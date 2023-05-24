@@ -23,6 +23,13 @@ Author:
 Contributors (aside from author):
     None
 */
+/**
+ * Example code for:
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ */
 #include<tuple>
 
 #include<dqrobotics/DQ.h>
@@ -53,16 +60,37 @@ struct Example_SimulationArguments
     bool use_adaptation;
 };
 
+//To the pure soul that will port this to DQ_robotics.
+//DQ_robotics needs to be altered before inheritance can happen here.
+//For instance
+//- add a class similar to DQ_SerialManipulator that provides parameter-space Jacobians, e.g. Example_SerialManipulatorEDH.
+//- add a class similar to DQ_KinematicController but for the parameter-space.
+//- And many of the support classes in this example, such as Example_AdaptiveControlStrategy and Example_MeasureSpace.
+class Example_AdaptiveController
+{
+private:
+    const Example_SimulationArguments& simulation_arguments_;
+    std::shared_ptr<Example_SerialManipulatorEDH> robot_;
 
-std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy &control_strategy,
-                                                                                         const VectorXd&q,
-                                                                                         const Example_SerialManipulatorEDH& robot,
-                                                                                         const DQ& x_d,
-                                                                                         const DQ& y, std::vector<Example_VFI> &vfis,
-                                                                                         const Example_SimulationArguments &simulation_parameters);
+    DQ_QPOASESSolver task_space_solver_;
+    DQ_QPOASESSolver parameter_space_solver_;
 
-DQ convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
-VectorXd smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
-MatrixXd convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const Example_MeasureSpace& measure_space);
-MatrixXd get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
-int get_measure_space_dimension(const Example_MeasureSpace& measure_space);
+    DQ _convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
+    VectorXd _smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
+    MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const Example_MeasureSpace& measure_space);
+    MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
+ public:
+    Example_AdaptiveController()=delete;
+    Example_AdaptiveController(Example_AdaptiveController&)=delete;
+    Example_AdaptiveController(const std::shared_ptr<Example_SerialManipulatorEDH>& robot,
+                               const Example_SimulationArguments &simulation_arguments);
+
+    std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy &control_strategy,
+                                                                                           const VectorXd& q,
+                                                                                           const DQ& xd,
+                                                                                           const DQ& y,
+                                                                                           std::vector<Example_VFI> &vfis);
+};
+
+
+

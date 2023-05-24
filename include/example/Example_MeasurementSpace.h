@@ -33,5 +33,7 @@ enum class Example_MeasureSpace
     Distance,
 };
 
+int get_measure_space_dimension(const Example_MeasureSpace &measure_space);
+
 
 

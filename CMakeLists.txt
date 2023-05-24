@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}
     src/example/Example_VFI.cpp
     src/example/Example_SerialManipulatorEDH.cpp
     src/example/Example_VS050VrepRobot.cpp
+    src/example/Example_MeasurementSpace.cpp
 
     submodules/sas_core/src/sas_object.cpp
     submodules/sas_core/src/sas_clock.cpp
