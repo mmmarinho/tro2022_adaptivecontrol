@@ -1,6 +1,6 @@
 # Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements
 
-Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047): 
+Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047).
 
 # Video on YouTube
 
