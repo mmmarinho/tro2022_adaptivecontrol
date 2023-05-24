@@ -24,7 +24,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 - In seconds, the estimation converges by using measurements from a simulated sensor.
 - The robot then proceeds through the box, reaching the target poses, without collisions. 
 
-https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/997cdd1f-0489-4afe-8cf6-077dc0cf505f
+https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
 # Tested on
 
