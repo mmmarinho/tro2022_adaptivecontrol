@@ -91,13 +91,19 @@ int main(int argc, char** argv)
                  "Bugs might be present, so report them at https://github.com/mmmarinho/tro2022_adaptivecontrol/issues\n"
               << std::endl;
 
+    /*
+     * The behavior is somewhat robust to the change in parameters, and by choosing the ones below
+     * there's no claim that they are optimal for any case, even only for this example.
+    */
     Example_SimulationArguments simulation_arguments;
     simulation_arguments.measure_space = Example_MeasureSpace::Pose;
     simulation_arguments.proportional_gain = 20.0;
-    simulation_arguments.vfi_gain = 0.5;
+    simulation_arguments.vfi_gain = 5;
     simulation_arguments.vfi_weight = 0.02;
-    simulation_arguments.damping = 0.001;
+    simulation_arguments.damping = 0.01;
     simulation_arguments.use_adaptation = true;
+    simulation_arguments.sampling_time_sec = 0.08; //The physical VS050 have a default joint control frequency of 125 Hz
+    simulation_arguments.reference_timeout_sec = 60;
 
     /************************************************************************
      * Connect to CoppeliaSim
@@ -111,7 +117,6 @@ int main(int argc, char** argv)
         vi->disconnect_all();
         throw std::runtime_error("Failed to connect to CoppeliaSim.");
     }
-    vi->start_video_recording();
     vi->stop_simulation();
 
     /************************************************************************
@@ -149,7 +154,7 @@ int main(int argc, char** argv)
 
     auto parameter_boundaries = estimated_robot->get_parameter_space_boundaries();
     //Velocity limits (simplified, this also helps to keep the real robot from moving too fast)
-    const double& ROBOT_JOINT_VELOCITY_LIMIT = 0.01;
+    const double& ROBOT_JOINT_VELOCITY_LIMIT = 0.1;
     estimated_robot->set_upper_q_dot_limit(ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
     estimated_robot->set_lower_q_dot_limit(-ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
 
@@ -201,10 +206,10 @@ int main(int argc, char** argv)
     Example_AdaptiveController adaptive_controller(estimated_robot,
                                                    simulation_arguments);
 
-    const double& sampling_time_sec = 0.02;
-    sas::Clock clock(sampling_time_sec);
+    sas::Clock clock(simulation_arguments.sampling_time_sec);
     clock.init();
 
+    vi->start_video_recording();
     vi->start_simulation();
 
     /************************************************************************
@@ -232,23 +237,24 @@ int main(int argc, char** argv)
 
             if(simulation_arguments.use_adaptation)
             {
-                a_hat += ua*sampling_time_sec;
+                a_hat += ua*simulation_arguments.sampling_time_sec;
                 estimated_robot->set_parameter_space_values(a_hat);
             }
 
-            q += uq*sampling_time_sec;
+            q += uq*simulation_arguments.sampling_time_sec;
             real_robot_in_vrep.set_configuration_space_positions(q);
 
             clock.update_and_sleep();
 
-            if(clock.get_elapsed_time_sec() > 60.0)
+            if(clock.get_elapsed_time_sec() > simulation_arguments.reference_timeout_sec*(xd_counter+1))
             {
-                std::cout << "xd timeout" << std::endl;
-                std::cout << "  x_tilde norm " << x_tilde.norm() << std::endl;
-                std::cout << "  translation error norm " << (translation(x_hat)-translation(xd)).norm() << std::endl;
-                std::cout << "  y_tilde_norm " << y_tilde.norm() << std::endl;
+                std::cout << "Reference timeout for xd" << xd_counter << std::endl;
+                std::cout << "  Clock overruns =" << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
+                std::cout << "  Final task pose error norm " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
+                std::cout << "  Final task translation error norm " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
+                std::cout << "  Final measurement error norm " << y_tilde.norm() << " (Dual quaternion norm)." << std::endl;
                 if(is_unit(y))
-                    std::cout << "  measurement translation error norm " << (translation(x_hat)-translation(y)).norm() << std::endl;
+                    std::cout << "  Final measurement translation error norm " << (translation(x_hat)-translation(y)).norm() << " (in meters)." << std::endl;
                 else
                     std::cout << "  measurement translation error norm: y not unit" << std::endl;
                 break;
@@ -258,11 +264,6 @@ int main(int argc, char** argv)
     }
 
     vi->stop_simulation();
-    //}
-    //catch(const std::exception& e)
-    // {
-    //     std::cout << e.what() << std::endl;
-    // }
 
     return 0;
 }

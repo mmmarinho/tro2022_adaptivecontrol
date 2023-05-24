@@ -29,6 +29,20 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 - qpOASES [`commit 0b86dbf00c7fce34420bedc5914f71b176fe79d3`](https://github.com/coin-or/qpOASES/commit/0b86dbf00c7fce34420bedc5914f71b176fe79d3)
 - sas_core [`commit 696b2019c30d62e322030eec8a0c2bb2f3f7b3c8`](https://github.com/SmartArmStack/sas_core/commit/696b2019c30d62e322030eec8a0c2bb2f3f7b3c8)
 
+# Known limitations, TODO list
+
+- The stopping criterium is elapsed time, so it might not converge for all initial parameters.
+- The initial convergence to measurements implemented in the experiments is TODO here.
+- The estimated model is randomized so it might start in an implausible zone. Fixing this it TODO for this example.
+- Sample code for partial measurements is included, but they have not been tested in this example, only in the physical robot.
+
+# Extra info
+
+- The adaptation is supposed to move the parameters of the `estimated_robot` towards ideal kinematic model, defined by `real_robot` in the code. 
+The robot model in CoppeliaSim is for visualization only.
+- A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
+- The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
+
 # Installation
 
 ## Just in case
@@ -80,4 +94,9 @@ cd build
 cmake ..
 make -j16
 ```
+
+# Running
+
+1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
+2. Run `~/git/tro2022_adaptivecontrol/build/adaptive_control_example`.
 
