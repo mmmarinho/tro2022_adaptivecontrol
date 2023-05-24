@@ -28,7 +28,7 @@ Contributors (aside from author):
 
 #include <dqrobotics/interfaces/vrep/DQ_SerialVrepRobot.h>
 
-#include "robot_modeling/Example_SerialManipulatorEDH.h"
+#include "example/Example_SerialManipulatorEDH.h"
 
 using namespace DQ_robotics;
 

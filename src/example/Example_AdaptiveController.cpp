@@ -22,9 +22,16 @@ Author:
 Contributors (aside from author):
     None
 */
+/**
+ * Example code for:
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ */
 #include <dqrobotics/utils/DQ_Math.h>
 
-#include "robot_control/Example_AdaptiveController.h"
+#include "example/Example_AdaptiveController.h"
 
 
 std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd& q, const std::tuple<VectorXd, VectorXd>& boundaries, const VectorXd& damping_matrix_diagonal=VectorXd())
@@ -105,23 +112,43 @@ std::tuple<VectorXd,double> __closest_invariant_error(const DQ& x, const DQ& xd,
     throw std::runtime_error("Not supposed to be reachable");
 }
 
-
+/**
+ * @brief compute_setpoint_control_signal One possible implementation of Algorithm 1 of
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ *
+ * @param control_strategy See Example_AdaptiveControlStrategy for possible values.
+ * @param q the current configuration of the robot.
+ * @param robot the model of the robot, as a Example_SerialManipulatorEDH.
+ * @param x_d the desired end-effector pose.
+ * @param y the current measurement.
+ * @param vfis the vector of VFIs.
+ * @param simulation_parameters the parameters of this simulation.
+ * @return {uq, ua, x_tilde, y_tilde, y_partial} in which
+ * uq: is the control signal, to be applied at the robot's configurations
+ * ua: the adaptation signal, to be applied on the robot's parameters,
+ * x_tilde: the task error,
+ * y_tilde: the measurement error,
+ * y_partial: the measurement error in the partial space when the measurements are not pose.
+ */
 std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy& control_strategy,
                                                                                        const VectorXd&q,
                                                                                        const Example_SerialManipulatorEDH& robot,
                                                                                        const DQ& x_d,
                                                                                        const DQ& y,
                                                                                        std::vector<Example_VFI>& vfis,
-                                                                                       const Example_SimulationArguments& cla)
+                                                                                       const Example_SimulationArguments& simulation_parameters)
 {
     const int n = robot.get_dim_configuration_space();
     const int p = robot.get_dim_parameter_space();
-    const double& eta_task = cla.proportional_gain;
-    const double& eta_parameter = cla.proportional_gain;
-    const double& vfi_gain = cla.vfi_gain;
-    const double& vfi_weight = cla.vfi_weight;
-    const double& lambda = cla.damping;
-    const Example_MeasureSpace& measure_space = cla.measure_space;
+    const double& eta_task = simulation_parameters.proportional_gain;
+    const double& eta_parameter = simulation_parameters.proportional_gain;
+    const double& vfi_gain = simulation_parameters.vfi_gain;
+    const double& vfi_weight = simulation_parameters.vfi_weight;
+    const double& lambda = simulation_parameters.damping;
+    const Example_MeasureSpace& measure_space = simulation_parameters.measure_space;
 
     const double& MAX_ACCEPTABLE_CONSTRAINT_PENETRATION = 0.001;
     const double& MAX_ACCEPTABLE_CONSTRAINT_PENETRATION_SQUARED = MAX_ACCEPTABLE_CONSTRAINT_PENETRATION*MAX_ACCEPTABLE_CONSTRAINT_PENETRATION;
@@ -271,6 +298,18 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_
     return {uq, ua, x_tilde, y_tilde, y_partial};
 }
 
+/**
+ * @brief convert_pose_jacobian_to_measure_space as discussed in Section IV of
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ * @param Jx the pose_jacobian, i.e. the complete Jacobian.
+ * @param x the pose, i.e. the complete measurement.
+ * @param xd the desired pose, used to calculate the rotation Jacobian.
+ * @param measure_space see Example_MeasureSpace for possible values.
+ * @return the (partial) Jacobian defined by Example_MeasureSpace.
+ */
 MatrixXd convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x, const DQ& xd, const Example_MeasureSpace& measure_space)
 {
     switch(measure_space)
@@ -289,6 +328,17 @@ MatrixXd convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x,
     throw std::runtime_error("Not supposed to be reachable");
 }
 
+/**
+ * @brief get_complimentary_measure_space_jacobian as discussed in Section IV of
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ * @param Jx the pose_jacobian, i.e. the complete Jacobian.
+ * @param x the pose, i.e. the complete measurement.
+ * @param measure_space see Example_MeasureSpace for possible values.
+ * @return the complimentary of the (partial) Jacobian defined by Example_MeasureSpace.
+ */
 MatrixXd get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space)
 {
     switch(measure_space)
@@ -308,7 +358,16 @@ MatrixXd get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &
     throw std::runtime_error("Not supposed to be reachable");
 }
 
-
+/**
+ * @brief get_complimentary_measure_space_jacobian as discussed in Section IV of
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ * @param x the pose, e.g. the complete measurement.
+ * @param measure_space see Example_MeasureSpace for possible values.
+ * @return the (partial) measurement defined by Example_MeasureSpace.
+ */
 DQ convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace &measure_space)
 {
     switch(measure_space)

@@ -28,9 +28,9 @@ Contributors (aside from author):
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/solvers/DQ_QPOASESSolver.h>
 
-#include"robot_modeling/Example_SerialManipulatorEDH.h"
-#include"robot_control/Example_MeasurementSpace.h"
-#include"constraints_modeling/Example_VFI.h"
+#include"example/Example_SerialManipulatorEDH.h"
+#include"example/Example_MeasurementSpace.h"
+#include"example/Example_VFI.h"
 
 using namespace Eigen;
 using namespace DQ_robotics;
@@ -59,7 +59,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_
                                                                                          const Example_SerialManipulatorEDH& robot,
                                                                                          const DQ& x_d,
                                                                                          const DQ& y, std::vector<Example_VFI> &vfis,
-                                                                                         const Example_SimulationArguments &cla);
+                                                                                         const Example_SimulationArguments &simulation_parameters);
 
 DQ convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
 VectorXd smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);

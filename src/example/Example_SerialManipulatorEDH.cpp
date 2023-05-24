@@ -23,7 +23,14 @@ Contributors (aside from author):
     None
 */
 
-#include <robot_modeling/Example_SerialManipulatorEDH.h>
+/**
+ * Example code for:
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ */
+#include <example/Example_SerialManipulatorEDH.h>
 
 Example_SerialManipulatorEDH::Example_SerialManipulatorEDH(const MatrixXd& dh_matrix):
     DQ_SerialManipulator(dh_matrix.cols()),

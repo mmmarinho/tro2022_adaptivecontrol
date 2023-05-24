@@ -13,10 +13,10 @@ include_directories(
 
 add_executable(${PROJECT_NAME}
     src/${PROJECT_NAME}.cpp
-    src/robot_control/Example_AdaptiveController.cpp
-    src/constraints_modeling/Example_VFI.cpp
-    src/robot_modeling/Example_SerialManipulatorEDH.cpp
-    src/interfaces/vrep/robots/Example_VS050VrepRobot.cpp
+    src/example/Example_AdaptiveController.cpp
+    src/example/Example_VFI.cpp
+    src/example/Example_SerialManipulatorEDH.cpp
+    src/example/Example_VS050VrepRobot.cpp
 
     submodules/sas_core/src/sas_object.cpp
     submodules/sas_core/src/sas_clock.cpp

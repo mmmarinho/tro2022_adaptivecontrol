@@ -22,10 +22,19 @@ Author:
 Contributors (aside from author):
     None
 */
+
+/**
+ * Example code for:
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ */
+
 #include <dqrobotics/utils/DQ_Constants.h>
 #include <dqrobotics/utils/DQ_Math.h>
 
-#include "interfaces/vrep/robots/Example_VS050VrepRobot.h"
+#include "example/Example_VS050VrepRobot.h"
 
 Example_VS050VrepRobot::Example_VS050VrepRobot(const std::string& robot_name, const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr):
     DQ_SerialVrepRobot("VS050",6,robot_name,vrep_interface_sptr)

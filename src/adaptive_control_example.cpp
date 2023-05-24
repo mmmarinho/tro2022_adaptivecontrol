@@ -44,10 +44,10 @@ Contributors (aside from author):
 
 #include <sas_core/sas_clock.hpp>
 
-#include "robot_control/Example_AdaptiveController.h"
-#include "constraints_modeling/Example_VFI.h"
-#include "robot_modeling/Example_SerialManipulatorEDH.h"
-#include "interfaces/vrep/robots/Example_VS050VrepRobot.h"
+#include "example/Example_AdaptiveController.h"
+#include "example/Example_VFI.h"
+#include "example/Example_SerialManipulatorEDH.h"
+#include "example/Example_VS050VrepRobot.h"
 
 #include <signal.h>
 #include <atomic>
