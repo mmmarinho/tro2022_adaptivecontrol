@@ -36,11 +36,11 @@ https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/997cdd1f-04
 - qpOASES [`commit 0b86dbf00c7fce34420bedc5914f71b176fe79d3`](https://github.com/coin-or/qpOASES/commit/0b86dbf00c7fce34420bedc5914f71b176fe79d3)
 - sas_core [`commit 696b2019c30d62e322030eec8a0c2bb2f3f7b3c8`](https://github.com/SmartArmStack/sas_core/commit/696b2019c30d62e322030eec8a0c2bb2f3f7b3c8)
 
-# Known limitations, TODO list
+# Known limitations, *TODO* list
 
 - The stopping criterium is elapsed time, so it might not converge for all initial parameters.
-- The initial convergence to measurements implemented in the experiments is TODO here.
-- The estimated model is randomized so it might start in an implausible zone. Fixing this it TODO for this example.
+- The initial convergence to measurements implemented in the experiments is *TODO* for this example.
+- The estimated model is randomized so it might start in an implausible zone. Fixing this it *TODO* for this example.
 - Sample code for partial measurements is included, but they have not been tested in this example, only in the physical robot.
 
 # Extra info
