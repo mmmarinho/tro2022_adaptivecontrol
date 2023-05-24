@@ -38,7 +38,7 @@
 VFI_Information::VFI_Information(const std::string &workspace_entity_name,
                                  const std::string& robot_entity_name,
                                  const DQ_Primitive &type,
-                                 std::shared_ptr<DQ_VrepInterface> &vi,
+                                 const std::shared_ptr<DQ_VrepInterface> &vi,
                                  const double &safe_distance,
                                  const VFI_Direction &vfi_direction,
                                  const int &joint_index,
