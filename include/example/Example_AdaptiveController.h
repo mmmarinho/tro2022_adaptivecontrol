@@ -50,7 +50,7 @@ enum class Example_AdaptiveControlStrategy
     FULL
 };
 
-struct Example_SimulationArguments
+struct Example_SimulationParameters
 {
     Example_MeasureSpace measure_space;
     double proportional_gain;
@@ -71,7 +71,7 @@ struct Example_SimulationArguments
 class Example_AdaptiveController
 {
 private:
-    const Example_SimulationArguments& simulation_arguments_;
+    const Example_SimulationParameters& simulation_arguments_;
     std::shared_ptr<Example_SerialManipulatorEDH> robot_;
 
     DQ_QPOASESSolver task_space_solver_;
@@ -85,7 +85,7 @@ private:
     Example_AdaptiveController()=delete;
     Example_AdaptiveController(Example_AdaptiveController&)=delete;
     Example_AdaptiveController(const std::shared_ptr<Example_SerialManipulatorEDH>& robot,
-                               const Example_SimulationArguments &simulation_arguments);
+                               const Example_SimulationParameters &simulation_arguments);
 
     std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy &control_strategy,
                                                                                            const VectorXd& q,

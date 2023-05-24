@@ -75,7 +75,6 @@ void randomize_parameters(const std::shared_ptr<Example_SerialManipulatorEDH> &e
 
 int main(int argc, char** argv)
 {
-    //try{
     signal(SIGINT, sig_int_handler);
 
     std::cout << "Example code for: \n"
@@ -95,15 +94,15 @@ int main(int argc, char** argv)
      * The behavior is somewhat robust to the change in parameters, and by choosing the ones below
      * there's no claim that they are optimal for any case, even only for this example.
     */
-    Example_SimulationArguments simulation_arguments;
-    simulation_arguments.measure_space = Example_MeasureSpace::Pose;
-    simulation_arguments.proportional_gain = 20.0;
-    simulation_arguments.vfi_gain = 5;
-    simulation_arguments.vfi_weight = 0.02;
-    simulation_arguments.damping = 0.01;
-    simulation_arguments.use_adaptation = true;
-    simulation_arguments.sampling_time_sec = 0.08; //The physical VS050 have a default joint control frequency of 125 Hz
-    simulation_arguments.reference_timeout_sec = 60;
+    Example_SimulationParameters simulation_parameters;
+    simulation_parameters.measure_space = Example_MeasureSpace::Pose;
+    simulation_parameters.proportional_gain = 20.0;
+    simulation_parameters.vfi_gain = 5;
+    simulation_parameters.vfi_weight = 0.02;
+    simulation_parameters.damping = 0.01;
+    simulation_parameters.use_adaptation = true;
+    simulation_parameters.sampling_time_sec = 0.08; //The physical VS050 have a default joint control frequency of 125 Hz
+    simulation_parameters.reference_timeout_sec = 60;
 
     /************************************************************************
      * Connect to CoppeliaSim
@@ -129,7 +128,7 @@ int main(int argc, char** argv)
     VectorXd q_init(real_robot_in_vrep.get_configuration_space_positions());
     VectorXd q(q_init);
 
-    //Real base (the one in the simulation)
+    //Real base (representing the ideal robot parameters)
 
     DQ real_base_frame(real_robot_in_vrep.get_base_frame());
 
@@ -138,14 +137,14 @@ int main(int argc, char** argv)
     const DQ& r = cos(-pi/4.0) + i_*sin(-pi/4.0);
     const DQ& effector_frame = r + 0.5 * E_ * k_ * 0.15688 * r;
 
-    //Real robot (the one in the simulation)
+    //Real robot (representing the ideal robot parameters)
 
     auto real_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
     real_robot->set_base_frame(real_base_frame);
     real_robot->set_effector_frame(effector_frame);
     set_parameter_space_boundaries(real_robot);
 
-    //Estimated robot (the one in our kinematic model)
+    //Estimated robot (the estimated kinematic model, the one that needs adaptation)
 
     auto estimated_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
     estimated_robot->set_base_frame(real_base_frame);
@@ -181,7 +180,7 @@ int main(int argc, char** argv)
 
     /************************************************************************
      * Randomize the estimated parameters, so that our adaptive controller
-     * something to do in this example!
+     * has something to do in this example!
      * *********************************************************************/
 
     std::cout << "[5] Trying to find suitable initial parameters..." << std::endl;
@@ -204,9 +203,9 @@ int main(int argc, char** argv)
     std::cout << "Starting with DQ_AdaptiveControlStrategy::FULL" << std::endl;
     Example_AdaptiveControlStrategy control_strategy(Example_AdaptiveControlStrategy::FULL);
     Example_AdaptiveController adaptive_controller(estimated_robot,
-                                                   simulation_arguments);
+                                                   simulation_parameters);
 
-    sas::Clock clock(simulation_arguments.sampling_time_sec);
+    sas::Clock clock(simulation_parameters.sampling_time_sec);
     clock.init();
 
     vi->start_video_recording();
@@ -235,18 +234,18 @@ int main(int argc, char** argv)
                                                                                                              y,
                                                                                                              vfis);
 
-            if(simulation_arguments.use_adaptation)
+            if(simulation_parameters.use_adaptation)
             {
-                a_hat += ua*simulation_arguments.sampling_time_sec;
+                a_hat += ua*simulation_parameters.sampling_time_sec;
                 estimated_robot->set_parameter_space_values(a_hat);
             }
 
-            q += uq*simulation_arguments.sampling_time_sec;
+            q += uq*simulation_parameters.sampling_time_sec;
             real_robot_in_vrep.set_configuration_space_positions(q);
 
             clock.update_and_sleep();
 
-            if(clock.get_elapsed_time_sec() > simulation_arguments.reference_timeout_sec*(xd_counter+1))
+            if(clock.get_elapsed_time_sec() > simulation_parameters.reference_timeout_sec*(xd_counter+1))
             {
                 std::cout << "Reference timeout for xd" << xd_counter << std::endl;
                 std::cout << "  Clock overruns =" << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;

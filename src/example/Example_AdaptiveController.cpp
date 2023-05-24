@@ -121,11 +121,9 @@ std::tuple<VectorXd,double> __closest_invariant_error(const DQ& x, const DQ& xd,
  *
  * @param control_strategy See Example_AdaptiveControlStrategy for possible values.
  * @param q the current configuration of the robot.
- * @param robot the model of the robot, as a Example_SerialManipulatorEDH.
- * @param x_d the desired end-effector pose.
+ * @param xd the desired task-space value.
  * @param y the current measurement.
  * @param vfis the vector of VFIs.
- * @param simulation_parameters the parameters of this simulation.
  * @return {uq, ua, x_tilde, y_tilde, y_partial} in which
  * uq: is the control signal, to be applied at the robot's configurations
  * ua: the adaptation signal, to be applied on the robot's parameters,
@@ -135,7 +133,7 @@ std::tuple<VectorXd,double> __closest_invariant_error(const DQ& x, const DQ& xd,
  */
 std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveController::compute_setpoint_control_signal(const Example_AdaptiveControlStrategy& control_strategy,
                                                                                        const VectorXd&q,
-                                                                                       const DQ& x_d,
+                                                                                       const DQ& xd,
                                                                                        const DQ& y,
                                                                                        std::vector<Example_VFI>& vfis)
 {
@@ -156,7 +154,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = __closest_invariant_error(x_hat, x_d, Example_MeasureSpace::Pose);
+    std::tie(x_tilde, x_invariant) = __closest_invariant_error(x_hat, xd, Example_MeasureSpace::Pose);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
@@ -196,7 +194,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     {
         ///Task
         const MatrixXd J_x_q = robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = haminus8(x_d)*C8()*robot_->pose_jacobian(q);
+        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
 
         const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
         const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
@@ -255,7 +253,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         const VectorXd b_N_a = VectorXd::Zero(N_a.rows());
 
         ///Inequality constraint for Lyapunov stability
-        const MatrixXd A_y = x_tilde.transpose()*haminus8(x_d)*C8()*J_y_a;
+        const MatrixXd A_y = x_tilde.transpose()*haminus8(xd)*C8()*J_y_a;
         const VectorXd b_y = VectorXd::Zero(1);
 
         MatrixXd W_vfi_a(vfis_size, p);
@@ -355,7 +353,7 @@ MatrixXd Example_AdaptiveController::_get_complimentary_measure_space_jacobian(c
     throw std::runtime_error("Not supposed to be reachable");
 }
 
-Example_AdaptiveController::Example_AdaptiveController(const std::shared_ptr<Example_SerialManipulatorEDH> &robot, const Example_SimulationArguments &simulation_arguments):
+Example_AdaptiveController::Example_AdaptiveController(const std::shared_ptr<Example_SerialManipulatorEDH> &robot, const Example_SimulationParameters &simulation_arguments):
     robot_(robot),
     simulation_arguments_(simulation_arguments)
 {
