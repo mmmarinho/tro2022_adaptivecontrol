@@ -2,6 +2,14 @@
 
 Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047): 
 
+# Video on YouTube
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=WntmyJe53gY" target="_blank">
+ <img src="http://img.youtube.com/vi/WntmyJe53gY/hqdefault.jpg" alt="Watch the video" width="480" height="360" border="10" />
+</a>
+
+# Citation
+
 ```bib
 @Article{marinhoandadorno2022adaptive,
   author       = {Marinho, M. M. and Adorno, B. V.},
@@ -18,7 +26,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
   pages        = {3498--3513}
 }
 ```
-# Example showcase
+# Example in this repo
 
 - The red object represents the estimated robot, initially very wrong.
 - In seconds, the estimation converges by using measurements from a simulated sensor.
@@ -26,24 +34,14 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
-# Tested on
-
-- Ubuntu 22.04 `5.19.0-41-generic #42~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 18 17:40:00 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`
-- CoppeliaSim EDU 5.4.1 (rev4)
-- DQ Robotics cpp [`commit 77acf9a42875ffb69e9f48f98f3950f9d7242c0e`](https://github.com/dqrobotics/cpp/commit/77acf9a42875ffb69e9f48f98f3950f9d7242c0e)
-- DQ Robotics cpp-interface-vrep [`commit 67a5839074243e262de3a6c83439dc3a59492913`](https://github.com/dqrobotics/cpp-interface-vrep/commit/67a5839074243e262de3a6c83439dc3a59492913)
-- DQ Robotics cpp-interface-qpoases [`commit cdc2d6cbc6d67074267c38227b85bb1f14df8b14`](https://github.com/dqrobotics/cpp-interface-qpoases/commit/cdc2d6cbc6d67074267c38227b85bb1f14df8b14)
-- qpOASES [`commit 0b86dbf00c7fce34420bedc5914f71b176fe79d3`](https://github.com/coin-or/qpOASES/commit/0b86dbf00c7fce34420bedc5914f71b176fe79d3)
-- sas_core [`commit 696b2019c30d62e322030eec8a0c2bb2f3f7b3c8`](https://github.com/SmartArmStack/sas_core/commit/696b2019c30d62e322030eec8a0c2bb2f3f7b3c8)
-
-# Known limitations, *TODO* list
+## Known limitations, *TODO* list
 
 - The stopping criterium is elapsed time, so it might not converge for all initial parameters.
 - The initial convergence to measurements implemented in the experiments is *TODO* for this example.
 - The estimated model is randomized so it might start in an implausible zone. Fixing this it *TODO* for this example.
 - Sample code for partial measurements is included, but they have not been tested in this example, only in the physical robot.
 
-# Extra info
+## Extra info
 
 - The adaptation is supposed to move the parameters of the `estimated_robot` towards ideal kinematic model, defined by `real_robot` in the code. 
 The robot model in CoppeliaSim is for visualization only.
@@ -106,4 +104,14 @@ make -j16
 
 1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
 2. Run `~/git/tro2022_adaptivecontrol/build/adaptive_control_example`.
+
+# Tested on
+
+- Ubuntu 22.04 `5.19.0-41-generic #42~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 18 17:40:00 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`
+- CoppeliaSim EDU 5.4.1 (rev4)
+- DQ Robotics cpp [`commit 77acf9a42875ffb69e9f48f98f3950f9d7242c0e`](https://github.com/dqrobotics/cpp/commit/77acf9a42875ffb69e9f48f98f3950f9d7242c0e)
+- DQ Robotics cpp-interface-vrep [`commit 67a5839074243e262de3a6c83439dc3a59492913`](https://github.com/dqrobotics/cpp-interface-vrep/commit/67a5839074243e262de3a6c83439dc3a59492913)
+- DQ Robotics cpp-interface-qpoases [`commit cdc2d6cbc6d67074267c38227b85bb1f14df8b14`](https://github.com/dqrobotics/cpp-interface-qpoases/commit/cdc2d6cbc6d67074267c38227b85bb1f14df8b14)
+- qpOASES [`commit 0b86dbf00c7fce34420bedc5914f71b176fe79d3`](https://github.com/coin-or/qpOASES/commit/0b86dbf00c7fce34420bedc5914f71b176fe79d3)
+- sas_core [`commit 696b2019c30d62e322030eec8a0c2bb2f3f7b3c8`](https://github.com/SmartArmStack/sas_core/commit/696b2019c30d62e322030eec8a0c2bb2f3f7b3c8)
 
