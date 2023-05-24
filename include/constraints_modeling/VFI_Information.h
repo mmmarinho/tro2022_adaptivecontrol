@@ -102,7 +102,7 @@ public:
                     const VFI_Direction& vfi_direction,
                     const int& joint_index,
                     const DQ& relative_displacement_to_joint,
-                    const std::string& cs_reference_name);
+                    const std::string& cs_reference_name=VREP_OBJECTNAME_ABSOLUTE);
 
     void initialize();
 

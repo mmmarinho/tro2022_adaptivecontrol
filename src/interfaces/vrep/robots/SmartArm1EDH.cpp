@@ -40,9 +40,9 @@ namespace DQ_robotics
 {
 
 SmartArm1EDH::SmartArm1EDH(const std::string& robot_name, const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr):
-    DQ_SerialVrepRobot("VS050",6,robot_name, vrep_interface_sptr)
+    DQ_SerialVrepRobot("VS050",6,robot_name,vrep_interface_sptr)
 {
-    base_frame_name_ = std::string("VS050") + std::string("_reference_frame");
+    base_frame_name_ = "VS050_reference_frame";
 }
 
 
@@ -66,14 +66,14 @@ DQ_SerialManipulatorEDH SmartArm1EDH::raw_kinematics()
     return dq_serialmanipulator_edh;
 }
 
-DQ SmartArm1EDH::get_base_frame_from_vrep()
+DQ SmartArm1EDH::get_base_frame()
 {
-    return vrep_interface_->get_object_pose(base_frame_name_);
+    return _get_interface_sptr()->get_object_pose(base_frame_name_);
 }
 
-void SmartArm1EDH::send_base_frame_to_vrep(const DQ& base_frame, const std::string& reference_frame)
+void SmartArm1EDH::set_base_frame(const DQ& base_frame, const std::string& reference_frame_name)
 {
-    vrep_interface_->set_object_pose(base_frame_name_,base_frame, reference_frame);
+    _get_interface_sptr()->set_object_pose(base_frame_name_,base_frame, reference_frame_name);
 }
 
 }

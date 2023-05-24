@@ -27,11 +27,11 @@ class SmartArm1EDH: public DQ_SerialVrepRobot
 {
 public:
     SmartArm1EDH(const std::string& robot_name,
-                              const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr);
+                 const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr);
 
     static DQ_SerialManipulatorEDH raw_kinematics();
-    DQ get_base_frame_from_vrep();
-    void send_base_frame_to_vrep(const DQ& base_frame, const std::string& reference_frame=VREP_OBJECTNAME_ABSOLUTE);
+    DQ get_base_frame();
+    void set_base_frame(const DQ& base_frame, const std::string& reference_frame_name=VREP_OBJECTNAME_ABSOLUTE);
 };
 }
 
