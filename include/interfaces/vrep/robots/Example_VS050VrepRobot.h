@@ -1,8 +1,8 @@
 #pragma once
 /**
-(C) Copyright 2029-2023 Murilo Marques Marinho (www.murilomarinho.info)
+(C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
-This file is part of DQ adaptive_control_example.
+This file is part of adaptive_control_example.
 
     DQ Robotics is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -23,16 +23,25 @@ Author:
 Contributors (aside from author):
     None
 */
-#include <dqrobotics/DQ.h>
+
+#include <vector>
+
+#include <dqrobotics/interfaces/vrep/DQ_SerialVrepRobot.h>
+
+#include "robot_modeling/Example_SerialManipulatorEDH.h"
 
 using namespace DQ_robotics;
 
-namespace utils
+class Example_VS050VrepRobot: public DQ_SerialVrepRobot
 {
+public:
+    Example_VS050VrepRobot(const std::string& robot_name,
+                 const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr);
 
-DQ add_noise_to_measurement(const DQ& y, const double& metric_error_3sigma, const double& degrees_error_3sigma);
+    static Example_SerialManipulatorEDH raw_kinematics();
+    DQ get_base_frame();
+    void set_base_frame(const DQ& base_frame, const std::string& reference_frame_name=VREP_OBJECTNAME_ABSOLUTE);
+};
 
-std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd& q, const std::tuple<VectorXd, VectorXd>& boundaries, const VectorXd &damping_matrix_diagonal=VectorXd());
 
-}
 

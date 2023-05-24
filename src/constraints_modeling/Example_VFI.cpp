@@ -1,7 +1,7 @@
 /**
 (C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
-This file is part of DQ adaptive_control_example.
+This file is part of adaptive_control_example.
 
     DQ Robotics is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -22,15 +22,15 @@ Author:
 Contributors (aside from author):
     None
 */
-#include "constraints_modeling/VFI_Information.h"
+#include "constraints_modeling/Example_VFI.h"
 
 
-VFI_Information::VFI_Information(const std::string &workspace_entity_name,
+Example_VFI::Example_VFI(const std::string &workspace_entity_name,
                                  const std::string& robot_entity_name,
-                                 const DQ_Primitive &type,
+                                 const Example_Primitive &type,
                                  const std::shared_ptr<DQ_VrepInterface> &vi,
                                  const double &safe_distance,
-                                 const VFI_Direction &vfi_direction,
+                                 const Example_VFI_Direction &vfi_direction,
                                  const int &joint_index,
                                  const DQ &relative_displacement_to_joint,
                                  const std::string &cs_reference_name):
@@ -48,15 +48,15 @@ VFI_Information::VFI_Information(const std::string &workspace_entity_name,
         throw std::runtime_error("Not implemented yet for anything besides joint_index_ == 7");
 }
 
-void VFI_Information::initialize()
+void Example_VFI::initialize()
 {
     switch(type_)
     {
-    case DQ_Primitive::None:
+    case Example_Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case DQ_Primitive::Point:
+    case Example_Primitive::Point:
         throw std::runtime_error("Not implemented yet.");
-    case DQ_Primitive::Plane:
+    case Example_Primitive::Plane:
     {
         const DQ x = vi_->get_object_pose(workspace_entity_name_,cs_reference_name_);
         const DQ r = rotation(x);
@@ -65,7 +65,7 @@ void VFI_Information::initialize()
         set_value(n + E_*dot(t,n));
         return;
     }
-    case DQ_Primitive::Line:
+    case Example_Primitive::Line:
         const DQ x = vi_->get_object_pose(workspace_entity_name_,cs_reference_name_);
         const DQ r = rotation(x);
         const DQ l = Ad(r, k_);
@@ -75,18 +75,18 @@ void VFI_Information::initialize()
     }
 }
 
-DQ VFI_Information::get_value() const
+DQ Example_VFI::get_value() const
 {
     return value_;
 }
 
-void VFI_Information::set_value(const DQ &value)
+void Example_VFI::set_value(const DQ &value)
 {
     switch(type_)
     {
-    case DQ_Primitive::None:
+    case Example_Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case DQ_Primitive::Point:
+    case Example_Primitive::Point:
         if(is_pure_quaternion(value))
         {
             value_ = value;
@@ -94,7 +94,7 @@ void VFI_Information::set_value(const DQ &value)
         }
         else
             throw std::runtime_error("Invalid point.");
-    case DQ_Primitive::Plane:
+    case Example_Primitive::Plane:
         if(is_plane(value))
         {
             value_ = value;
@@ -102,7 +102,7 @@ void VFI_Information::set_value(const DQ &value)
         }
         else
             throw std::runtime_error("Invalid plane.");
-    case DQ_Primitive::Line:
+    case Example_Primitive::Line:
         if(is_line(value))
         {
             value_ = value;
@@ -113,28 +113,28 @@ void VFI_Information::set_value(const DQ &value)
     }
 }
 
-MatrixXd VFI_Information::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
+MatrixXd Example_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
 {
     //Consider the relative displacement
     const DQ& local_x = x*relative_displacement_to_joint_;
     const MatrixXd& local_Jx = haminus8(relative_displacement_to_joint_)*Jx;
     switch(type_)
     {
-    case DQ_Primitive::None:
+    case Example_Primitive::None:
     {
         throw std::runtime_error("Expected valid type.");
     }
-    case DQ_Primitive::Point:
+    case Example_Primitive::Point:
     {
         throw std::runtime_error("Not implemented yet.");
     }
-    case DQ_Primitive::Plane:
+    case Example_Primitive::Plane:
     {
         const MatrixXd Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ t = translation(local_x);
         return DQ_Kinematics::point_to_plane_distance_jacobian(Jt, t, get_value());
     }
-    case DQ_Primitive::Line:
+    case Example_Primitive::Line:
     {
         const MatrixXd& Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ& t = translation(local_x);
@@ -144,20 +144,20 @@ MatrixXd VFI_Information::get_distance_jacobian(const DQ &x, const MatrixXd &Jx)
     throw std::runtime_error("Unexpected end of method.");
 }
 
-MatrixXd VFI_Information::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
+MatrixXd Example_VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
 {
     switch(vfi_direction_)
     {
-    case VFI_Direction::None:
+    case Example_VFI_Direction::None:
     {
         throw std::runtime_error("Expected valid type");
     }
-    case VFI_Direction::FORBIDDEN_ZONE:
+    case Example_VFI_Direction::FORBIDDEN_ZONE:
     {
         //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
         return -get_distance_jacobian(x, Jx);
     }
-    case VFI_Direction::SAFE_ZONE:
+    case Example_VFI_Direction::SAFE_ZONE:
     {
         //Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
         return get_distance_jacobian(x, Jx);
@@ -166,26 +166,26 @@ MatrixXd VFI_Information::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double VFI_Information::get_distance(const DQ &x) const
+double Example_VFI::get_distance(const DQ &x) const
 {
     //Consider the relative displacement
     const DQ& local_x = x*relative_displacement_to_joint_;
     switch(type_)
     {
-    case DQ_Primitive::None:
+    case Example_Primitive::None:
     {
         throw std::runtime_error("Expected valid type.");
     }
-    case DQ_Primitive::Point:
+    case Example_Primitive::Point:
     {
         throw std::runtime_error("Not implemented yet.");
     }
-    case DQ_Primitive::Plane:
+    case Example_Primitive::Plane:
     {
         const DQ& t = translation(local_x);
         return DQ_Geometry::point_to_plane_distance(t, get_value());
     }
-    case DQ_Primitive::Line:
+    case Example_Primitive::Line:
     {
         const DQ& t = translation(local_x);
         return DQ_Geometry::point_to_line_squared_distance(t, get_value());
@@ -194,72 +194,72 @@ double VFI_Information::get_distance(const DQ &x) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double VFI_Information::get_distance_error(const DQ &x) const
+double Example_VFI::get_distance_error(const DQ &x) const
 {
     switch(vfi_direction_)
     {
-    case VFI_Direction::None:
+    case Example_VFI_Direction::None:
         throw std::runtime_error("Expected valid type");
-    case VFI_Direction::FORBIDDEN_ZONE:
+    case Example_VFI_Direction::FORBIDDEN_ZONE:
     {
         //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
         return (get_distance(x) - safe_distance_);
     }
-    case VFI_Direction::SAFE_ZONE:
+    case Example_VFI_Direction::SAFE_ZONE:
         //Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
         return (safe_distance_ - get_distance(x));
     }
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double VFI_Information::get_safe_distance() const
+double Example_VFI::get_safe_distance() const
 {
     return safe_distance_;
 }
 
-VFI_DistanceType VFI_Information::get_distance_type() const
+Example_VFI_DistanceType Example_VFI::get_distance_type() const
 {
     switch(type_)
     {
-    case DQ_Primitive::None:
+    case Example_Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case DQ_Primitive::Point:
+    case Example_Primitive::Point:
     {
-        return VFI_DistanceType::EUCLIDEAN_SQUARED;
+        return Example_VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
-    case DQ_Primitive::Plane:
+    case Example_Primitive::Plane:
     {
-        return VFI_DistanceType::EUCLIDEAN;
+        return Example_VFI_DistanceType::EUCLIDEAN;
     }
-    case DQ_Primitive::Line:
+    case Example_Primitive::Line:
     {
-        return VFI_DistanceType::EUCLIDEAN_SQUARED;
+        return Example_VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
     }
     throw std::runtime_error("Unexpected end of method.");
 }
 
-void VFI_Information::set_last_real_distance(const DQ &y)
+void Example_VFI::set_last_real_distance(const DQ &y)
 {
     last_real_distance_ = get_distance(y);
 }
 
-double VFI_Information::get_last_real_distance() const
+double Example_VFI::get_last_real_distance() const
 {
     return last_real_distance_;
 }
 
-void VFI_Information::set_last_estimated_distance(const DQ &x_hat)
+void Example_VFI::set_last_estimated_distance(const DQ &x_hat)
 {
     last_estimated_distance_ = get_distance(x_hat);
 }
 
-double VFI_Information::get_last_estimated_distance() const
+double Example_VFI::get_last_estimated_distance() const
 {
     return last_estimated_distance_;
 }
 
-std::string VFI_Information::get_vfi_name() const
+std::string Example_VFI::get_vfi_name() const
 {
     return workspace_entity_name_ + std::string("___") + robot_entity_name_;
 }

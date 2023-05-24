@@ -2,7 +2,7 @@
 /**
 (C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
-This file is part of DQ adaptive_control_example.
+This file is part of adaptive_control_example.
 
     DQ Robotics is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -28,14 +28,14 @@ Contributors (aside from author):
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/solvers/DQ_QPOASESSolver.h>
 
-#include"robot_modeling/DQ_SerialManipulatorEDH.h"
-#include"robot_control/DQ_MeasurementSpace.h"
-#include"constraints_modeling/VFI_Information.h"
+#include"robot_modeling/Example_SerialManipulatorEDH.h"
+#include"robot_control/Example_MeasurementSpace.h"
+#include"constraints_modeling/Example_VFI.h"
 
 using namespace Eigen;
 using namespace DQ_robotics;
 
-enum class DQ_AdaptiveControlStrategy
+enum class Example_AdaptiveControlStrategy
 {
     NONE=0,
     TASK_ONLY,
@@ -43,28 +43,26 @@ enum class DQ_AdaptiveControlStrategy
     FULL
 };
 
-struct SimulationArguments
+struct Example_SimulationArguments
 {
-    DQ_MeasureSpace measure_space;
+    Example_MeasureSpace measure_space;
     double proportional_gain;
     double vfi_gain;
     double vfi_weight;
     double damping;
     bool use_adaptation;
-    //bool get_parameters_from_parameter_server;
-    //bool use_real_robot;
 };
 
 
-std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const DQ_AdaptiveControlStrategy &control_strategy,
+std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy &control_strategy,
                                                                                          const VectorXd&q,
-                                                                                         const DQ_SerialManipulatorEDH& robot,
+                                                                                         const Example_SerialManipulatorEDH& robot,
                                                                                          const DQ& x_d,
-                                                                                         const DQ& y, std::vector<VFI_Information> &vfis,
-                                                                                         const SimulationArguments &cla);
+                                                                                         const DQ& y, std::vector<Example_VFI> &vfis,
+                                                                                         const Example_SimulationArguments &cla);
 
-DQ convert_pose_to_measure_space(const DQ& x, const DQ_MeasureSpace& measure_space);
-VectorXd smart_vec(const DQ& x, const DQ_MeasureSpace& measure_space);
-MatrixXd convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const DQ_MeasureSpace& measure_space);
-MatrixXd get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const DQ_MeasureSpace& measure_space);
-int get_measure_space_dimension(const DQ_MeasureSpace& measure_space);
+DQ convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
+VectorXd smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
+MatrixXd convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const Example_MeasureSpace& measure_space);
+MatrixXd get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
+int get_measure_space_dimension(const Example_MeasureSpace& measure_space);

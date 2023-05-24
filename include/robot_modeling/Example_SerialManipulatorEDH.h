@@ -1,7 +1,8 @@
+#pragma once
 /**
 (C) Copyright 2029-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
-This file is part of DQ adaptive_control_example.
+This file is part of adaptive_control_example.
 
     DQ Robotics is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -22,22 +23,19 @@ Author:
 Contributors (aside from author):
     None
 */
-#ifndef DQ_SerialManipulatorEDH_H
-#define DQ_SerialManipulatorEDH_H
 
 #include <vector>
 #include <dqrobotics/DQ.h>
 #include <dqrobotics/robot_modeling/DQ_SerialManipulatorDH.h>
 
-namespace DQ_robotics
-{
+using namespace DQ_robotics;
 
 // Contains EDH parameters and EDH parameter types
-namespace DQ_ParameterSpaceEDH
+namespace Example_ParameterSpaceEDH
 {
 
 // EDH parameter types
-enum class ParameterType
+enum class Example_ParameterType
 {
     theta=1,
     d,
@@ -59,16 +57,15 @@ enum class ParameterType
     eff_gamma,
 };
 
-// EDH parameter
-struct Parameter
+struct Example_Parameter
 {
     int link_index_;
-    DQ_ParameterSpaceEDH::ParameterType type_;
+    Example_ParameterSpaceEDH::Example_ParameterType type_;
     double value_;
     double min_;
     double max_;
 
-    Parameter(const int& link_index, const DQ_ParameterSpaceEDH::ParameterType& type, const double& value=0, const double& min=0, const double& max=0):
+    Example_Parameter(const int& link_index, const Example_ParameterSpaceEDH::Example_ParameterType& type, const double& value=0, const double& min=0, const double& max=0):
         link_index_(link_index),
         type_(type),
         value_(value),
@@ -80,29 +77,28 @@ struct Parameter
 };
 }
 
-
-class DQ_SerialManipulatorEDH : public DQ_SerialManipulator
+class Example_SerialManipulatorEDH : public DQ_SerialManipulator
 {
 protected:
     MatrixXd dh_matrix_;
 
-    std::vector<DQ_ParameterSpaceEDH::Parameter> parameter_space_;
-    std::vector<DQ_ParameterSpaceEDH::Parameter> base_parameters_;
-    std::vector<DQ_ParameterSpaceEDH::Parameter> eff_parameters_;
+    std::vector<Example_ParameterSpaceEDH::Example_Parameter> parameter_space_;
+    std::vector<Example_ParameterSpaceEDH::Example_Parameter> base_parameters_;
+    std::vector<Example_ParameterSpaceEDH::Example_Parameter> eff_parameters_;
 
     void _check_link_index(const int& link_index) const;
     void _check_parameter_index(const int&parameter_index) const;
-    void _check_base_parameters(const std::vector<DQ_ParameterSpaceEDH::Parameter>& parameters);
-    void _check_eff_parameters(const std::vector<DQ_ParameterSpaceEDH::Parameter>& parameters);
+    void _check_base_parameters(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>& parameters);
+    void _check_eff_parameters(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>& parameters);
 
     DQ _dh2dq(const double& joint_value, const int& link_index) const;
     DQ _get_w(const int& link_index) const;
-    DQ _get_param_w(const double &joint_value, const DQ_ParameterSpaceEDH::Parameter& parameter) const;
-    DQ _get_base_param_w(const DQ_ParameterSpaceEDH::ParameterType &parameter_type) const;
-    DQ _get_eff_param_w(const DQ_ParameterSpaceEDH::ParameterType &parameter_type) const;
-    DQ_ParameterSpaceEDH::Parameter _get_parameter(const int& parameter_index) const;
-    double _get_parameter_space_value(const DQ_ParameterSpaceEDH::Parameter& parameter) const;
-    void _set_parameter_space_value(const DQ_ParameterSpaceEDH::Parameter& parameter, const double& value);
+    DQ _get_param_w(const double &joint_value, const Example_ParameterSpaceEDH::Example_Parameter& parameter) const;
+    DQ _get_base_param_w(const Example_ParameterSpaceEDH::Example_ParameterType &parameter_type) const;
+    DQ _get_eff_param_w(const Example_ParameterSpaceEDH::Example_ParameterType &parameter_type) const;
+    Example_ParameterSpaceEDH::Example_Parameter _get_parameter(const int& parameter_index) const;
+    double _get_parameter_space_value(const Example_ParameterSpaceEDH::Example_Parameter& parameter) const;
+    void _set_parameter_space_value(const Example_ParameterSpaceEDH::Example_Parameter& parameter, const double& value);
 
     VectorXd _parameter_pose_jacobian_col(const VectorXd& joint_values, const int& parameter_index, const int& to_ith_link) const;
 
@@ -115,21 +111,20 @@ public:
         JOINT_PRISMATIC
     };
 
-    DQ_SerialManipulatorEDH()=delete;
-    DQ_SerialManipulatorEDH(const MatrixXd& dh_matrix);
-
+    Example_SerialManipulatorEDH()=delete;
+    Example_SerialManipulatorEDH(const MatrixXd& dh_matrix);
 
     DQ get_base_frame() const;
-    std::vector<DQ_ParameterSpaceEDH::Parameter> get_base_parameters() const;
-    void set_base_frame(const std::vector<DQ_ParameterSpaceEDH::Parameter> &base_parameters);
+    std::vector<Example_ParameterSpaceEDH::Example_Parameter> get_base_parameters() const;
+    void set_base_frame(const std::vector<Example_ParameterSpaceEDH::Example_Parameter> &base_parameters);
     void set_base_frame(const DQ& base);
 
     DQ get_effector_frame() const;
-    std::vector<DQ_ParameterSpaceEDH::Parameter> get_effector_parameters() const;
-    void set_effector_frame(const std::vector<DQ_ParameterSpaceEDH::Parameter>& effector_parameters);
+    std::vector<Example_ParameterSpaceEDH::Example_Parameter> get_effector_parameters() const;
+    void set_effector_frame(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>& effector_parameters);
     void set_effector_frame(const DQ& effector);
 
-    void set_parameter_space(const std::vector<DQ_ParameterSpaceEDH::Parameter>& parameter_space);
+    void set_parameter_space(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>& parameter_space);
     bool is_parameter_space_set() const;
     int get_dim_parameter_space() const;
 
@@ -137,7 +132,7 @@ public:
     void set_parameter_space_values(const VectorXd& parameter_space_vector);
     void set_parameter_space_boundaries(const std::tuple<VectorXd, VectorXd>& boundaries);
     std::tuple<VectorXd,VectorXd> get_parameter_space_boundaries() const;
-    std::vector<DQ_ParameterSpaceEDH::ParameterType> get_parameter_types() const;
+    std::vector<Example_ParameterSpaceEDH::Example_ParameterType> get_parameter_types() const;
 
     VectorXd get_link_types() const;
     double get_link_type(const int& link_index) const;
@@ -175,7 +170,4 @@ public:
     MatrixXd raw_pose_jacobian_derivative(const VectorXd &q, const VectorXd &q_dot, const int &to_ith_link) const override;
 };
 
-}//Namespace DQ_robotics
-
-#endif//DQ_SerialManipulatorEDH_H_INCLUDED
 

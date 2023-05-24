@@ -2,7 +2,7 @@
 /**
 (C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
-This file is part of DQ adaptive_control_example.
+This file is part of adaptive_control_example.
 
     DQ Robotics is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -33,7 +33,7 @@ Contributors (aside from author):
 #include<dqrobotics/interfaces/vrep/DQ_VrepInterface.h>
 
 
-enum class DQ_Primitive
+enum class Example_Primitive
 {
     None=0,
     Point,
@@ -41,41 +41,41 @@ enum class DQ_Primitive
     Line
 };
 
-enum class VFI_Direction
+enum class Example_VFI_Direction
 {
     None=0,
     FORBIDDEN_ZONE,//-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
     SAFE_ZONE//Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
 };
 
-enum class VFI_DistanceType
+enum class Example_VFI_DistanceType
 {
     None=0,
     EUCLIDEAN,
     EUCLIDEAN_SQUARED
 };
 
-struct VFI_output
+struct Example_VFI_output
 {
     double real_distance;
     double estimated_distance;
-    VFI_output():
+    Example_VFI_output():
         real_distance(0),
         estimated_distance(0)
     {
     }
 };
 
-class VFI_Information
+class Example_VFI
 {
 private:
     std::string workspace_entity_name_;
     std::string robot_entity_name_;
-    DQ_Primitive type_;
+    Example_Primitive type_;
     DQ value_;
     std::shared_ptr<DQ_VrepInterface> vi_;
     double safe_distance_;
-    VFI_Direction vfi_direction_;
+    Example_VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
     const DQ relative_displacement_to_joint_;
     const std::string cs_reference_name_;
@@ -84,12 +84,12 @@ private:
     double last_estimated_distance_;
     double last_real_distance_;
 public:
-    VFI_Information(const std::string& workspace_entity_name,
+    Example_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
-                    const DQ_Primitive& type,
+                    const Example_Primitive& type,
                     const std::shared_ptr<DQ_VrepInterface>& vi,
                     const double& safe_distance,
-                    const VFI_Direction& vfi_direction,
+                    const Example_VFI_Direction& vfi_direction,
                     const int& joint_index,
                     const DQ& relative_displacement_to_joint,
                     const std::string& cs_reference_name=VREP_OBJECTNAME_ABSOLUTE);
@@ -110,7 +110,7 @@ public:
 
     double get_safe_distance() const;
 
-    VFI_DistanceType get_distance_type() const;
+    Example_VFI_DistanceType get_distance_type() const;
 
     void set_last_real_distance(const DQ& y);
 

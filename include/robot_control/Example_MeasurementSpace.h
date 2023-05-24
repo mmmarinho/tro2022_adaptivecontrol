@@ -2,7 +2,7 @@
 /**
 (C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
-This file is part of DQ adaptive_control_example.
+This file is part of adaptive_control_example.
 
     DQ Robotics is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -24,22 +24,14 @@ Contributors (aside from author):
     None
 */
 
-#include <vector>
-#include <dqrobotics/interfaces/vrep/DQ_SerialVrepRobot.h>
-#include <robot_modeling/DQ_SerialManipulatorEDH.h>
-
-namespace DQ_robotics
+enum class Example_MeasureSpace
 {
-class SmartArm1EDH: public DQ_SerialVrepRobot
-{
-public:
-    SmartArm1EDH(const std::string& robot_name,
-                 const std::shared_ptr<DQ_VrepInterface>& vrep_interface_sptr);
-
-    static DQ_SerialManipulatorEDH raw_kinematics();
-    DQ get_base_frame();
-    void set_base_frame(const DQ& base_frame, const std::string& reference_frame_name=VREP_OBJECTNAME_ABSOLUTE);
+    None=0,
+    Pose,
+    Rotation,
+    Translation,
+    Distance,
 };
-}
+
 
 
