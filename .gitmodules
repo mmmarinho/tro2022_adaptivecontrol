@@ -1,4 +1,4 @@
 [submodule "submodules/sas_core"]
 	path = submodules/sas_core
-	url = git@github.com:SmartArmStack/sas_core.git
+	url = https://github.com/SmartArmStack/sas_core.git
 	branch = ros2

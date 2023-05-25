@@ -227,7 +227,6 @@ int main(int argc, char** argv)
             DQ y = real_robot->fkm(q);
             vi->set_object_pose("x", y);
 
-            // Parameter adaptation law
             auto [uq, ua, x_tilde, y_tilde, y_partial] = adaptive_controller.compute_setpoint_control_signal(control_strategy,
                                                                                                              q,
                                                                                                              xd,
@@ -248,6 +247,7 @@ int main(int argc, char** argv)
             if(clock.get_elapsed_time_sec() > simulation_parameters.reference_timeout_sec*(xd_counter+1))
             {
                 std::cout << "Reference timeout for xd" << xd_counter << std::endl;
+                std::cout << "  Average computational time = " << clock.get_statistics(sas::Statistics::Mean,sas::Clock::TimeType::Computational) << " seconds." << std::endl;
                 std::cout << "  Clock overruns =" << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
                 std::cout << "  Final task pose error norm " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
                 std::cout << "  Final task translation error norm " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
