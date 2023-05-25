@@ -97,7 +97,7 @@ With all dependencies correctly configured,
 cd ~/git/tro2022_adaptivecontrol
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j16
 ```
 
