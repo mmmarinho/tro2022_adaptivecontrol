@@ -31,7 +31,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 - The red object represents the estimated robot, initially very wrong.
 - In seconds, the estimation converges by using measurements from a simulated sensor.
 - The robot then proceeds through the box, reaching the target poses, without collisions. 
-- Using a different solver, we obtain much faster calculation than compared with the experiments in the paper.
+- Using a different solver, we obtain much faster calculation when compared with the experiments in the original paper.
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
