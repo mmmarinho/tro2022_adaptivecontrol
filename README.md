@@ -104,7 +104,11 @@ make -j16
 # Running
 
 1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
-2. Run `~/git/tro2022_adaptivecontrol/build/adaptive_control_example`.
+2. Run
+```console
+cd ~/git/tro2022_adaptivecontrol/build
+./adaptive_control_example
+```
 
 # Tested on
 
