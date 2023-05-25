@@ -55,17 +55,29 @@ enum class Example_VFI_DistanceType
     EUCLIDEAN_SQUARED
 };
 
-struct Example_VFI_output
-{
-    double real_distance;
-    double estimated_distance;
-    Example_VFI_output():
-        real_distance(0),
-        estimated_distance(0)
-    {
-    }
-};
-
+/**
+ * @brief The Example_VFI class is an abstraction of VFIs to make them more configurable and easier to use.
+ *
+ * Implements some of the VFIs initially discussed in [1], below.
+ *
+ * [1] M. M. Marinho, B. V. Adorno, K. Harada and M. Mitsuishi,
+ * "Dynamic Active Constraints for Surgical Robots Using Vector-Field Inequalities,"
+ * in IEEE Transactions on Robotics, vol. 35, no. 5, pp. 1166-1185, Oct. 2019, doi: 10.1109/TRO.2019.2920078.
+ *
+ * This implementation was made in the context of [2], below.
+ *
+ * [2] M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022, doi: 10.1109/TRO.2022.3181047.
+ *
+ * and does not include all VFIs of [1].
+ *
+ * A more mature implementation is available at [3], below.
+ *
+ * [3] Design and Validation of a Multi-Arm Robotic Platform for Scientific Exploration
+ * Murilo Marques Marinho, Juan José Quiroz-Omaña, Kanako Harada
+ * https://arxiv.org/abs/2210.11877
+ */
 class Example_VFI
 {
 private:

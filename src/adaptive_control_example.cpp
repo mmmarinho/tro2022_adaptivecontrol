@@ -183,7 +183,7 @@ int main(int argc, char** argv)
      * has something to do in this example!
      * *********************************************************************/
 
-    std::cout << "[5] Trying to find suitable initial parameters..." << std::endl;
+    std::cout << "[5] Making our initial parameter estimate wrong, but plausible..." << std::endl;
 
     randomize_parameters(estimated_robot,
                          parameter_boundaries,

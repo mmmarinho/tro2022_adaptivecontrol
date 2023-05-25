@@ -39,6 +39,28 @@ Example_SerialManipulatorEDH::Example_SerialManipulatorEDH(const MatrixXd& dh_ma
 
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::get_base_frame Obtains the base of the robot, with
+ * respect to the measurement system, as a DQ.
+ *
+ * As described in the paper, the base transformation is **NOT** described using DH parameters.
+ * This serves to show that this work is not only for DH parameters.
+ * The base transformation is described by a 3D translation, followed by a rotation about
+ * the x-axis, the y-axis, and the z-axis. This choice was arbitrary and anything will do as long
+ * as _get_base_param_w is updated to match it.
+ *
+ * In the paper, we left DQ algebra in the sidelines to not distract the reader and further increase
+ * the length of the paper. However, for a possible implementation of this on DQ Robotics, it might
+ * be better to rewrite this and _get_base_param_w to use the DQ directly. Seems to be somewhat
+ * trivial as long as DQs are in the spotlight.
+ *
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ *
+ * @return a DQ representing the base of the robot.
+ */
 DQ Example_SerialManipulatorEDH::get_base_frame() const
 {
     if(base_parameters_.size()==6)
@@ -81,6 +103,13 @@ void Example_SerialManipulatorEDH::set_base_frame(const std::vector<Example_Para
     base_parameters_ = base_parameters;
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::set_base_frame Sets the base frame using base parameters.
+ *
+ * @param base a DQ to be broken into parameters.
+ *
+ * @see get_base_frame for a detailed explanation on the parameters.
+ */
 void Example_SerialManipulatorEDH::set_base_frame(const DQ &base)
 {
     //The vector constructor of Eigen3 changes the order of the quaternion with scalar last.
@@ -108,6 +137,14 @@ void Example_SerialManipulatorEDH::set_base_frame(const DQ &base)
     }
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::get_effector_frame Obtains the effector of the robot, with
+ * respect to the measurement system, as a DQ.
+ *
+ * @return a DQ representing the base of the robot.
+ *
+ * @see get_base_frame for a detailed explanation on the parameters.
+ */
 DQ Example_SerialManipulatorEDH::get_effector_frame() const
 {
     if(eff_parameters_.size()==6)
@@ -150,6 +187,14 @@ void Example_SerialManipulatorEDH::set_effector_frame(const std::vector<Example_
     eff_parameters_ = effector_parameters;
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::set_effector_frame Sets the effector of the robot, with
+ * respect to the measurement system, using a DQ.
+ *
+ * @param effector a DQ representing the effector of the robot.
+ *
+ * @see get_base_frame for a detailed explanation on the parameters.
+ */
 void Example_SerialManipulatorEDH::set_effector_frame(const DQ &effector)
 {
     //The vector constructor of Eigen3 changes the order of the quaternion with scalar last.
@@ -471,6 +516,19 @@ void Example_SerialManipulatorEDH::_check_eff_parameters(const std::vector<Examp
         std::runtime_error("Sixth parameter should be of type eff_gamma");
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::_dh2dq
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param joint_value
+ * @param link_index
+ * @return
+ */
 DQ Example_SerialManipulatorEDH::_dh2dq(const double &joint_value, const int &link_index) const
 {
     double half_theta = get_theta(link_index)/2.0;
@@ -511,7 +569,18 @@ DQ Example_SerialManipulatorEDH::_dh2dq(const double &joint_value, const int &li
                 );
 }
 
-
+/**
+ * @brief Example_SerialManipulatorEDH::_get_w
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param link_index
+ * @return
+ */
 DQ Example_SerialManipulatorEDH::_get_w(const int &link_index) const
 {
     const int link_type = int(get_link_type(link_index));
@@ -526,6 +595,12 @@ DQ Example_SerialManipulatorEDH::_get_w(const int &link_index) const
     }
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::_get_param_w An equivalent of _get_w for each parameter of the DH convention.
+ * @param joint_value the current joint value.
+ * @param parameter a Example_ParameterSpaceEDH::Example_Parameter containing all information of the parameter.
+ * @return a DQ representing the parameter's w.
+ */
 DQ Example_SerialManipulatorEDH::_get_param_w(const double& joint_value, const Example_ParameterSpaceEDH::Example_Parameter &parameter) const
 {
     double theta = get_theta(parameter.link_index_);
@@ -561,6 +636,11 @@ DQ Example_SerialManipulatorEDH::_get_param_w(const double& joint_value, const E
     }
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::_get_base_param_w An equivalent of _get_w for each parameter of the base transformation.
+ * @param parameter_type
+ * @return
+ */
 DQ Example_SerialManipulatorEDH::_get_base_param_w(const Example_ParameterSpaceEDH::Example_ParameterType &parameter_type) const
 {
     const double& x = base_parameters_.at(0).value_;
@@ -597,6 +677,15 @@ DQ Example_SerialManipulatorEDH::_get_base_param_w(const Example_ParameterSpaceE
     }
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::_get_eff_param_w An equivalent of _get_w for each parameter of the effector transformation.
+ *
+ * This implementation is slightly faster than _get_base_param_w, but I'm leaving both to illustrate two possible implementations.
+ * Note that _get_base_param_w and _get_eff_param_w should return precisely the same values, as they do the same calculation.
+ *
+ * @param parameter_type
+ * @return
+ */
 DQ Example_SerialManipulatorEDH::_get_eff_param_w(const Example_ParameterSpaceEDH::Example_ParameterType &parameter_type) const
 {
     const double& x = eff_parameters_.at(0).value_;
@@ -631,6 +720,19 @@ DQ Example_SerialManipulatorEDH::_get_eff_param_w(const Example_ParameterSpaceED
     }
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::raw_fkm
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param joint_values
+ * @param to_ith_link
+ * @return
+ */
 DQ Example_SerialManipulatorEDH::raw_fkm(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_link_index(to_ith_link);
@@ -643,6 +745,19 @@ DQ Example_SerialManipulatorEDH::raw_fkm(const VectorXd &joint_values, const int
     return x;
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::fkm
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param joint_values
+ * @param to_ith_link
+ * @return
+ */
 DQ Example_SerialManipulatorEDH::fkm(const VectorXd& joint_values, const int& to_ith_link) const
 {
     _check_q_vec(joint_values);
@@ -656,11 +771,36 @@ DQ Example_SerialManipulatorEDH::fkm(const VectorXd& joint_values, const int& to
     return x;
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::fkm
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param joint_values
+ * @return
+ */
 DQ Example_SerialManipulatorEDH::fkm(const VectorXd &joint_values) const
 {
     return fkm(joint_values, get_dim_configuration_space()-1);
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::pose_jacobian
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param joint_values
+ * @param to_ith_link
+ * @return
+ */
 MatrixXd Example_SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_q_vec(joint_values);
@@ -680,11 +820,37 @@ MatrixXd Example_SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_value
     return J;
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::pose_jacobian
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param joint_values
+ * @return
+ */
 MatrixXd Example_SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values) const
 {
     return pose_jacobian(joint_values, get_dim_configuration_space()-1);
 }
 
+
+/**
+ * @brief Example_SerialManipulatorEDH::raw_pose_jacobian
+ *
+ * At the time of first writing this class, it was the sandbox on many modifications in
+ * DQ_SerialManipulatorDH, but now probably many of these changes became part of the main code.
+ * This one might possibly be removed without loss.
+ *
+ * I'd recommend doing this after the next 23.04 (or later) release.
+ *
+ * @param joint_values
+ * @param to_ith_link
+ * @return
+ */
 MatrixXd Example_SerialManipulatorEDH::raw_pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_q_vec(joint_values);
@@ -704,6 +870,18 @@ MatrixXd Example_SerialManipulatorEDH::raw_pose_jacobian(const VectorXd &joint_v
     return J;
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::_parameter_pose_jacobian_col obtains the column of the pose Jacobian obtained from a parameter.
+ *
+ * The parameter_pose_jacobian, differently from the pose_jacobian related to the joint values, does not have an obvious order for the columns.
+ * In addition, depending on the robot we might want to adapt more or less parameters, so this implementation helps making it highly
+ * customizable.
+ *
+ * @param joint_values the vector of joint values.
+ * @param parameter_index the index of the parameters.
+ * @param to_ith_link up to which link of the robot should the parameter Jacobian column be calculated.
+ * @return the parameter pose Jacobian column.
+ */
 VectorXd Example_SerialManipulatorEDH::_parameter_pose_jacobian_col(const VectorXd& joint_values, const int& parameter_index, const int& to_ith_link) const
 {
     _check_parameter_index(parameter_index);
@@ -739,6 +917,15 @@ VectorXd Example_SerialManipulatorEDH::_parameter_pose_jacobian_col(const Vector
     return vec8(jp);
 }
 
+/**
+ * @brief Example_SerialManipulatorEDH::parameter_pose_jacobian obtains the the pose Jacobian obtained from the parameters.
+ *
+ * @see _parameter_pose_jacobian_col.
+ *
+ * @param joint_values
+ * @param to_ith_link
+ * @return
+ */
 MatrixXd Example_SerialManipulatorEDH::parameter_pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_q_vec(joint_values);

@@ -30,8 +30,10 @@ Contributors (aside from author):
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
  */
-#include "example/Example_VFI.h"
 
+
+
+#include "example/Example_VFI.h"
 
 Example_VFI::Example_VFI(const std::string &workspace_entity_name,
                                  const std::string& robot_entity_name,
