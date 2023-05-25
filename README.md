@@ -112,7 +112,7 @@ cd ~/git/tro2022_adaptivecontrol/build
 
 # Example console output of the results
 
-Running on a 8-core Ubuntu VM.
+Running on an 8 core Ubuntu VM.
 
 *Not considering the setup step prints*
 
