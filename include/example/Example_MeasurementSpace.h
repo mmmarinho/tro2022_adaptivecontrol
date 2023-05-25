@@ -24,6 +24,14 @@ Contributors (aside from author):
     None
 */
 
+/**
+ * @brief The Example_MeasureSpace enum represent the use cases discurssed in.
+ *
+ * M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ */
 enum class Example_MeasureSpace
 {
     None=0,

@@ -54,6 +54,24 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
     return {W, w};
 }
 
+/**
+ * @brief __closest_invariant_error a generalization of the switching error described in [1] for the different measure
+ * spaces described in [2]. Addresses the DQ double cover for the rotation and the pose controllers.
+ *
+ * [1] M. M. Marinho et al.,
+ * "A Unified Framework for the Teleoperation of Surgical Robots in Constrained Workspaces,"
+ * 2019 International Conference on Robotics and Automation (ICRA), Montreal, QC, Canada, 2019, pp. 2721-2727, doi: 10.1109/ICRA.2019.8794363.
+ *
+ * [2] M. M. Marinho and B. V. Adorno,
+ * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
+ * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
+ * doi: 10.1109/TRO.2022.3181047.
+ *
+ * @param x the current (partial) pose.
+ * @param xd the desired (partial) pose.
+ * @param measure_space see Example_MeasureSpace for possible values.
+ * @return the closest invariant error, and the closest invariant itself as 1 or -1.
+ */
 std::tuple<VectorXd,double> __closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& measure_space)
 {
     switch(measure_space)
