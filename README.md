@@ -110,6 +110,29 @@ cd ~/git/tro2022_adaptivecontrol/build
 ./adaptive_control_example
 ```
 
+# Example console output of the results
+
+Running on a 8-core Ubuntu VM.
+
+*Not considering the setup step prints*
+
+```console
+Reference timeout for xd0
+  Average computational time = 0.00126314 seconds.
+  Clock overruns =7 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm 2.37699e-15 (Dual quaternion norm).
+  Final task translation error norm 0 (in meters).
+  Final measurement error norm 9.3756e-16 (Dual quaternion norm).
+  Final measurement translation error norm 0 (in meters).
+Reference timeout for xd1
+  Average computational time = 0.000902905 seconds.
+  Clock overruns =7 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm 0.0225817 (Dual quaternion norm).
+  Final task translation error norm 0.044178 (in meters).
+  Final measurement error norm 0.000940036 (Dual quaternion norm).
+  Final measurement translation error norm 0.001836 (in meters).
+```
+
 # Tested on
 
 - Ubuntu 22.04 `5.19.0-41-generic #42~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 18 17:40:00 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`
