@@ -42,6 +42,18 @@ tar -xvf tro2022_adaptivecontrol_example.tar.xz
 cd ~/tro2022_adaptivecontrol_example
 ./run_example.sh
 ```
+## Troubleshooting
+
+If you have the error below when running the pre-compiled example, please use `Ubuntu 22.04` or later.
+
+```console
+./run_example.sh
+bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by bin/adaptive_control_example) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.34' not found (required by bin/adaptive_control_example)
+bin/adaptive_control_example: /lib/x86_64-linux-gnu/libstdc++.so.6: version GLIBCXX_3.4.29' not found (required by bin/adaptive_control_example) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by lib/libdqrobotics.so)
+bin/adaptive_control_example: /lib/x86_64-linux-gnu/libstdc++.so.6: version GLIBCXX_3.4.29' not found (required by lib/libdqrobotics-interface-vrep.so) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by lib/libdqrobotics-interface-vrep.so)
+bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found (required by lib/libdqrobotics-interface-vrep.so)
+```
+
 # Known limitations *of this example*/*TODO* list/*Extra info*
 
 - The stopping criterium is elapsed time, so it might not converge for all initial parameters.
@@ -116,6 +128,7 @@ Reference timeout for xd1
 # Tested on
 
 - Ubuntu 22.04 `5.19.0-41-generic #42~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 18 17:40:00 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`
+- g++ --version `g++ (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0`
 - CoppeliaSim EDU 5.4.1 (rev4)
 - DQ Robotics cpp as shown in the submodule information.
 - DQ Robotics cpp-interface-vrep as shown in the submodule information.
