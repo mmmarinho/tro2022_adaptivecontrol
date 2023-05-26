@@ -53,14 +53,6 @@ The robot model in CoppeliaSim is for visualization only.
 - A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
 - The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
 
-# Paper info
-
-## Video on Youtube
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=WntmyJe53gY" target="_blank">
- <img src="http://img.youtube.com/vi/WntmyJe53gY/hqdefault.jpg" alt="Watch the video" width="480" height="360" border="10" />
-</a>
-
 # Build from source
 
 ## Just in case
