@@ -31,6 +31,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 - The red object represents the estimated robot, initially very wrong.
 - In seconds, the estimation converges by using measurements from a simulated sensor.
 - The robot then proceeds through the box, reaching the target poses, without collisions. 
+- Using a different solver, we obtain much faster calculation when compared with the experiments in the original paper.
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
@@ -96,14 +97,41 @@ With all dependencies correctly configured,
 cd ~/git/tro2022_adaptivecontrol
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j16
 ```
 
 # Running
 
 1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
-2. Run `~/git/tro2022_adaptivecontrol/build/adaptive_control_example`.
+2. Run
+```console
+cd ~/git/tro2022_adaptivecontrol/build
+./adaptive_control_example
+```
+
+# Example console output of the results
+
+Running on an 8 core Ubuntu VM.
+
+*Not considering the setup step prints*
+
+```console
+Reference timeout for xd0
+  Average computational time = 0.00126314 seconds.
+  Clock overruns =7 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm 2.37699e-15 (Dual quaternion norm).
+  Final task translation error norm 0 (in meters).
+  Final measurement error norm 9.3756e-16 (Dual quaternion norm).
+  Final measurement translation error norm 0 (in meters).
+Reference timeout for xd1
+  Average computational time = 0.000902905 seconds.
+  Clock overruns =7 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm 0.0225817 (Dual quaternion norm).
+  Final task translation error norm 0.044178 (in meters).
+  Final measurement error norm 0.000940036 (Dual quaternion norm).
+  Final measurement translation error norm 0.001836 (in meters).
+```
 
 # Tested on
 
@@ -113,5 +141,5 @@ make -j16
 - DQ Robotics cpp-interface-vrep [`commit 67a5839074243e262de3a6c83439dc3a59492913`](https://github.com/dqrobotics/cpp-interface-vrep/commit/67a5839074243e262de3a6c83439dc3a59492913)
 - DQ Robotics cpp-interface-qpoases [`commit cdc2d6cbc6d67074267c38227b85bb1f14df8b14`](https://github.com/dqrobotics/cpp-interface-qpoases/commit/cdc2d6cbc6d67074267c38227b85bb1f14df8b14)
 - qpOASES [`commit 0b86dbf00c7fce34420bedc5914f71b176fe79d3`](https://github.com/coin-or/qpOASES/commit/0b86dbf00c7fce34420bedc5914f71b176fe79d3)
-- sas_core [`commit 696b2019c30d62e322030eec8a0c2bb2f3f7b3c8`](https://github.com/SmartArmStack/sas_core/commit/696b2019c30d62e322030eec8a0c2bb2f3f7b3c8)
+- sas_core as shown in the submodule information.
 
