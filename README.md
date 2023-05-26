@@ -28,7 +28,7 @@ https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e
 # Usage 
 
 ## Download & extract the standalone version (only do this once)
-```console
+```bash
 cd ~
 sudo apt install curl jq -y
 wget $(curl -sL https://api.github.com/repos/mmmarinho/tro2022_adaptivecontrol/releases/latest | jq -r '.assets[].browser_download_url')
@@ -38,7 +38,7 @@ tar -xvf tro2022_adaptivecontrol_example.tar.xz
 
 1. Open the example scene, namely `tro2022_adaptivecontrol_example/TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
 2. Run
-```console
+```bash
 cd ~/tro2022_adaptivecontrol_example
 ./run_example.sh
 ```
@@ -46,7 +46,7 @@ cd ~/tro2022_adaptivecontrol_example
 
 If you have the error below when running the pre-compiled example, please use `Ubuntu 22.04` or later.
 
-```console
+```bash
 ./run_example.sh
 bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by bin/adaptive_control_example) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.34' not found (required by bin/adaptive_control_example)
 bin/adaptive_control_example: /lib/x86_64-linux-gnu/libstdc++.so.6: version GLIBCXX_3.4.29' not found (required by bin/adaptive_control_example) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by lib/libdqrobotics.so)
@@ -96,7 +96,7 @@ chmod +x .build.sh
 
 1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
 2. Run
-```console
+```bash
 cd ~/git/tro2022_adaptivecontrol
 chmod +x .run.sh
 ./.run.sh
