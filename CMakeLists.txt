@@ -25,10 +25,11 @@ add_executable(${PROJECT_NAME}
 
 
 target_link_libraries(${PROJECT_NAME}
-    qpOASES
-
-    dqrobotics
-    dqrobotics-interface-vrep
-
+    ${CMAKE_SOURCE_DIR}/lib/libqpOASES.a
+    ${CMAKE_SOURCE_DIR}/lib/libdqrobotics.so
+    ${CMAKE_SOURCE_DIR}/lib/libdqrobotics-interface-vrep.so
     )
 
+install(TARGETS
+    ${PROJECT_NAME}
+    DESTINATION ${CMAKE_SOURCE_DIR}/bin/)

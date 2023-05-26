@@ -2,3 +2,15 @@
 	path = submodules/sas_core
 	url = https://github.com/SmartArmStack/sas_core.git
 	branch = ros2
+[submodule "submodules/dqrobotics/cpp"]
+	path = submodules/dqrobotics/cpp
+	url = https://github.com/dqrobotics/cpp.git
+[submodule "submodules/dqrobotics/cpp-interface-vrep"]
+	path = submodules/dqrobotics/cpp-interface-vrep
+	url = https://github.com/dqrobotics/cpp-interface-vrep.git
+[submodule "submodules/dqrobotics/cpp-interface-qpoases"]
+	path = submodules/dqrobotics/cpp-interface-qpoases
+	url = https://github.com/dqrobotics/cpp-interface-qpoases.git
+[submodule "submodules/qpOASES"]
+	path = submodules/qpOASES
+	url = https://github.com/coin-or/qpOASES.git

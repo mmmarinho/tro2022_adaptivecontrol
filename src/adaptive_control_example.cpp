@@ -205,15 +205,15 @@ int main(int argc, char** argv)
     Example_AdaptiveController adaptive_controller(estimated_robot,
                                                    simulation_parameters);
 
-    sas::Clock clock(simulation_parameters.sampling_time_sec);
-    clock.init();
-
     vi->start_video_recording();
     vi->start_simulation();
 
     /************************************************************************
      * For all xds
      * *********************************************************************/
+
+    sas::Clock clock(simulation_parameters.sampling_time_sec);
+    clock.init();
     for(int xd_counter = 0; xd_counter < xds.size(); xd_counter++)
     {
         const DQ& xd = xds[xd_counter];
@@ -248,12 +248,12 @@ int main(int argc, char** argv)
             {
                 std::cout << "Reference timeout for xd" << xd_counter << std::endl;
                 std::cout << "  Average computational time = " << clock.get_statistics(sas::Statistics::Mean,sas::Clock::TimeType::Computational) << " seconds." << std::endl;
-                std::cout << "  Clock overruns =" << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
-                std::cout << "  Final task pose error norm " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
-                std::cout << "  Final task translation error norm " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
-                std::cout << "  Final measurement error norm " << y_tilde.norm() << " (Dual quaternion norm)." << std::endl;
+                std::cout << "  Clock overruns = " << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
+                std::cout << "  Final task pose error norm = " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
+                std::cout << "  Final task translation error norm = " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
+                std::cout << "  Final measurement error norm = " << y_tilde.norm() << " (Dual quaternion norm)." << std::endl;
                 if(is_unit(y))
-                    std::cout << "  Final measurement translation error norm " << (translation(x_hat)-translation(y)).norm() << " (in meters)." << std::endl;
+                    std::cout << "  Final measurement translation error norm = " << (translation(x_hat)-translation(y)).norm() << " (in meters)." << std::endl;
                 else
                     std::cout << "  measurement translation error norm: y not unit" << std::endl;
                 break;
