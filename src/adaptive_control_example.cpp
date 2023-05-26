@@ -77,6 +77,9 @@ int main(int argc, char** argv)
 {
     signal(SIGINT, sig_int_handler);
 
+    try
+    {
+
     std::cout << "Example code for: \n"
                  "M. M. Marinho and B. V. Adorno\n"
                  "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements\n"
@@ -111,10 +114,12 @@ int main(int argc, char** argv)
     std::cout << "[1] Connecting to CoppeliaSim..." << std::endl;
 
     auto vi = std::make_shared<DQ_VrepInterface>();
-    if(!vi->connect("127.0.0.1",19997, 100, 100))
+    if(!vi->connect(19997, 100, 100))
     {
         vi->disconnect_all();
-        throw std::runtime_error("Failed to connect to CoppeliaSim.");
+        throw std::runtime_error("Failed to connect to CoppeliaSim. "
+                                 "Make sure that CoppeliaSim is running "
+                                 "with the correct scene file opened.");
     }
     vi->stop_simulation();
 
@@ -263,6 +268,12 @@ int main(int argc, char** argv)
     }
 
     vi->stop_simulation();
+
+    }
+    catch(const std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 
     return 0;
 }

@@ -26,7 +26,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
   pages        = {3498--3513}
 }
 ```
-# Example in this repo
+# Standalone Example
 
 - The red object represents the estimated robot, initially very wrong.
 - In seconds, the estimation converges by using measurements from a simulated sensor.
@@ -49,35 +49,16 @@ The robot model in CoppeliaSim is for visualization only.
 - A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
 - The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
 
-# Installation
+# Run the binary
+
+
+
+# Build from source
 
 ## Just in case
 
 ```bash
-sudo apt install g++ cmake git
-```
-
-## DQ Robotics Development 
-
-```bash
-sudo add-apt-repository ppa:dqrobotics-dev/development
-sudo apt-get update
-sudo apt-get install libdqrobotics*
-```
-
-## qpOASES
-
-```bash
-cd ~/Downloads
-git clone https://github.com/coin-or/qpOASES.git
-cd qpOASES
-sed -i -e 's/option(BUILD_SHARED_LIBS "If ON, build shared library instead of static" OFF)/option(BUILD_SHARED_LIBS "If ON, build shared library instead of static" ON)/g' CMakeLists.txt
-mkdir build
-cd build
-cmake ..
-make -j16
-sudo make install
-sudo ldconfig
+sudo apt install g++ cmake git libeigen3-dev
 ```
 
 ## Download the repo
@@ -89,16 +70,14 @@ cd git
 git clone https://github.com/mmmarinho/tro2022_adaptivecontrol.git --recursive
 ```
 
-# Build
+## Build
 
 With all dependencies correctly configured,
 
 ```bash
-cd ~/git/tro2022_adaptivecontrol
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j16
+cd ~/git/tro2022_adaptivecontrol.git
+chmod +x .build.sh
+./.build.sh
 ```
 
 # Running
@@ -106,8 +85,9 @@ make -j16
 1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
 2. Run
 ```console
-cd ~/git/tro2022_adaptivecontrol/build
-./adaptive_control_example
+cd ~/git/tro2022_adaptivecontrol.git
+chmod +x .run.sh
+./.run.sh
 ```
 
 # Example console output of the results
@@ -137,9 +117,9 @@ Reference timeout for xd1
 
 - Ubuntu 22.04 `5.19.0-41-generic #42~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 18 17:40:00 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`
 - CoppeliaSim EDU 5.4.1 (rev4)
-- DQ Robotics cpp [`commit 77acf9a42875ffb69e9f48f98f3950f9d7242c0e`](https://github.com/dqrobotics/cpp/commit/77acf9a42875ffb69e9f48f98f3950f9d7242c0e)
-- DQ Robotics cpp-interface-vrep [`commit 67a5839074243e262de3a6c83439dc3a59492913`](https://github.com/dqrobotics/cpp-interface-vrep/commit/67a5839074243e262de3a6c83439dc3a59492913)
-- DQ Robotics cpp-interface-qpoases [`commit cdc2d6cbc6d67074267c38227b85bb1f14df8b14`](https://github.com/dqrobotics/cpp-interface-qpoases/commit/cdc2d6cbc6d67074267c38227b85bb1f14df8b14)
-- qpOASES [`commit 0b86dbf00c7fce34420bedc5914f71b176fe79d3`](https://github.com/coin-or/qpOASES/commit/0b86dbf00c7fce34420bedc5914f71b176fe79d3)
+- DQ Robotics cpp as shown in the submodule information.
+- DQ Robotics cpp-interface-vrep as shown in the submodule information.
+- DQ Robotics cpp-interface-qpoases as shown in the submodule information.
+- qpOASES as shown in the submodule information.
 - sas_core as shown in the submodule information.
 
