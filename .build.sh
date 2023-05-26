@@ -31,7 +31,7 @@ BUILD(){
   rm -rf build
   mkdir build
   cd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=${repo_root_dir}
+  cmake .. -DCMAKE_INSTALL_PREFIX=${repo_root_dir} -DCMAKE_BUILD_TYPE=Release
   if [ -z $variable ]
     then
       make -j${phycores}
