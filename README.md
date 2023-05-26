@@ -2,6 +2,15 @@
 
 Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047).
 
+# Standalone Example
+
+- The red object represents the estimated robot, initially very wrong.
+- In seconds, the estimation converges by using measurements from a simulated sensor.
+- The robot then proceeds through the box, reaching the target poses, without collisions. 
+- Using a different solver, we obtain much faster calculation when compared with the experiments in the original paper.
+
+https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
+
 # Usage 
 
 ## Download & extract the standalone version (only do this once)
@@ -20,13 +29,15 @@ cd ~/tro2022_adaptivecontrol_example
 ./run_example.sh
 ```
 
-# Video on YouTube
+# Paper info
+
+## Video on Youtube
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=WntmyJe53gY" target="_blank">
  <img src="http://img.youtube.com/vi/WntmyJe53gY/hqdefault.jpg" alt="Watch the video" width="480" height="360" border="10" />
 </a>
 
-# Citation
+## Citation
 
 ```bib
 @Article{marinhoandadorno2022adaptive,
@@ -44,15 +55,6 @@ cd ~/tro2022_adaptivecontrol_example
   pages        = {3498--3513}
 }
 ```
-# Standalone Example
-
-- The red object represents the estimated robot, initially very wrong.
-- In seconds, the estimation converges by using measurements from a simulated sensor.
-- The robot then proceeds through the box, reaching the target poses, without collisions. 
-- Using a different solver, we obtain much faster calculation when compared with the experiments in the original paper.
-
-https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
-
 ## Known limitations, *TODO* list
 
 - The stopping criterium is elapsed time, so it might not converge for all initial parameters.
