@@ -87,7 +87,7 @@ git clone https://github.com/mmmarinho/tro2022_adaptivecontrol.git --recursive
 With all dependencies correctly configured,
 
 ```bash
-cd ~/git/tro2022_adaptivecontrol.git
+cd ~/git/tro2022_adaptivecontrol
 chmod +x .build.sh
 ./.build.sh
 ```
@@ -97,7 +97,7 @@ chmod +x .build.sh
 1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
 2. Run
 ```console
-cd ~/git/tro2022_adaptivecontrol.git
+cd ~/git/tro2022_adaptivecontrol
 chmod +x .run.sh
 ./.run.sh
 ```
