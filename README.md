@@ -2,12 +2,26 @@
 
 Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047).
 
+```bib
+@Article{marinhoandadorno2022adaptive,
+  author       = {Marinho, M. M. and Adorno, B. V.},
+  title        = {Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements},
+  journal      = {IEEE Transactions on Robotics (T-RO)},
+  year         = {2022},
+  month        = dec,
+  doi          = {10.1109/TRO.2022.3181047},
+  volume       = {38},
+  number       = {6},
+  pages        = {3498--3513}
+}
+```
+
 # Standalone Example
 
-- The red object represents the estimated robot, initially very wrong.
-- In seconds, the estimation converges by using measurements from a simulated sensor.
-- The robot then proceeds through the box, reaching the target poses, without collisions. 
-- Using a different solver, we obtain much faster calculation when compared with the experiments in the original paper.
+- The red object represents the estimated robot, initially very wrong **on purpose** to evaluate the adaptation.
+- The estimation usually converges within a few seconds by using measurements from a simulated sensor.
+- Simultaneously, the robot proceeds through the box, toward the target poses, without collisions. 
+- You can change the pose of the `xd0` and `xd1` objects in the scene, as long as you do it **before** the simulation starts.
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
@@ -28,6 +42,16 @@ tar -xvf tro2022_adaptivecontrol_example.tar.xz
 cd ~/tro2022_adaptivecontrol_example
 ./run_example.sh
 ```
+# Known limitations *of this example*/*TODO* list/*Extra info*
+
+- The stopping criterium is elapsed time, so it might not converge for all initial parameters.
+- The initial convergence to measurements mentioned in the paper *TODO* for this example.
+- The estimated model is randomized so it might start in an implausible zone. Fixing this is *TODO* for this example.
+- Sample code for partial measurements is included, but they have not been tested in this example, only in the physical robot.
+- The adaptation is supposed to move the parameters of the `estimated_robot` towards ideal kinematic model, defined by `real_robot` in the code. 
+The robot model in CoppeliaSim is for visualization only.
+- A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
+- The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
 
 # Paper info
 
@@ -36,38 +60,6 @@ cd ~/tro2022_adaptivecontrol_example
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=WntmyJe53gY" target="_blank">
  <img src="http://img.youtube.com/vi/WntmyJe53gY/hqdefault.jpg" alt="Watch the video" width="480" height="360" border="10" />
 </a>
-
-## Citation
-
-```bib
-@Article{marinhoandadorno2022adaptive,
-  author       = {Marinho, M. M. and Adorno, B. V.},
-  title        = {Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements},
-  journal      = {IEEE Transactions on Robotics (T-RO)},
-  year         = {2022},
-  month        = dec,
-  doi          = {10.1109/TRO.2022.3181047},
-  url          = {https://arxiv.org/pdf/2109.06375.pdf},
-  url_video    = {https://youtu.be/WntmyJe53gY},
-  custom_type  = {1. Journal Paper},
-  volume       = {38},
-  number       = {6},
-  pages        = {3498--3513}
-}
-```
-## Known limitations, *TODO* list
-
-- The stopping criterium is elapsed time, so it might not converge for all initial parameters.
-- The initial convergence to measurements implemented in the experiments is *TODO* for this example.
-- The estimated model is randomized so it might start in an implausible zone. Fixing this it *TODO* for this example.
-- Sample code for partial measurements is included, but they have not been tested in this example, only in the physical robot.
-
-## Extra info
-
-- The adaptation is supposed to move the parameters of the `estimated_robot` towards ideal kinematic model, defined by `real_robot` in the code. 
-The robot model in CoppeliaSim is for visualization only.
-- A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
-- The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
 
 # Build from source
 
