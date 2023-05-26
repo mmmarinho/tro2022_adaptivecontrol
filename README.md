@@ -2,6 +2,24 @@
 
 Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047).
 
+# Usage 
+
+## Download standalone version (only once)
+```console
+cd ~
+sudo apt install curl jq -y
+wget $(curl -sL https://api.github.com/repos/mmmarinho/tro2022_adaptivecontrol/releases/latest | jq -r '.assets[].browser_download_url')
+tar -xvf tro2022_adaptivecontrol_example.tar.xz
+```
+## Running
+
+1. Open the example scene, namely `tro2022_adaptivecontrol_example/TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
+2. Run
+```console
+cd ~/tro2022_adaptivecontrol_example
+./run_example.sh
+```
+
 # Video on YouTube
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=WntmyJe53gY" target="_blank">
@@ -48,10 +66,6 @@ https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e
 The robot model in CoppeliaSim is for visualization only.
 - A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
 - The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
-
-# Run the binary
-
-
 
 # Build from source
 
