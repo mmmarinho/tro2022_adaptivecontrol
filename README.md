@@ -4,7 +4,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 
 # Usage 
 
-## Download standalone version (only once)
+## Download & extract the standalone version (only do this once)
 ```console
 cd ~
 sudo apt install curl jq -y
