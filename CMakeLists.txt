@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
+find_package(Threads REQUIRED)
+
 project(adaptive_control_example LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -28,6 +30,7 @@ target_link_libraries(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/lib/libqpOASES.a
     ${CMAKE_SOURCE_DIR}/lib/libdqrobotics.so
     ${CMAKE_SOURCE_DIR}/lib/libdqrobotics-interface-vrep.so
+    Threads::Threads
     )
 
 install(TARGETS
