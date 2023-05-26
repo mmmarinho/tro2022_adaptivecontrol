@@ -26,7 +26,7 @@ pkg_array=(
 # Get the current directory
 repo_root_dir=`pwd`
 # For this shell, we add the local include folder
-export CXXFLAGS=-isystem\ ${repo_root_dir}/include
+export CXXFLAGS=-isystem\ ${repo_root_dir}/include\ -L${repo_root_dir}/lib
 
 ####################################
 # TRY TO GET THE NUMBER OF CORES

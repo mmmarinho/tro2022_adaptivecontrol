@@ -8,6 +8,15 @@ add_compile_options(-Werror=return-type)
 
 find_package(Threads REQUIRED)
 
+if(APPLE)
+    INCLUDE_DIRECTORIES(
+        /usr/local/include/
+        /usr/local/include/eigen3
+        # Most recent versions of brew install here
+        /opt/homebrew/include
+        /opt/homebrew/include/eigen3)
+endif()
+
 include_directories(
     include
     submodules/sas_core/include
@@ -27,9 +36,9 @@ add_executable(${PROJECT_NAME}
 
 
 target_link_libraries(${PROJECT_NAME}
-    ${CMAKE_SOURCE_DIR}/lib/libqpOASES.a
-    ${CMAKE_SOURCE_DIR}/lib/libdqrobotics.so
-    ${CMAKE_SOURCE_DIR}/lib/libdqrobotics-interface-vrep.so
+    -lqpOASES
+    -ldqrobotics
+    -ldqrobotics-interface-vrep
     Threads::Threads
     )
 

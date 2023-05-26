@@ -425,7 +425,7 @@ std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_VrepInt
                                    std::get<2>(tp),
                                    Example_Primitive::Line,
                                    vi,
-                                   powf64x(std::get<double>(tp)+tube_distance, 2.),
+                                   std::pow(std::get<double>(tp)+tube_distance, 2.),
                                    Example_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
@@ -435,7 +435,7 @@ std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_VrepInt
                                    std::get<2>(tp),
                                    Example_Primitive::Line,
                                    vi,
-                                   powf64x(std::get<double>(tp)+tube_distance, 2.),
+                                   std::pow(std::get<double>(tp)+tube_distance, 2.),
                                    Example_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
