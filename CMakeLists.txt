@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 
-find_package(Threads REQUIRED)
-
 project(adaptive_control_example LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Werror=return-type)
+
+find_package(Threads REQUIRED)
 
 include_directories(
     include
