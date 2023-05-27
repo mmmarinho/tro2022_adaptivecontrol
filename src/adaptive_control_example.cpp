@@ -80,194 +80,203 @@ int main(int argc, char** argv)
     try
     {
 
-    std::cout << "Example code for: \n"
-                 "M. M. Marinho and B. V. Adorno\n"
-                 "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements\n"
-                 "in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022\n"
-                 "doi: 10.1109/TRO.2022.3181047\n"
-              << std::endl;
+        std::cout << "Example code for: \n"
+                     "M. M. Marinho and B. V. Adorno\n"
+                     "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements\n"
+                     "in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022\n"
+                     "doi: 10.1109/TRO.2022.3181047\n"
+                  << std::endl;
 
-    std::cout << "Disclaimer: \n"
-                 "This code has been modified from the one used in the paper's experiments to not depend\n"
-                 "on ROS, sensors, etc.\n"
-                 "Bugs might be present, so report them at https://github.com/mmmarinho/tro2022_adaptivecontrol/issues\n"
-              << std::endl;
+        std::cout << "Disclaimer: \n"
+                     "This code has been modified from the one used in the paper's experiments to not depend\n"
+                     "on ROS, sensors, etc.\n"
+                     "Bugs might be present, so report them at https://github.com/mmmarinho/tro2022_adaptivecontrol/issues\n"
+                  << std::endl;
 
-    /*
-     * The behavior is somewhat robust to the change in parameters, and by choosing the ones below
-     * there's no claim that they are optimal for any case, even only for this example.
-    */
-    Example_SimulationParameters simulation_parameters;
-    simulation_parameters.measure_space = Example_MeasureSpace::Pose;
-    simulation_parameters.proportional_gain = 20.0;
-    simulation_parameters.vfi_gain = 5;
-    simulation_parameters.vfi_weight = 0.02;
-    simulation_parameters.damping = 0.01;
-    simulation_parameters.use_adaptation = true;
-    simulation_parameters.sampling_time_sec = 0.08; //The physical VS050 have a default joint control frequency of 125 Hz
-    simulation_parameters.reference_timeout_sec = 60;
+        /// The behavior is somewhat robust to the change in parameters, and by choosing the ones below
+        /// there's no claim that they are optimal for any case, even only for this example.
 
-    /************************************************************************
-     * Connect to CoppeliaSim
-     * *********************************************************************/
+        Example_SimulationParameters simulation_parameters;
+        simulation_parameters.measure_space = Example_MeasureSpace::Pose;
+        simulation_parameters.proportional_gain = 20.0;
+        simulation_parameters.vfi_gain = 5;
+        simulation_parameters.vfi_weight = 0.02;
+        simulation_parameters.damping = 0.01;
+        simulation_parameters.use_adaptation = true;
+        simulation_parameters.sampling_time_sec = 0.08; //The physical VS050 have a default joint control frequency of 125 Hz
+        simulation_parameters.reference_timeout_sec = 60;
 
-    std::cout << "[1] Connecting to CoppeliaSim..." << std::endl;
+        /// *********************************************************************
+        /// Connect to CoppeliaSim
+        /// *********************************************************************
 
-    auto vi = std::make_shared<DQ_VrepInterface>();
-    if(!vi->connect(19997, 100, 100))
-    {
-        vi->disconnect_all();
-        throw std::runtime_error("Failed to connect to CoppeliaSim. "
-                                 "Make sure that CoppeliaSim is running "
-                                 "with the correct scene file opened.");
-    }
-    vi->stop_simulation();
+        std::cout << "[1] Connecting to CoppeliaSim..." << std::endl;
 
-    /************************************************************************
-     * CoppeliaSim Robot and Models
-     * *********************************************************************/
-
-    std::cout << "[2] Initializing CoppeliaSim robot and models..." << std::endl;
-
-    Example_VS050VrepRobot real_robot_in_vrep("VS050", vi);
-    VectorXd q_init(real_robot_in_vrep.get_configuration_space_positions());
-    VectorXd q(q_init);
-
-    //Real base (representing the ideal robot parameters)
-
-    DQ real_base_frame(real_robot_in_vrep.get_base_frame());
-
-    //Real effector (from the CAD model)
-
-    const DQ& r = cos(-pi/4.0) + i_*sin(-pi/4.0);
-    const DQ& effector_frame = r + 0.5 * E_ * k_ * 0.15688 * r;
-
-    //Real robot (representing the ideal robot parameters)
-
-    auto real_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
-    real_robot->set_base_frame(real_base_frame);
-    real_robot->set_effector_frame(effector_frame);
-    set_parameter_space_boundaries(real_robot);
-
-    //Estimated robot (the estimated kinematic model, the one that needs adaptation)
-
-    auto estimated_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
-    estimated_robot->set_base_frame(real_base_frame);
-    estimated_robot->set_effector_frame(effector_frame);
-    set_parameter_space_boundaries(estimated_robot);
-
-    auto parameter_boundaries = estimated_robot->get_parameter_space_boundaries();
-    //Velocity limits (simplified, this also helps to keep the real robot from moving too fast)
-    const double& ROBOT_JOINT_VELOCITY_LIMIT = 0.1;
-    estimated_robot->set_upper_q_dot_limit(ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
-    estimated_robot->set_lower_q_dot_limit(-ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
-
-    /************************************************************************
-     * Initialize xd
-     * *********************************************************************/
-
-    std::cout << "[3] Initializing xd..." << std::endl;
-
-    const DQ& xd_1 = vi->get_object_pose("xd1");
-    const DQ& xd_0 = vi->get_object_pose("xd0");
-    std::vector<DQ> xds = {
-        xd_0, //Safe approach prior DQ (Going)
-        xd_1, //Target DQ
-    };
-
-    /************************************************************************
-     * Initialize VFIs
-     * *********************************************************************/
-
-    std::cout << "[4] Initializing VFIs..." << std::endl;
-
-    std::vector<Example_VFI> vfis(get_example_scene_vfis(vi));
-
-    /************************************************************************
-     * Randomize the estimated parameters, so that our adaptive controller
-     * has something to do in this example!
-     * *********************************************************************/
-
-    std::cout << "[5] Making our initial parameter estimate wrong, but plausible..." << std::endl;
-
-    randomize_parameters(estimated_robot,
-                         parameter_boundaries,
-                         q,
-                         vfis);
-
-    VectorXd a_hat(estimated_robot->get_parameter_space_values());
-
-    /************************************************************************
-     * Adaptive Control Loop
-     * *********************************************************************/
-
-    std::cout << "[6] Initializing Adaptive Control..." << std::endl;
-
-    //Other states are only needed for real sensors that have noise, lost measurements etc.
-    //Things that don't happen with a simulated sensor
-    std::cout << "Starting with DQ_AdaptiveControlStrategy::FULL" << std::endl;
-    Example_AdaptiveControlStrategy control_strategy(Example_AdaptiveControlStrategy::FULL);
-    Example_AdaptiveController adaptive_controller(estimated_robot,
-                                                   simulation_parameters);
-
-    vi->start_video_recording();
-    vi->start_simulation();
-
-    /************************************************************************
-     * For all xds
-     * *********************************************************************/
-
-    sas::Clock clock(simulation_parameters.sampling_time_sec);
-    clock.init();
-    for(int xd_counter = 0; xd_counter < xds.size(); xd_counter++)
-    {
-        const DQ& xd = xds[xd_counter];
-
-        while(!kill_this_process)
+        auto vi = std::make_shared<DQ_VrepInterface>();
+        if(!vi->connect(19997, 100, 100))
         {
-            const DQ& x_hat = estimated_robot->fkm(q);
-            vi->set_object_pose("x_hat",  x_hat);
-
-
-            DQ y = real_robot->fkm(q);
-            vi->set_object_pose("x", y);
-
-            auto [uq, ua, x_tilde, y_tilde, y_partial] = adaptive_controller.compute_setpoint_control_signal(control_strategy,
-                                                                                                             q,
-                                                                                                             xd,
-                                                                                                             y,
-                                                                                                             vfis);
-
-            if(simulation_parameters.use_adaptation)
-            {
-                a_hat += ua*simulation_parameters.sampling_time_sec;
-                estimated_robot->set_parameter_space_values(a_hat);
-            }
-
-            q += uq*simulation_parameters.sampling_time_sec;
-            real_robot_in_vrep.set_configuration_space_positions(q);
-
-            clock.update_and_sleep();
-
-            if(clock.get_elapsed_time_sec() > simulation_parameters.reference_timeout_sec*(xd_counter+1))
-            {
-                std::cout << "Reference timeout for xd" << xd_counter << std::endl;
-                std::cout << "  Average computational time = " << clock.get_statistics(sas::Statistics::Mean,sas::Clock::TimeType::Computational) << " seconds." << std::endl;
-                std::cout << "  Clock overruns = " << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
-                std::cout << "  Final task pose error norm = " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
-                std::cout << "  Final task translation error norm = " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
-                std::cout << "  Final measurement error norm = " << y_tilde.norm() << " (Dual quaternion norm)." << std::endl;
-                if(is_unit(y))
-                    std::cout << "  Final measurement translation error norm = " << (translation(x_hat)-translation(y)).norm() << " (in meters)." << std::endl;
-                else
-                    std::cout << "  measurement translation error norm: y not unit" << std::endl;
-                break;
-            }
-
+            vi->disconnect_all();
+            throw std::runtime_error("Failed to connect to CoppeliaSim. "
+                                     "Make sure that CoppeliaSim is running "
+                                     "with the correct scene file opened."
+                         #ifdef __OSX_AVAILABLE
+                                     "\nFor macos users, note that 'simRemoteApi.start(19997)' "
+                                     "must be added to the main script and the simulation "
+                                     "must be started before running this example. "
+                         #endif
+                                     );
         }
-    }
 
-    vi->stop_simulation();
+#ifndef __OSX_AVAILABLE
+        //Limitations in CoppeliaSim on macos make this directive to not play well with macos
+        vi->stop_simulation();
+#endif
+
+        /// ************************************************************************
+        /// CoppeliaSim Robot and Models
+        /// ************************************************************************
+
+        std::cout << "[2] Initializing CoppeliaSim robot and models..." << std::endl;
+
+        Example_VS050VrepRobot real_robot_in_vrep("VS050", vi);
+        VectorXd q_init(real_robot_in_vrep.get_configuration_space_positions());
+        VectorXd q(q_init);
+
+        //Real base (representing the ideal robot parameters)
+
+        DQ real_base_frame(real_robot_in_vrep.get_base_frame());
+
+        //Real effector (from the CAD model)
+
+        const DQ& r = cos(-pi/4.0) + i_*sin(-pi/4.0);
+        const DQ& effector_frame = r + 0.5 * E_ * k_ * 0.15688 * r;
+
+        //Real robot (representing the ideal robot parameters)
+
+        auto real_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
+        real_robot->set_base_frame(real_base_frame);
+        real_robot->set_effector_frame(effector_frame);
+        set_parameter_space_boundaries(real_robot);
+
+        //Estimated robot (the estimated kinematic model, the one that needs adaptation)
+
+        auto estimated_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
+        estimated_robot->set_base_frame(real_base_frame);
+        estimated_robot->set_effector_frame(effector_frame);
+        set_parameter_space_boundaries(estimated_robot);
+
+        auto parameter_boundaries = estimated_robot->get_parameter_space_boundaries();
+        //Velocity limits (simplified, this also helps to keep the real robot from moving too fast)
+        const double& ROBOT_JOINT_VELOCITY_LIMIT = 0.1;
+        estimated_robot->set_upper_q_dot_limit(ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
+        estimated_robot->set_lower_q_dot_limit(-ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
+
+        /// ************************************************************************
+        /// Initialize xd
+        /// ************************************************************************
+
+        std::cout << "[3] Initializing xd..." << std::endl;
+
+        const DQ& xd_1 = vi->get_object_pose("xd1");
+        const DQ& xd_0 = vi->get_object_pose("xd0");
+        std::vector<DQ> xds = {
+            xd_0, //Safe approach prior DQ (Going)
+            xd_1, //Target DQ
+        };
+
+        /// ************************************************************************
+        /// Initialize VFIs
+        /// ************************************************************************
+
+        std::cout << "[4] Initializing VFIs..." << std::endl;
+
+        std::vector<Example_VFI> vfis(get_example_scene_vfis(vi));
+
+        /// ************************************************************************
+        /// Randomize the estimated parameters, so that our adaptive controller
+        /// has something to do in this example!
+        /// ************************************************************************
+
+        std::cout << "[5] Making our initial parameter estimate wrong, but plausible..." << std::endl;
+
+        randomize_parameters(estimated_robot,
+                             parameter_boundaries,
+                             q,
+                             vfis);
+
+        VectorXd a_hat(estimated_robot->get_parameter_space_values());
+
+        /// ************************************************************************
+        /// Adaptive Control Loop
+        /// ************************************************************************
+
+        std::cout << "[6] Initializing Adaptive Control..." << std::endl;
+
+        //Other states are only needed for real sensors that have noise, lost measurements etc.
+        //Things that don't happen with a simulated sensor
+        std::cout << "Starting with DQ_AdaptiveControlStrategy::FULL" << std::endl;
+        Example_AdaptiveControlStrategy control_strategy(Example_AdaptiveControlStrategy::FULL);
+        Example_AdaptiveController adaptive_controller(estimated_robot,
+                                                       simulation_parameters);
+
+        vi->start_video_recording();
+        vi->start_simulation();
+
+        /// ************************************************************************
+        /// For all xds
+        /// ************************************************************************
+
+        sas::Clock clock(simulation_parameters.sampling_time_sec);
+        clock.init();
+        for(int xd_counter = 0; xd_counter < xds.size(); xd_counter++)
+        {
+            const DQ& xd = xds[xd_counter];
+
+            while(!kill_this_process)
+            {
+                const DQ& x_hat = estimated_robot->fkm(q);
+                vi->set_object_pose("x_hat",  x_hat);
+
+
+                DQ y = real_robot->fkm(q);
+                vi->set_object_pose("x", y);
+
+                auto [uq, ua, x_tilde, y_tilde, y_partial] = adaptive_controller.compute_setpoint_control_signal(control_strategy,
+                        q,
+                        xd,
+                        y,
+                        vfis);
+
+                        if(simulation_parameters.use_adaptation)
+                {
+                    a_hat += ua*simulation_parameters.sampling_time_sec;
+                    estimated_robot->set_parameter_space_values(a_hat);
+                }
+
+                q += uq*simulation_parameters.sampling_time_sec;
+                real_robot_in_vrep.set_configuration_space_positions(q);
+
+                clock.update_and_sleep();
+
+                if(clock.get_elapsed_time_sec() > simulation_parameters.reference_timeout_sec*(xd_counter+1))
+                {
+                    std::cout << "Reference timeout for xd" << xd_counter << std::endl;
+                    std::cout << "  Average computational time = " << clock.get_statistics(sas::Statistics::Mean,sas::Clock::TimeType::Computational) << " seconds." << std::endl;
+                    std::cout << "  Clock overruns = " << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
+                    std::cout << "  Final task pose error norm = " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
+                    std::cout << "  Final task translation error norm = " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
+                    std::cout << "  Final measurement error norm = " << y_tilde.norm() << " (Dual quaternion norm)." << std::endl;
+                    if(is_unit(y))
+                        std::cout << "  Final measurement translation error norm = " << (translation(x_hat)-translation(y)).norm() << " (in meters)." << std::endl;
+                    else
+                        std::cout << "  measurement translation error norm: y not unit" << std::endl;
+                    break;
+                }
+
+            }
+        }
+
+        vi->stop_simulation();
 
     }
     catch(const std::exception& e)
