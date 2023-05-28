@@ -57,7 +57,6 @@ struct Example_SimulationParameters
     double vfi_gain;
     double vfi_weight;
     double damping;
-    bool use_adaptation;
     double sampling_time_sec;
     double reference_timeout_sec;
 };

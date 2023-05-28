@@ -73,7 +73,7 @@ void randomize_parameters(const std::shared_ptr<Example_SerialManipulatorEDH> &e
                           const std::vector<Example_VFI> &vfis);
 
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
     signal(SIGINT, sig_int_handler);
 
@@ -102,7 +102,6 @@ int main(int argc, char** argv)
         simulation_parameters.vfi_gain = 5;
         simulation_parameters.vfi_weight = 0.02;
         simulation_parameters.damping = 0.01;
-        simulation_parameters.use_adaptation = true;
         simulation_parameters.sampling_time_sec = 0.08; //The physical VS050 have a default joint control frequency of 125 Hz
         simulation_parameters.reference_timeout_sec = 60;
 
@@ -140,7 +139,6 @@ int main(int argc, char** argv)
 
         Example_VS050VrepRobot real_robot_in_vrep("VS050", vi);
         VectorXd q_init(real_robot_in_vrep.get_configuration_space_positions());
-        VectorXd q(q_init);
 
         //Real base (representing the ideal robot parameters)
 
@@ -201,78 +199,97 @@ int main(int argc, char** argv)
 
         randomize_parameters(estimated_robot,
                              parameter_boundaries,
-                             q,
+                             q_init,
                              vfis);
 
-        VectorXd a_hat(estimated_robot->get_parameter_space_values());
+        VectorXd a_hat_init(estimated_robot->get_parameter_space_values());
 
         /// ************************************************************************
         /// Adaptive Control Loop
         /// ************************************************************************
 
-        std::cout << "[6] Initializing Adaptive Control..." << std::endl;
-
-        //Other states are only needed for real sensors that have noise, lost measurements etc.
-        //Things that don't happen with a simulated sensor
-        std::cout << "Starting with DQ_AdaptiveControlStrategy::FULL" << std::endl;
-        Example_AdaptiveControlStrategy control_strategy(Example_AdaptiveControlStrategy::FULL);
         Example_AdaptiveController adaptive_controller(estimated_robot,
                                                        simulation_parameters);
 
+#ifndef __OSX_AVAILABLE
         vi->start_video_recording();
         vi->start_simulation();
+#endif
+
 
         /// ************************************************************************
-        /// For all xds
+        /// Run once with adaptation and once without adaptation
         /// ************************************************************************
-
-        sas::Clock clock(simulation_parameters.sampling_time_sec);
-        clock.init();
-        for(int xd_counter = 0; xd_counter < xds.size(); xd_counter++)
+        for(const auto& control_strategy : {Example_AdaptiveControlStrategy::FULL,
+            Example_AdaptiveControlStrategy::TASK_ONLY})
         {
-            const DQ& xd = xds[xd_counter];
+            VectorXd q = q_init;
+            real_robot_in_vrep.set_configuration_space_positions(q_init);
+            estimated_robot->set_parameter_space_values(a_hat_init);
+            VectorXd a_hat = a_hat_init;
 
-            while(!kill_this_process)
+            if(control_strategy == Example_AdaptiveControlStrategy::FULL)
             {
-                const DQ& x_hat = estimated_robot->fkm(q);
-                vi->set_object_pose("x_hat",  x_hat);
+                std::cout << "[6] Running with full adaptation. " << std::endl;
+            }
+            else if(control_strategy == Example_AdaptiveControlStrategy::TASK_ONLY)
+            {
+                std::cout << "[7] Running WITHOUT adaptation. " << std::endl;
+            }
+            else
+            {
+                throw std::runtime_error("Not implemented yet.");
+            }
 
+            sas::Clock clock(simulation_parameters.sampling_time_sec);
+            clock.init();
 
-                DQ y = real_robot->fkm(q);
-                vi->set_object_pose("x", y);
+            /// ************************************************************************
+            /// For all xds
+            /// ************************************************************************
+            for(int xd_counter = 0; xd_counter < xds.size(); xd_counter++)
+            {
+                const DQ& xd = xds[xd_counter];
 
-                auto [uq, ua, x_tilde, y_tilde, y_partial] = adaptive_controller.compute_setpoint_control_signal(control_strategy,
-                        q,
-                        xd,
-                        y,
-                        vfis);
-
-                        if(simulation_parameters.use_adaptation)
+                while(!kill_this_process)
                 {
+                    const DQ& x_hat = estimated_robot->fkm(q);
+                    vi->set_object_pose("x_hat",  x_hat);
+
+
+                    DQ y = real_robot->fkm(q);
+                    vi->set_object_pose("x", y);
+
+                    auto [uq, ua, x_tilde, y_tilde, y_partial] = adaptive_controller.compute_setpoint_control_signal(control_strategy,
+                            q,
+                            xd,
+                            y,
+                            vfis);
+
                     a_hat += ua*simulation_parameters.sampling_time_sec;
                     estimated_robot->set_parameter_space_values(a_hat);
+
+                    q += uq*simulation_parameters.sampling_time_sec;
+                    real_robot_in_vrep.set_configuration_space_positions(q);
+
+                    clock.update_and_sleep();
+
+                    if(clock.get_elapsed_time_sec() > simulation_parameters.reference_timeout_sec*(xd_counter+1))
+                    {
+                        std::cout << "Reference timeout for xd" << xd_counter << std::endl;
+                        std::cout << "  Average computational time = " << clock.get_statistics(sas::Statistics::Mean,sas::Clock::TimeType::Computational) << " seconds." << std::endl;
+                        std::cout << "  Clock overruns = " << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
+                        std::cout << "  Final task pose error norm = " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
+                        std::cout << "  Final task translation error norm = " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
+                        std::cout << "  Final measurement error norm = " << y_tilde.norm() << " (Dual quaternion norm)." << std::endl;
+                        if(is_unit(y))
+                            std::cout << "  Final measurement translation error norm = " << (translation(x_hat)-translation(y)).norm() << " (in meters)." << std::endl;
+                        else
+                            std::cout << "  measurement translation error norm: y not unit" << std::endl;
+                        break;
+                    }
+
                 }
-
-                q += uq*simulation_parameters.sampling_time_sec;
-                real_robot_in_vrep.set_configuration_space_positions(q);
-
-                clock.update_and_sleep();
-
-                if(clock.get_elapsed_time_sec() > simulation_parameters.reference_timeout_sec*(xd_counter+1))
-                {
-                    std::cout << "Reference timeout for xd" << xd_counter << std::endl;
-                    std::cout << "  Average computational time = " << clock.get_statistics(sas::Statistics::Mean,sas::Clock::TimeType::Computational) << " seconds." << std::endl;
-                    std::cout << "  Clock overruns = " << clock.get_overrun_count() << " (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU)."<< std::endl;
-                    std::cout << "  Final task pose error norm = " << x_tilde.norm() << " (Dual quaternion norm)." << std::endl;
-                    std::cout << "  Final task translation error norm = " << (translation(x_hat)-translation(xd)).norm() << " (in meters)." << std::endl;
-                    std::cout << "  Final measurement error norm = " << y_tilde.norm() << " (Dual quaternion norm)." << std::endl;
-                    if(is_unit(y))
-                        std::cout << "  Final measurement translation error norm = " << (translation(x_hat)-translation(y)).norm() << " (in meters)." << std::endl;
-                    else
-                        std::cout << "  measurement translation error norm: y not unit" << std::endl;
-                    break;
-                }
-
             }
         }
 
@@ -281,7 +298,7 @@ int main(int argc, char** argv)
     }
     catch(const std::exception& e)
     {
-        std::cout << e.what() << std::endl;
+        std::cerr << e.what() << std::endl;
     }
 
     return 0;
