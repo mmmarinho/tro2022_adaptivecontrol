@@ -118,7 +118,7 @@ int main(int, char**)
             throw std::runtime_error("Failed to connect to CoppeliaSim. "
                                      "Make sure that CoppeliaSim is running "
                                      "with the correct scene file opened."
-                         #ifdef __OSX_AVAILABLE
+                         #ifdef __APPLE__
                                      "\nFor macos users, note that 'simRemoteApi.start(19997)' "
                                      "must be added to the main script and the simulation "
                                      "must be started before running this example. "
@@ -126,7 +126,7 @@ int main(int, char**)
                                      );
         }
 
-#ifndef __OSX_AVAILABLE
+#ifndef __APPLE__
         //Limitations in CoppeliaSim on macos make this directive to not play well with macos
         vi->stop_simulation();
 #endif
@@ -211,7 +211,7 @@ int main(int, char**)
         Example_AdaptiveController adaptive_controller(estimated_robot,
                                                        simulation_parameters);
 
-#ifndef __OSX_AVAILABLE
+#ifndef __APPLE__
         vi->start_video_recording();
         vi->start_simulation();
 #endif
