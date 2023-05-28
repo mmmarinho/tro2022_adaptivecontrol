@@ -12,14 +12,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-20.04', 'ubuntu-22.04']
+        os: ['ubuntu-20.04', 'ubuntu-22.04', 'macos-13']
 
     steps:
     - uses: actions/checkout@v3
     - name: init submodules
       run: git submodule update --init --recursive
-    - name: configure
+    - name: configure (Ubuntu)
+      if: matrix.os != 'macos-13' 
       run: sudo apt install libeigen3-dev
+    - name: configure (macos)
+      if: matrix.os == 'macos-13' 
+      run: brew install eigen
     - name: Make build executable
       run: chmod +x .build.sh
     - name: build
