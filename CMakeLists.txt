@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15...3.26)
 
 project(adaptive_control_example LANGUAGES CXX)
 
@@ -45,3 +45,4 @@ target_link_libraries(${PROJECT_NAME}
 install(TARGETS
     ${PROJECT_NAME}
     DESTINATION ${CMAKE_SOURCE_DIR}/bin/)
+    

@@ -136,3 +136,28 @@ Reference timeout for xd1
 - qpOASES as shown in the submodule information.
 - sas_core as shown in the submodule information.
 
+# Python binding installation
+
+## Supposing there is a venv installed as
+
+```console
+~/git/tro2022_adaptivecontrol
+python3 -m venv venv
+```
+
+## Once
+
+At the root of this directory
+
+```console
+~/git/tro2022_adaptivecontrol
+source venv/bin/activate
+python3 -m pip install ./python_wrapper
+```
+
+## Using it
+
+```console
+python3
+>>> from adaptive_control_example import *
+```

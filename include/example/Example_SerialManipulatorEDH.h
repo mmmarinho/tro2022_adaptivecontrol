@@ -26,7 +26,7 @@ Contributors (aside from author):
 
 #include <vector>
 #include <dqrobotics/DQ.h>
-#include <dqrobotics/robot_modeling/DQ_SerialManipulatorDH.h>
+#include <dqrobotics/robot_modeling/DQ_SerialManipulator.h>
 
 using namespace DQ_robotics;
 
