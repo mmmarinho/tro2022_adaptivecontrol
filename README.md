@@ -138,6 +138,12 @@ Reference timeout for xd1
 
 # Python binding installation
 
+All dependencies **MUST** be installed as system-wide packages. Also
+
+```console
+sudo apt install pybind11-dev
+```
+
 ## Supposing there is a venv installed as
 
 ```console
