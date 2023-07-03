@@ -8,8 +8,7 @@ add_compile_options(-Werror=return-type)
 
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
-find_package(pybind11 CONFIG REQUIRED)
+find_package(pybind11 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 include_directories(
@@ -17,7 +16,7 @@ include_directories(
     ../submodules/sas_core/include
     )
 
-python_add_library(_core MODULE
+pybind11_add_module(_core MODULE
 
     ../src/adaptive_control_example_py.cpp
 
@@ -30,10 +29,9 @@ python_add_library(_core MODULE
     ../submodules/sas_core/src/sas_object.cpp
     ../submodules/sas_core/src/sas_clock.cpp
 
-    WITH_SOABI)
+    )
     
 target_link_libraries(_core PRIVATE pybind11::headers dqrobotics dqrobotics-interface-vrep qpOASES)
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
-install(TARGETS _core DESTINATION _adaptive_control_example)
 
