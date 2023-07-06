@@ -8,7 +8,6 @@ add_compile_options(-Werror=return-type)
 
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(pybind11 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 include_directories(
@@ -16,6 +15,7 @@ include_directories(
     ../submodules/sas_core/include
     )
 
+add_subdirectory(pybind11)
 pybind11_add_module(_core MODULE
 
     ../src/adaptive_control_example_py.cpp

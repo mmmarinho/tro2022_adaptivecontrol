@@ -1,5 +1,8 @@
+#include <vector>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 
 #include "example/Example_AdaptiveController.h"
 #include "example/Example_VFI.h"
@@ -163,12 +166,12 @@ PYBIND11_MODULE(_core, m) {
     example_serialmanipulatoredh.def("get_base_parameters",&Example_SerialManipulatorEDH::get_base_parameters,"");
     //    void set_base_frame(const std::vector<Example_ParameterSpaceEDH::Example_Parameter> &base_parameters);
     example_serialmanipulatoredh.def("set_base_frame",
-                                     py::overload_cast<const std::vector<Example_ParameterSpaceEDH::Example_Parameter>&>
+                                     (void (Example_SerialManipulatorEDH::*)(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>&))
                                      (&Example_SerialManipulatorEDH::set_base_frame),
                                      "");
     //    void set_base_frame(const DQ& base);
     example_serialmanipulatoredh.def("set_base_frame",
-                                     py::overload_cast<const DQ&>
+                                     (void (Example_SerialManipulatorEDH::*)(const DQ&))
                                      (&Example_SerialManipulatorEDH::set_base_frame),
                                      "");
     //    DQ get_effector_frame() const;
@@ -177,12 +180,12 @@ PYBIND11_MODULE(_core, m) {
     example_serialmanipulatoredh.def("get_effector_parameters",&Example_SerialManipulatorEDH::get_effector_parameters,"");
     //    void set_effector_frame(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>& effector_parameters);
     example_serialmanipulatoredh.def("set_effector_frame",
-                                     py::overload_cast<const std::vector<Example_ParameterSpaceEDH::Example_Parameter>&>
+                                     (void (Example_SerialManipulatorEDH::*)(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>&))
                                      (&Example_SerialManipulatorEDH::set_effector_frame),
                                      "");
     //    void set_effector_frame(const DQ& effector);
     example_serialmanipulatoredh.def("set_effector_frame",
-                                     py::overload_cast<const DQ&>
+                                     (void (Example_SerialManipulatorEDH::*)(const DQ&))
                                      (&Example_SerialManipulatorEDH::set_effector_frame),
                                      "");
     //    void set_parameter_space(const std::vector<Example_ParameterSpaceEDH::Example_Parameter>& parameter_space);
@@ -231,19 +234,13 @@ PYBIND11_MODULE(_core, m) {
     example_serialmanipulatoredh.def("set_alpha",&Example_SerialManipulatorEDH::set_alpha,"");
     //    MatrixXd parameter_pose_jacobian(const VectorXd& joint_values, const int& to_ith_link) const;
     example_serialmanipulatoredh.def("parameter_pose_jacobian",
-                                     py::overload_cast
-                                     <
-                                     const VectorXd&,
-                                     const int&
-                                     >
-                                     (&Example_SerialManipulatorEDH::parameter_pose_jacobian,
-                                      py::const_),
+                                     (MatrixXd (Example_SerialManipulatorEDH::*)(const VectorXd&,const int&) const)
+                                     (&Example_SerialManipulatorEDH::parameter_pose_jacobian),
                                      "");
     //    MatrixXd parameter_pose_jacobian(const VectorXd& joint_values) const;
     example_serialmanipulatoredh.def("parameter_pose_jacobian",
-                                     py::overload_cast<const VectorXd&>
-                                     (&Example_SerialManipulatorEDH::parameter_pose_jacobian,
-                                      py::const_),
+                                     (MatrixXd (Example_SerialManipulatorEDH::*)(const VectorXd&) const)
+                                     (&Example_SerialManipulatorEDH::parameter_pose_jacobian),
                                      "");
     //    //Virtual methods from DQ_SerialManipulator
     //    DQ raw_fkm(const VectorXd& joint_values, const int& to_ith_link) const override;
@@ -252,36 +249,23 @@ PYBIND11_MODULE(_core, m) {
     example_serialmanipulatoredh.def("raw_pose_jacobian",&Example_SerialManipulatorEDH::raw_pose_jacobian,"");
     //    DQ fkm (const VectorXd& joint_values) const override;
     example_serialmanipulatoredh.def("fkm",
-                                     py::overload_cast<const VectorXd&>
-                                     (&Example_SerialManipulatorEDH::fkm,
-                                      py::const_),
+                                     (DQ (Example_SerialManipulatorEDH::*)(const VectorXd&) const)
+                                     (&Example_SerialManipulatorEDH::fkm),
                                      "");
     //    DQ fkm (const VectorXd& joint_values, const int& to_ith_link) const override;
     example_serialmanipulatoredh.def("fkm",
-                                     py::overload_cast
-                                     <
-                                     const VectorXd&,
-                                     const int&
-                                     >
-                                     (&Example_SerialManipulatorEDH::fkm,
-                                      py::const_),
+                                     (DQ (Example_SerialManipulatorEDH::*)(const VectorXd&,const int&) const)
+                                     (&Example_SerialManipulatorEDH::fkm),
                                      "");
     //    MatrixXd pose_jacobian(const VectorXd& joint_values, const int& to_ith_link) const override;
     example_serialmanipulatoredh.def("pose_jacobian",
-                                     py::overload_cast
-                                     <
-                                     const VectorXd&,
-                                     const int&
-                                     >
-                                     (&Example_SerialManipulatorEDH::pose_jacobian,
-                                      py::const_),
+                                     (MatrixXd (Example_SerialManipulatorEDH::*)(const VectorXd&,const int&) const)
+                                     (&Example_SerialManipulatorEDH::pose_jacobian),
                                      "");
     //    MatrixXd pose_jacobian (const VectorXd& joint_values) const override;
     example_serialmanipulatoredh.def("pose_jacobian",
-                                     py::overload_cast
-                                     <const VectorXd&>
-                                     (&Example_SerialManipulatorEDH::pose_jacobian,
-                                      py::const_),
+                                     (MatrixXd (Example_SerialManipulatorEDH::*)(const VectorXd&) const)
+                                     (&Example_SerialManipulatorEDH::pose_jacobian),
                                      "");
     //    int get_dim_configuration_space() const override;
     example_serialmanipulatoredh.def("get_dim_configuration_space",&Example_SerialManipulatorEDH::get_dim_configuration_space,"");
