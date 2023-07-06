@@ -36,8 +36,11 @@ python3 -m pip install ./python_wrapper
 
 echo "
 from dqrobotics import *
+from dqrobotics.robot_modeling import DQ_SerialManipulator
 from adaptive_control_example import *
 print('All OK.')
 " > adaptive_control_import_eval.py
+
+cat adaptive_control_import_eval.py
 
 python3 adaptive_control_import_eval.py
