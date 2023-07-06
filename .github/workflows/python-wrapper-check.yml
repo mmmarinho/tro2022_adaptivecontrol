@@ -19,6 +19,8 @@ jobs:
     - name: init submodules
       run: git submodule update --init --recursive
     - name: Make test executable
-      run: chmod +x test_python_wrapper.sh
+      run: |
+       chmod +x test_python_wrapper.sh
+       sed -i 's/\r//' test_python_wrapper.sh
     - name: build
       run: ./test_python_wrapper.sh
