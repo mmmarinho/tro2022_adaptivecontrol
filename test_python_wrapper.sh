@@ -26,10 +26,9 @@ python3 -m venv venv
 source venv/bin/activate
 
 python3 -m pip install --upgrade pip
-
-python3 -m pip uninstall dqrobotics
-git clone https://github.com/dqrobotics/python.git dqrobotics_python --recursive
 python3 -m pip install wheel scipy quadprog
+
+git clone https://github.com/dqrobotics/python.git dqrobotics_python --recursive
 python3 -m pip install ./dqrobotics_python 
 
 cd dqrobotics_python/tests
@@ -39,6 +38,9 @@ python3 cpp_issues.py
 python3 python_issues.py
 cd ..
 cd ..
+
+deactivate
+source venv/bin/activate
 
 git clone https://github.com/mmmarinho/tro2022_adaptivecontrol.git --recursive
 cd tro2022_adaptivecontrol
