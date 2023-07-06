@@ -1,0 +1,24 @@
+name: Check Python Wrapper
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-20.04', 'ubuntu-22.04']
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: init submodules
+      run: git submodule update --init --recursive
+    - name: Make test executable
+      run: chmod +x test_python_wrapper.sh
+    - name: build
+      run: ./test_python_wrapper.sh
