@@ -31,7 +31,7 @@ pybind11_add_module(_core MODULE
 
     )
     
-target_link_libraries(_core PRIVATE pybind11::headers dqrobotics dqrobotics-interface-vrep qpOASES)
+target_link_libraries(_core PRIVATE dqrobotics dqrobotics-interface-vrep qpOASES)
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 
