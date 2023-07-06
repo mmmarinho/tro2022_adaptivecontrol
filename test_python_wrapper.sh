@@ -2,10 +2,6 @@
 
 sudo apt install pybind11-dev python3-dev python3-distutils libeigen3-dev
 
-cd ~
-mkdir tmp
-cd tmp
-
 git clone https://github.com/coin-or/qpOASES.git
 cd qpOASES
 sed -i -e 's/option(BUILD_SHARED_LIBS "If ON, build shared library instead of static" OFF)/option(BUILD_SHARED_LIBS "If ON, build shared library instead of static" ON)/g' CMakeLists.txt
@@ -22,9 +18,6 @@ sudo add-apt-repository ppa:dqrobotics-dev/development
 sudo apt-get update
 sudo apt-get install libdqrobotics*
 
-python3 -m venv venv
-source venv/bin/activate
-
 python3 -m pip install --upgrade pip
 python3 -m pip install wheel scipy quadprog
 
@@ -39,16 +32,7 @@ python3 python_issues.py
 cd ..
 cd ..
 
-deactivate
-source venv/bin/activate
-
-git clone https://github.com/mmmarinho/tro2022_adaptivecontrol.git --recursive
-cd tro2022_adaptivecontrol
 python3 -m pip install ./python_wrapper
-cd ..
-
-deactivate
-source venv/bin/activate
 
 echo "
 from dqrobotics import *
