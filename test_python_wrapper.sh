@@ -51,6 +51,7 @@ source venv/bin/activate
 echo "
 from dqrobotics import *
 from adaptive_control_example import *
+print('All OK.')
 " > adaptive_control_import_eval.py
 
 python3 adaptive_control_import_eval.py
