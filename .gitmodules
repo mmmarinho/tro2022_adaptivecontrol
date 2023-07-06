@@ -14,3 +14,6 @@
 [submodule "submodules/qpOASES"]
 	path = submodules/qpOASES
 	url = https://github.com/coin-or/qpOASES.git
+[submodule "python_wrapper/pybind11"]
+	path = python_wrapper/pybind11
+	url = https://github.com/pybind/pybind11.git
