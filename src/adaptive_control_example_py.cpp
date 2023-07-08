@@ -28,7 +28,24 @@ PYBIND11_MODULE(_core, m) {
             .export_values();
 
     //struct Example_SimulationParameters
-    // NO NEED, I SUPPOSE
+    py::class_<Example_AdaptiveController::Example_SimulationParameters>(Example_SimulationParameters, "Example_SimulationParameters")
+            .def(py::init
+                 <
+                 const Example_MeasureSpace&,
+                 const double&,
+                 const double&,
+                 const double&,
+                 const double&,
+                 const double&,
+                 const double&
+                 >())
+            .def_readwrite("measure_space",&Example_AdaptiveController::Example_SimulationParameters::measure_space)
+            .def_readwrite("proportional_gain",&Example_AdaptiveController::Example_SimulationParameters::proportional_gain)
+            .def_readwrite("vfi_gain",&Example_AdaptiveController::Example_SimulationParameters::vfi_gain)
+            .def_readwrite("vfi_weight",&Example_AdaptiveController::Example_SimulationParameters::vfi_weight)
+            .def_readwrite("damping",&Example_AdaptiveController::Example_SimulationParameters::damping)
+            .def_readwrite("sampling_time_sec",&Example_AdaptiveController::Example_SimulationParameters::sampling_time_sec)
+            .def_readwrite("reference_timeout_sec",&Example_AdaptiveController::Example_SimulationParameters::reference_timeout_sec);
 
     //class Example_AdaptiveController
     py::class_
