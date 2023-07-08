@@ -8,6 +8,7 @@
 #include "example/Example_VFI.h"
 #include "example/Example_SerialManipulatorEDH.h"
 #include "example/Example_VS050VrepRobot.h"
+#include "example/Example_MeasurementSpace.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -16,6 +17,17 @@ namespace py = pybind11;
 using namespace DQ_robotics;
 
 PYBIND11_MODULE(_core, m) {
+
+    /// "example/Example_MeasurementSpace.h"
+
+    //enum class Example_MeasureSpace
+    py::enum_<Example_MeasureSpace>(m, "Example_MeasureSpace")
+            .value("None", Example_MeasureSpace::None)
+            .value("Pose", Example_MeasureSpace::Pose)
+            .value("Rotation", Example_MeasureSpace::Rotation)
+            .value("Translation", Example_MeasureSpace::Translation)
+            .value("Distance", Example_MeasureSpace::Distance)
+            .export_values();
 
     /// "example/Example_AdaptiveController.h"
 
@@ -28,7 +40,32 @@ PYBIND11_MODULE(_core, m) {
             .export_values();
 
     //struct Example_SimulationParameters
-    // NO NEED, I SUPPOSE
+    py::class_<Example_SimulationParameters>(m, "Example_SimulationParameters")
+            .def(py::init
+                 <
+                 const Example_MeasureSpace&,
+                 const double&,
+                 const double&,
+                 const double&,
+                 const double&,
+                 const double&,
+                 const double&
+                 >(),
+                py::arg("measure_space"),
+                py::arg("proportional_gain"),
+                py::arg("vfi_gain"),
+                py::arg("vfi_weight"),
+                py::arg("damping"),
+                py::arg("sampling_time_sec"),
+                py::arg("reference_timeout_sec")
+             )
+            .def_readwrite("measure_space",&Example_SimulationParameters::measure_space)
+            .def_readwrite("proportional_gain",&Example_SimulationParameters::proportional_gain)
+            .def_readwrite("vfi_gain",&Example_SimulationParameters::vfi_gain)
+            .def_readwrite("vfi_weight",&Example_SimulationParameters::vfi_weight)
+            .def_readwrite("damping",&Example_SimulationParameters::damping)
+            .def_readwrite("sampling_time_sec",&Example_SimulationParameters::sampling_time_sec)
+            .def_readwrite("reference_timeout_sec",&Example_SimulationParameters::reference_timeout_sec);
 
     //class Example_AdaptiveController
     py::class_
