@@ -60,7 +60,7 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
  *
  * [1] M. M. Marinho et al.,
  * "A Unified Framework for the Teleoperation of Surgical Robots in Constrained Workspaces,"
- * 2019 International Conference on Robotics and Automation (ICRA), Montreal, QC, Canada, 2019, pp. 2721-2727, doi: 10.1109/ICRA.2019.8794363.
+ * 2019 International Conference on Robotics and Automation (ICRA), Montréal, QC, Canada, 2019, pp. 2721-2727, doi: 10.1109/ICRA.2019.8794363.
  *
  * [2] M. M. Marinho and B. V. Adorno,
  * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
@@ -301,7 +301,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         }
         catch(const std::exception& e)
         {
-            std::cerr << "Error solving parametric quadratic program " << std::endl;
+            std::cerr << "Error solving parametric quadratic program " << e << std::endl;
             std::cerr << "Hy size = (" << Hy.rows() << "," << Hy.cols() << ")." << std::endl;
             FullPivLU<MatrixXd> Hy_lu_decomp(Hy);
             std::cerr << "Hy rank = (" << Hy_lu_decomp.rank() << ")." << std::endl;
@@ -317,8 +317,8 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
  * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
- * @param Jx the pose_jacobian, i.e. the complete Jacobian.
- * @param x the pose, i.e. the complete measurement.
+ * @param Jx the pose_jacobian, i.e., the complete Jacobian.
+ * @param x the pose, i.e., the complete measurement.
  * @param xd the desired pose, used to calculate the rotation Jacobian.
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the (partial) Jacobian defined by Example_MeasureSpace.
@@ -347,8 +347,8 @@ MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_measure_space(con
  * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
- * @param Jx the pose_jacobian, i.e. the complete Jacobian.
- * @param x the pose, i.e. the complete measurement.
+ * @param Jx the pose_jacobian, i.e., the complete Jacobian.
+ * @param x the pose, i.e., the complete measurement.
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the complimentary of the (partial) Jacobian defined by Example_MeasureSpace.
  */
@@ -384,7 +384,7 @@ Example_AdaptiveController::Example_AdaptiveController(const std::shared_ptr<Exa
  * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
- * @param x the pose, e.g. the complete measurement.
+ * @param x the pose, e.g., the complete measurement.
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the (partial) measurement defined by Example_MeasureSpace.
  */
