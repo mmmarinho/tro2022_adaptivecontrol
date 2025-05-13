@@ -17,3 +17,9 @@
 [submodule "python_wrapper/pybind11"]
 	path = python_wrapper/pybind11
 	url = https://github.com/pybind/pybind11.git
+[submodule "submodules/dqrobotics/cpp-interface-coppeliasim"]
+	path = submodules/dqrobotics/cpp-interface-coppeliasim
+	url = https://github.com/dqrobotics/cpp-interface-coppeliasim.git
+[submodule "submodules/dqrobotics/cpp-interface-coppeliasim-zmq"]
+	path = submodules/dqrobotics/cpp-interface-coppeliasim-zmq
+	url = https://github.com/dqrobotics/cpp-interface-coppeliasim-zmq.git

@@ -28,7 +28,8 @@
 # of you example.
 pkg_array=(
 "submodules/dqrobotics/cpp"
-"submodules/dqrobotics/cpp-interface-vrep"
+"submodules/dqrobotics/cpp-interface-coppeliasim"
+"submodules/dqrobotics/cpp-interface-coppeliasim-zmq"
 "submodules/dqrobotics/cpp-interface-qpoases"
 "submodules/qpOASES"
 "." # This is the example itself, so don't forget it!
@@ -62,7 +63,7 @@ BUILD(){
   rm -rf build
   mkdir build
   cd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=${repo_root_dir} -DCMAKE_BUILD_TYPE=Release
+  cmake .. -DCMAKE_INSTALL_PREFIX=${repo_root_dir} -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
   if [ -z $variable ]
     then
       make -j${phycores}
