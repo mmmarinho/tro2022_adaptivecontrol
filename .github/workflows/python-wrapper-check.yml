@@ -23,8 +23,21 @@ jobs:
       run: |
        chmod +x test_python_wrapper.sh
     - name: build
-      run: ./test_python_wrapper.sh
+      run: |
+        python3 -m pip install setuptools wheel
+        ./test_python_wrapper.sh
+        python setup.py bdist_wheel
 
+    - name: Rename wheel (MacOS only)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install rename
+        cd dist
+        sw_vers
+        rename 's/11_0/10_14/' *
+        rename 's/12_0/10_15/' *
+        rename 's/universal2/arm64/' *
+        cd ..
     - name: Rename wheel (Ubuntu Only)
       if: matrix.os == 'ubuntu-22.04'
       run: |
