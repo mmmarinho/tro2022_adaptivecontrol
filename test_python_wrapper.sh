@@ -20,7 +20,6 @@ python3 -m pip install ./python_wrapper
 # Test the example wrapper code
 echo "
 from dqrobotics import *
-from dqrobotics.robot_modeling import DQ_SerialManipulator
 from marinholab.papers.tro2022.adaptive_control import *
 print('marinholab.papers.tro2022.adaptive_control import ok.')
 " > adaptive_control_import_eval.py
