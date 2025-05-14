@@ -27,6 +27,7 @@ endif()
 
 include_directories(
     include
+    /usr/include/eigen3/
     submodules/dqrobotics/cpp/include
     submodules/dqrobotics/cpp-interface-coppeliasim/include
     submodules/dqrobotics/cpp-interface-coppeliasim-zmq/include
