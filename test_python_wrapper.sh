@@ -11,6 +11,9 @@ else
     echo "Unrecognized system."
 fi
 
+python3 -m pip config set global.break-system-packages true
+python3 -m pip install setuptools wheel
+
 python3 -m pip install dqrobotics --pre
 python3 -m pip install ./python_wrapper
 
@@ -23,5 +26,4 @@ print('marinholab.papers.tro2022.adaptive_control import ok.')
 " > adaptive_control_import_eval.py
 
 cat adaptive_control_import_eval.py
-
 python3 adaptive_control_import_eval.py
