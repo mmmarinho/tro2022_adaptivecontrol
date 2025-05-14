@@ -14,7 +14,7 @@
 ## When you cannot use a venv (e.g. ROS2)
 
 ```commandline
-    python3 -m pip install dqrobotics --pre
+    python3 -m pip install dqrobotics --pre --break-system-packages
     python3 -m pip install marinholab-papers-tro2022-adaptivecontrol --break-system-packages
 ```
 
