@@ -126,13 +126,14 @@ class CMakeBuild(build_ext):
 
 setup(
     name="marinholab-papers-tro2022-adaptivecontrol",
-    version="25.5.0",
+    version="25.5.1",
     description="A Python implementation of an example of 'Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements'",
     author = "Murilo M. Marinho",
     author_email="murilomarinho@ieee.org",
     license="MIT",
     packages=[
-    "marinholab.papers.tro2022.adaptive_control",
+        "marinholab.papers.tro2022.adaptive_control",
+        "marinholab.papers.tro2022.adaptive_control.Example_ParameterSpaceEDH"
     ],
     ext_modules=[CMakeExtension('marinholab.papers.tro2022.adaptive_control._core')],
     cmdclass={"build_ext": CMakeBuild},
