@@ -40,7 +40,7 @@ Contributors (aside from author):
 #include <dqrobotics/utils/DQ_Constants.h>
 #include <dqrobotics/utils/DQ_Math.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
-#include <dqrobotics/interfaces/vrep/DQ_VrepInterface.h>
+#include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 
 #include <sas_core/sas_clock.hpp>
 

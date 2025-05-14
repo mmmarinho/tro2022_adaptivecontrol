@@ -19,7 +19,7 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 # Standalone Example
 
 - The red object represents the estimated robot, initially very wrong **on purpose** to evaluate the adaptation.
-- The estimation usually converges within a few seconds by using measurements from a simulated sensor.
+- The estimation usually converges within a few seconds using measurements from a simulated sensor.
 - Simultaneously, the robot proceeds through the box, toward the target poses, without collisions. 
 - You can change the pose of the `xd0` and `xd1` objects in the scene, as long as you do it **before** the simulation starts.
 
@@ -56,11 +56,11 @@ bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.
 
 # Known limitations *of this example*/*TODO* list/*Extra info*
 
-- The stopping criterium is elapsed time, so it might not converge for all initial parameters.
+- The stopping criterion is elapsed time, so it might not converge for all initial parameters.
 - The initial convergence to measurements mentioned in the paper *TODO* for this example.
 - The estimated model is randomized so it might start in an implausible zone. Fixing this is *TODO* for this example.
 - Sample code for partial measurements is included, but they have not been tested in this example, only in the physical robot.
-- The adaptation is supposed to move the parameters of the `estimated_robot` towards ideal kinematic model, defined by `real_robot` in the code. 
+The adaptation is supposed to move the parameters of the `estimated_robot` towards the ideal kinematic model defined by `real_robot` in the code. 
 The robot model in CoppeliaSim is for visualization only.
 - A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
 - The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
@@ -71,6 +71,11 @@ The robot model in CoppeliaSim is for visualization only.
 
 ```bash
 sudo apt install g++ cmake git libeigen3-dev
+```
+
+### `macos`
+```bash
+brew install cmake eigen cppzmq boost
 ```
 
 ## Download the repo

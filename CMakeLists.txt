@@ -38,7 +38,8 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     -lqpOASES
     -ldqrobotics
-    -ldqrobotics-interface-vrep
+    -ldqrobotics-interface-coppeliasim
+    -ldqrobotics-interface-coppeliasim-zmq
     Threads::Threads
     )
 

@@ -5,9 +5,6 @@
 [submodule "submodules/dqrobotics/cpp"]
 	path = submodules/dqrobotics/cpp
 	url = https://github.com/dqrobotics/cpp.git
-[submodule "submodules/dqrobotics/cpp-interface-vrep"]
-	path = submodules/dqrobotics/cpp-interface-vrep
-	url = https://github.com/dqrobotics/cpp-interface-vrep.git
 [submodule "submodules/dqrobotics/cpp-interface-qpoases"]
 	path = submodules/dqrobotics/cpp-interface-qpoases
 	url = https://github.com/dqrobotics/cpp-interface-qpoases.git

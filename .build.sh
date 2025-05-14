@@ -36,7 +36,7 @@ pkg_array=(
 )
 
 ##########################
-# BUILD ENVIROMENT SETUP
+# BUILD ENVIRONMENT SETUP
 ##########################
 
 # Get the current directory
@@ -51,7 +51,7 @@ export CXXFLAGS=-isystem\ ${repo_root_dir}/include\ -L${repo_root_dir}/lib
 # This script works only on Ubuntu, AFAIK, so we use `|| true` to ignore failures.
 # It is a bit different from what you find on stackoverflow but also works for Ubuntu VMs
 phycores=$(echo $sudoPW|lscpu | grep -m 1 "CPU(s)"|awk '{print $ 2;}') || true
-echo "Found "${phycores}" physical cores."
+echo "Found ""${phycores}"" physical cores."
 
 ##########################
 # BUILD FUNCTION
@@ -62,11 +62,11 @@ echo "Found "${phycores}" physical cores."
 BUILD(){
   rm -rf build
   mkdir build
-  cd build
-  cmake .. -DCMAKE_INSTALL_PREFIX=${repo_root_dir} -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-  if [ -z $variable ]
+  cd build || return
+  cmake .. -DCMAKE_INSTALL_PREFIX="${repo_root_dir}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+  if [ -z "$variable" ]
     then
-      make -j${phycores}
+      make -j"${phycores}"
     else
       make
   fi
@@ -77,10 +77,10 @@ BUILD(){
 # BUILD DEPENDENCIES & INSTALL LOCALLY
 ######################################
 
-for pkg_relative_path in ${pkg_array[@]}; do
-  echo "Building "${pkg_relative_path}"..."
-  cd ${repo_root_dir}
-  cd ${pkg_relative_path}
+for pkg_relative_path in "${pkg_array[@]}"; do
+  echo "Building ""${pkg_relative_path}""..."
+  cd "${repo_root_dir}" || return
+  cd "${pkg_relative_path}" || return
   BUILD # The function defined above in this script
 done
 
@@ -94,15 +94,15 @@ done
 # to re-link the libraries to use the local copies in lib/.
 
 if [ "$(uname)" == "Darwin" ]; then
-  cd ${repo_root_dir}
-  cd bin
+  cd "${repo_root_dir}" || return
+  cd bin || return
   for executable_name in *; do
     [ -e "$executable_name" ] || continue
     for dylib_name in ../lib/*.dylib; do
       [ -e "$dylib_name" ] || continue
       dylib_base_name="$(basename -- $dylib_name)"
-      echo "Fixing "${dylib_base_name}" for "${executable_name}" ..."
-      install_name_tool -change @rpath/${dylib_base_name} @executable_path/../lib/${dylib_base_name} ${executable_name}
+      echo "Fixing ""${dylib_base_name}"" for ""${executable_name}"" ..."
+      install_name_tool -change @rpath/"${dylib_base_name}" @executable_path/../lib/"${dylib_base_name}" "${executable_name}"
     done
   done
 fi
