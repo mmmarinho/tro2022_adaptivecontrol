@@ -6,7 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Werror=return-type)
 
-find_package(cppzmq REQUIRED)
+if(APPLE)
+    find_package(cppzmq REQUIRED)
+endif ()
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
@@ -49,6 +51,11 @@ pybind11_add_module(_core MODULE
 
     )
 
-target_link_libraries(_core PRIVATE dqrobotics dqrobotics-interface-coppeliasim-zmq cppzmq qpOASES ${Boost_LIBRARIES})
+if(APPLE)
+    target_link_libraries(_core PRIVATE dqrobotics dqrobotics-interface-coppeliasim-zmq cppzmq qpOASES ${Boost_LIBRARIES})
+endif()
+if(UNIX AND NOT APPLE)
+    target_link_libraries(_core PRIVATE dqrobotics dqrobotics-interface-coppeliasim-zmq zmq qpOASES ${Boost_LIBRARIES})
+endif()
 
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
