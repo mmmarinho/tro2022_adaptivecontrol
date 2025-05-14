@@ -32,13 +32,14 @@ Contributors (aside from author):
  */
 
 
-
+#include <dqrobotics/robot_modeling/DQ_Kinematics.h>
+#include <dqrobotics/utils/DQ_Geometry.h>
 #include "example/Example_VFI.h"
 
 Example_VFI::Example_VFI(const std::string &workspace_entity_name,
                                  const std::string& robot_entity_name,
                                  const Example_Primitive &type,
-                                 const std::shared_ptr<DQ_VrepInterface> &vi,
+                                 const std::shared_ptr<DQ_CoppeliaSimInterface> &vi,
                                  const double &safe_distance,
                                  const Example_VFI_Direction &vfi_direction,
                                  const int &joint_index,
@@ -60,6 +61,12 @@ Example_VFI::Example_VFI(const std::string &workspace_entity_name,
 
 void Example_VFI::initialize()
 {
+    //Reference pose is desired
+    DQ x_ref(1);
+    if (cs_reference_name_.empty()) {
+        x_ref = vi_->get_object_pose(cs_reference_name_);
+    }
+
     switch(type_)
     {
     case Example_Primitive::None:
@@ -68,7 +75,7 @@ void Example_VFI::initialize()
         throw std::runtime_error("Not implemented yet.");
     case Example_Primitive::Plane:
     {
-        const DQ x = vi_->get_object_pose(workspace_entity_name_,cs_reference_name_);
+        const DQ x = conj(x_ref) * vi_->get_object_pose(workspace_entity_name_);
         const DQ r = rotation(x);
         const DQ n = Ad(r, k_);
         const DQ t = translation(x);
@@ -76,7 +83,7 @@ void Example_VFI::initialize()
         return;
     }
     case Example_Primitive::Line:
-        const DQ x = vi_->get_object_pose(workspace_entity_name_,cs_reference_name_);
+        const DQ x = conj(x_ref) * vi_->get_object_pose(workspace_entity_name_);
         const DQ r = rotation(x);
         const DQ l = Ad(r, k_);
         const DQ t = translation(x);

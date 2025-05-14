@@ -30,6 +30,7 @@ Contributors (aside from author):
  * doi: 10.1109/TRO.2022.3181047.
  */
 #include <dqrobotics/utils/DQ_Math.h>
+#include <dqrobotics/utils/DQ_Geometry.h>
 
 #include "example/Example_AdaptiveController.h"
 
@@ -301,7 +302,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         }
         catch(const std::exception& e)
         {
-            std::cerr << "Error solving parametric quadratic program " << e << std::endl;
+            std::cerr << "Error solving parametric quadratic program " << e.what() << std::endl;
             std::cerr << "Hy size = (" << Hy.rows() << "," << Hy.cols() << ")." << std::endl;
             FullPivLU<MatrixXd> Hy_lu_decomp(Hy);
             std::cerr << "Hy rank = (" << Hy_lu_decomp.rank() << ")." << std::endl;

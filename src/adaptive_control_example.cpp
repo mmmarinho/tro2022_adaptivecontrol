@@ -33,13 +33,13 @@ Contributors (aside from author):
 
 #include <memory>
 #include <string>
-#include <deque>
 #include <random>
 #include <thread>
 
 #include <dqrobotics/utils/DQ_Constants.h>
 #include <dqrobotics/utils/DQ_Math.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
+#include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterface.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 
 #include <sas_core/sas_clock.hpp>
@@ -65,7 +65,7 @@ void set_parameter_space_boundaries(const std::shared_ptr<Example_SerialManipula
                                     const double& other_parameters_linear_confidence_meters = 0.001,
                                     const double& other_parameters_angular_confidence_degrees = 1);
 
-std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_VrepInterface>& vi);
+std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_CoppeliaSimInterface>& vi);
 
 void randomize_parameters(const std::shared_ptr<Example_SerialManipulatorEDH> &estimated_robot,
                           const std::tuple<VectorXd, VectorXd> &parameter_boundaries,
@@ -111,25 +111,15 @@ int main(int, char**)
 
         std::cout << "[1] Connecting to CoppeliaSim..." << std::endl;
 
-        auto vi = std::make_shared<DQ_VrepInterface>();
-        if(!vi->connect(19997, 100, 100))
+        auto vi = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
+        if(!vi->connect())
         {
-            vi->disconnect_all();
             throw std::runtime_error("Failed to connect to CoppeliaSim. "
                                      "Make sure that CoppeliaSim is running "
-                                     "with the correct scene file opened."
-                         #ifdef __APPLE__
-                                     "\nFor macos users, note that 'simRemoteApi.start(19997)' "
-                                     "must be added to the main script and the simulation "
-                                     "must be started before running this example. "
-                         #endif
-                                     );
+                                     "with the correct scene file opened.");
         }
 
-#ifndef __APPLE__
-        //Limitations in CoppeliaSim on macos make this directive to not play well with macos
         vi->stop_simulation();
-#endif
 
         /// ************************************************************************
         /// CoppeliaSim Robot and Models
@@ -211,11 +201,8 @@ int main(int, char**)
         Example_AdaptiveController adaptive_controller(estimated_robot,
                                                        simulation_parameters);
 
-#ifndef __APPLE__
-        vi->start_video_recording();
+        //vi->start_video_recording();
         vi->start_simulation();
-#endif
-
 
         /// ************************************************************************
         /// Run once with adaptation and once without adaptation
@@ -266,10 +253,10 @@ int main(int, char**)
                             y,
                             vfis);
 
-                    a_hat += ua*simulation_parameters.sampling_time_sec;
+                    a_hat += ua * simulation_parameters.sampling_time_sec;
                     estimated_robot->set_parameter_space_values(a_hat);
 
-                    q += uq*simulation_parameters.sampling_time_sec;
+                    q += uq * simulation_parameters.sampling_time_sec;
                     real_robot_in_vrep.set_configuration_space_positions(q);
 
                     clock.update_and_sleep();
@@ -393,24 +380,25 @@ void set_parameter_space_boundaries(const std::shared_ptr<Example_SerialManipula
  * @param vi a DQ_VrepInterface that has already connected.
  * @return a vector of VFI_Information containing all relevant VFIs in the scene.
  */
-std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_VrepInterface>& vi)
+std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_CoppeliaSimInterface>& vi)
 {
     std::vector<Example_VFI> vfis;
 
+    auto x_hat = vi->get_object_pose("x_hat");
+    // x_hat * x_rel = x_ts1 --> x_rel = conj(x_hat)*x_ts1
     std::vector<std::tuple<DQ,double,std::string>> vfi_reference_dqs = {
-        {vi->get_object_pose("tool_sphere_1","x_hat"),0.04,"tool_sphere_1"},
-        {vi->get_object_pose("tool_sphere_2","x_hat"),0.015,"tool_sphere_2"},
-        {vi->get_object_pose("tool_sphere_3","x_hat"),0.015,"tool_sphere_3"},
-        {vi->get_object_pose("tool_sphere_4","x_hat"),0.015,"tool_sphere_4"},
-        {vi->get_object_pose("tool_sphere_5","x_hat"),0.015,"tool_sphere_5"},
-        {vi->get_object_pose("tool_sphere_6","x_hat"),0.075,"tool_sphere_6"}
+        {conj(x_hat) * vi->get_object_pose("tool_sphere_1"), 0.04, "tool_sphere_1"},
+        {conj(x_hat) * vi->get_object_pose("tool_sphere_2"), 0.015, "tool_sphere_2"},
+        {conj(x_hat) * vi->get_object_pose("tool_sphere_3"), 0.015, "tool_sphere_3"},
+        {conj(x_hat) * vi->get_object_pose("tool_sphere_4"), 0.015, "tool_sphere_4"},
+        {conj(x_hat) * vi->get_object_pose("tool_sphere_5"), 0.015, "tool_sphere_5"},
+        {conj(x_hat) * vi->get_object_pose("tool_sphere_6"), 0.075, "tool_sphere_6"}
     };
-
-    const double wall_distance = 0.02;
-    const double tube_distance = 0.02;
 
     for(const std::tuple<DQ,double,std::string>& tp : vfi_reference_dqs)
     {
+        constexpr double tube_distance = 0.02;
+        constexpr double wall_distance = 0.02;
         vfis.push_back(Example_VFI("cube_40x40_wall_1",
                                    std::get<2>(tp),
                                    Example_Primitive::Plane,

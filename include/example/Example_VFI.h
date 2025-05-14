@@ -28,10 +28,9 @@ Contributors (aside from author):
 #include<string>
 
 #include<dqrobotics/DQ.h>
-#include<dqrobotics/robot_modeling/DQ_Kinematics.h>
-#include<dqrobotics/utils/DQ_Geometry.h>
-#include<dqrobotics/interfaces/vrep/DQ_VrepInterface.h>
+#include<dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterface.h>
 
+using namespace DQ_robotics;
 
 enum class Example_Primitive
 {
@@ -80,12 +79,11 @@ enum class Example_VFI_DistanceType
  */
 class Example_VFI
 {
-private:
     std::string workspace_entity_name_;
     std::string robot_entity_name_;
     Example_Primitive type_;
     DQ value_;
-    std::shared_ptr<DQ_VrepInterface> vi_;
+    std::shared_ptr<DQ_CoppeliaSimInterface> vi_;
     double safe_distance_;
     Example_VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
@@ -99,18 +97,18 @@ public:
     Example_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
                     const Example_Primitive& type,
-                    const std::shared_ptr<DQ_VrepInterface>& vi,
+                    const std::shared_ptr<DQ_CoppeliaSimInterface>& vi,
                     const double& safe_distance,
                     const Example_VFI_Direction& vfi_direction,
                     const int& joint_index,
                     const DQ& relative_displacement_to_joint,
-                    const std::string& cs_reference_name=VREP_OBJECTNAME_ABSOLUTE);
+                    const std::string& cs_reference_name="");
 
     void initialize();
 
     DQ get_value() const;
 
-    void set_value(const DQ &value);;
+    void set_value(const DQ &value);
 
     MatrixXd get_distance_jacobian(const DQ& x, const MatrixXd& Jx) const;
 
