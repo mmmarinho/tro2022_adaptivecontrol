@@ -12,10 +12,10 @@ else
 fi
 
 # dqrobotics python
-python3 -m pip install dqrobotics --pre
+python3 -m pip install --user dqrobotics --pre
 
 # Install the example wrapper code
-python3 -m pip install ./python_wrapper
+python3 -m pip install --user ./python_wrapper
 
 # Test the example wrapper code
 echo "
