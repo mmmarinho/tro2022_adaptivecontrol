@@ -7,7 +7,7 @@
 #include "example/Example_AdaptiveController.h"
 #include "example/Example_VFI.h"
 #include "example/Example_SerialManipulatorEDH.h"
-#include "example/Example_VS050VrepRobot.h"
+//#include "example/Example_VS050VrepRobot.h"
 #include "example/Example_MeasurementSpace.h"
 
 #define STRINGIFY(x) #x
@@ -110,7 +110,7 @@ PYBIND11_MODULE(_core, m) {
                  const std::string&,
                  const std::string&,
                  const Example_Primitive&,
-                 const std::shared_ptr<DQ_VrepInterface>&,
+                 const std::shared_ptr<DQ_CoppeliaSimInterface>&,
                  const double&,
                  const Example_VFI_Direction&,
                  const int&,
@@ -311,20 +311,20 @@ PYBIND11_MODULE(_core, m) {
     /// "example/Example_VS050VrepRobot.h"
 
     //class Example_VS050VrepRobot: public DQ_SerialVrepRobot
-    py::class_
-            <
-            Example_VS050VrepRobot,
-            std::shared_ptr<Example_VS050VrepRobot>,
-            DQ_SerialVrepRobot
-            >(m, "Example_VS050VrepRobot")
-            .def(py::init
-                 <
-                 const std::string&,
-                 const std::shared_ptr<DQ_VrepInterface>&
-                 >())
-            .def_static("raw_kinematics",&Example_VS050VrepRobot::raw_kinematics,"")
-            .def("get_base_frame",&Example_VS050VrepRobot::get_base_frame,"")
-            .def("set_base_frame",&Example_VS050VrepRobot::set_base_frame,"");
+    // py::class_
+    //         <
+    //         Example_VS050VrepRobot,
+    //         std::shared_ptr<Example_VS050VrepRobot>,
+    //         DQ_SerialVrepRobot
+    //         >(m, "Example_VS050VrepRobot")
+    //         .def(py::init
+    //              <
+    //              const std::string&,
+    //              const std::shared_ptr<DQ_VrepInterface>&
+    //              >())
+    //         .def_static("raw_kinematics",&Example_VS050VrepRobot::raw_kinematics,"")
+    //         .def("get_base_frame",&Example_VS050VrepRobot::get_base_frame,"")
+    //         .def("set_base_frame",&Example_VS050VrepRobot::set_base_frame,"");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
