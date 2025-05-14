@@ -30,6 +30,7 @@ include_directories(
     submodules/dqrobotics/cpp/include
     submodules/dqrobotics/cpp-interface-coppeliasim/include
     submodules/dqrobotics/cpp-interface-coppeliasim-zmq/include
+    submodules/qpOASES/include
     submodules/dqrobotics/cpp-interface-qpoases/include
     submodules/sas_core/include
     )
