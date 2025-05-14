@@ -4,7 +4,7 @@ project(adaptive_control_example_python_wrapper LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Werror=return-type)
+add_compile_options(-Werror=return-type -fPIC)
 
 if(APPLE)
     find_package(cppzmq)
