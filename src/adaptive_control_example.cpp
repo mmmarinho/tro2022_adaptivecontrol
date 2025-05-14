@@ -49,7 +49,7 @@ Contributors (aside from author):
 #include "example/Example_SerialManipulatorEDH.h"
 #include "example/Example_VS050VrepRobot.h"
 
-#include <signal.h>
+#include <csignal>
 #include <atomic>
 static std::atomic_bool kill_this_process(false);
 void sig_int_handler(int)

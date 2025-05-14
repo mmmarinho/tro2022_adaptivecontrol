@@ -73,7 +73,7 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the closest invariant error, and the closest invariant itself as 1 or -1.
  */
-std::tuple<VectorXd,double> __closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& measure_space)
+std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& measure_space)
 {
     switch(measure_space)
     {
@@ -173,7 +173,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = __closest_invariant_error(x_hat, xd, Example_MeasureSpace::Pose);
+    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, Example_MeasureSpace::Pose);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
@@ -258,7 +258,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         y_partial = _convert_pose_to_measure_space(y, measure_space);
         const DQ y_hat_partial = _convert_pose_to_measure_space(y_hat, measure_space);
         double y_invariant;
-        std::tie(y_tilde, y_invariant) = __closest_invariant_error(y_hat_partial, y_partial, measure_space);
+        std::tie(y_tilde, y_invariant) = closest_invariant_error(y_hat_partial, y_partial, measure_space);
 
         const MatrixXd J_y_a = robot_->parameter_pose_jacobian(q);
         const MatrixXd J_y_a_partial = _convert_pose_jacobian_to_measure_space(J_y_a, y_hat, y, measure_space);

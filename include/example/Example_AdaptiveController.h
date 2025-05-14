@@ -77,9 +77,10 @@ private:
     DQ_QPOASESSolver parameter_space_solver_;
 
     DQ _convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
-    VectorXd _smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
-    MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const Example_MeasureSpace& measure_space);
-    MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
+
+    static VectorXd _smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
+    static MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const Example_MeasureSpace& measure_space);
+    static MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
  public:
     Example_AdaptiveController()=delete;
     Example_AdaptiveController(Example_AdaptiveController&)=delete;

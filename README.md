@@ -172,3 +172,7 @@ python3 -m pip install ./python_wrapper
 python3
 >>> from adaptive_control_example import *
 ```
+
+# Changelog
+
+- 2025.05. Updating code to work with `DQ_CoppeliaSimInterfaceZMQ`. 
