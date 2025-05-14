@@ -4,18 +4,16 @@
 if [ "$(uname)" == "Darwin" ]; then
     echo "Installing prerequisites with brew..."
     brew install eigen cppzmq boost
+    python3 -m pip install dqrobotics --pre --break-system-packages
+    python3 -m pip install ./python_wrapper --break-system-packages
 elif [ "$(expr substr "$(uname -s)" 1 5)" == "Linux" ]; then
     echo "Installing prerequisites with apt..."
     sudo apt install python3-dev libeigen3-dev libzmq3-dev libboost-all-dev
+    python3 -m pip install dqrobotics --pre
+    python3 -m pip install ./python_wrapper
 else
     echo "Unrecognized system."
 fi
-
-# dqrobotics python
-python3 -m pip install --break-system-packages dqrobotics --pre
-
-# Install the example wrapper code
-python3 -m pip install --break-system-packages ./python_wrapper
 
 # Test the example wrapper code
 echo "
