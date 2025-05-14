@@ -27,24 +27,28 @@ jobs:
         python3 -m pip config set global.break-system-packages true
         python3 -m pip install setuptools wheel 
         ./test_python_wrapper.sh
+        cd python_wrapper
         python setup.py bdist_wheel
+        cd ..
 
     - name: Rename wheel (MacOS only)
       if: matrix.os == 'macos-latest'
       run: |
         brew install rename
-        cd dist
+        cd python_wrapper/dist
         sw_vers
         rename 's/11_0/10_14/' *
         rename 's/12_0/10_15/' *
         rename 's/universal2/arm64/' *
         cd ..
+        cd ..
     - name: Rename wheel (Ubuntu Only)
       if: matrix.os == 'ubuntu-22.04'
       run: |
         sudo apt install rename
-        cd dist
+        cd python_wrapper/dist
         rename 's/linux/manylinux1/' *
+        cd ..
         cd ..
     - name: Upload distributions
       uses: actions/upload-artifact@v4
@@ -65,9 +69,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-dists
-          path: dist/
+          path: python_wrapper/dist/
 
       - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist/
+          packages-dir: python_wrapper/dist/

@@ -11,8 +11,8 @@ else
     echo "Unrecognized system."
 fi
 
-  python3 -m pip install dqrobotics --pre
-  python3 -m pip install ./python_wrapper
+python3 -m pip install dqrobotics --pre
+python3 -m pip install ./python_wrapper
 
 # Test the example wrapper code
 echo "
