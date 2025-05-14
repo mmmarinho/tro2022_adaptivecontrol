@@ -45,6 +45,7 @@ jobs:
       run: |
         sudo apt install rename
         cd python_wrapper/dist
+        ls -lah
         rename 's/linux/manylinux1/' *
         cd ..
         cd ..
