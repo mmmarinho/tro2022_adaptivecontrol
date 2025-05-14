@@ -175,6 +175,11 @@ PYBIND11_MODULE(_core, m) {
             .def_readwrite("min_",&Example_ParameterSpaceEDH::Example_Parameter::min_)
             .def_readwrite("max_",&Example_ParameterSpaceEDH::Example_Parameter::max_);
 
+    //This is originally wrapped in dqrobotics. Better to know what to expect in this case. Nonetheless, this was needed
+    //in 2025.05 and otherwise had the error
+    // ImportError: generic_type: type "Example_SerialManipulatorEDH" referenced unknown base type "DQ_robotics::DQ_SerialManipulator"
+    py::class_<DQ_SerialManipulator,std::shared_ptr<DQ_SerialManipulator>>(m,"DQ_SerialManipulator");
+
     //class Example_SerialManipulatorEDH : public DQ_SerialManipulator
     py::class_
             <

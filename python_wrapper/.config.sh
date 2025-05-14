@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+BASE_PATH=$(cd ../ && pwd)
+echo $BASE_PATH
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BASE_PATH/lib
+export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BASE_PATH/lib
+export LIBRARY_PATH=$LIBRARY_PATH:$BASE_PATH/lib
+export CPATH=$CPATH:$BASE_PATH/include
