@@ -7,19 +7,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Werror=return-type)
 
 if(APPLE)
-    find_package(cppzmq REQUIRED)
-endif ()
-find_package(Threads REQUIRED)
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
-
-if(APPLE)
+    find_package(cppzmq)
+    message("Building not supported on this platform.")
     include_directories(
             /usr/local/include/
             /usr/local/include/eigen3
-            # Most recent versions of brew install here
             /opt/homebrew/include
-            /opt/homebrew/include/eigen3)
+            /opt/homebrew/include/eigen3
+    )
+endif()
+
+if(WIN32)
+    message("Building not supported on this platform.")
+
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+    FIND_PACKAGE(Eigen3 CONFIG REQUIRED)
+    INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 endif()
 
 include_directories(
