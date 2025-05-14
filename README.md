@@ -1,5 +1,25 @@
 # Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements
 
+# Python Users
+
+## venv
+
+```commandline
+    python3 -m venv venv
+    source venv/bin/activate
+    python3 -m pip install dqrobotics --pre
+    python3 -m pip install marinholab-papers-tro2022-adaptivecontrol
+```
+
+## When you cannot use a venv (e.g. ROS2)
+
+```commandline
+    python3 -m pip install dqrobotics --pre
+    python3 -m pip install marinholab-papers-tro2022-adaptivecontrol --break-system-packages
+```
+
+# Reference
+
 Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047).
 
 ```bib
