@@ -181,7 +181,7 @@ PYBIND11_MODULE(_core, m) {
     // This was solved by me a long time ago, the DQ_SerialManipulator imported be installed beforehand in Python.
     // see test_python_wrapper.sh or look up the history if the file no longer exists.
     // However, this does not seem to always work. It might fail for the slightest of differences in versions.
-    py::class_<DQ_SerialManipulator,std::shared_ptr<DQ_SerialManipulator>>(m,"DQ_SerialManipulator");
+    // py::object DQ_SerialManipulator = (py::object) py::module_::import("dqrobotics").attr("Pet");
 
     //class Example_SerialManipulatorEDH : public DQ_SerialManipulator
     py::class_
