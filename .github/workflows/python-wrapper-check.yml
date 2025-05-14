@@ -24,7 +24,7 @@ jobs:
        chmod +x test_python_wrapper.sh
     - name: build
       run: |
-        python3 -m config set global.break-system-packages true
+        python3 -m pip config set global.break-system-packages true
         python3 -m pip install setuptools wheel 
         ./test_python_wrapper.sh
         python setup.py bdist_wheel
