@@ -131,7 +131,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="marinholab-papers-tro2022-adaptivecontrol",
-    version="25.5.3",
+    version="25.5.4",
     description="A Python implementation of an example of 'Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements'",
     author = "Murilo M. Marinho",
     author_email="murilomarinho@ieee.org",
