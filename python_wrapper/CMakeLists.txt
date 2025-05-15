@@ -37,6 +37,7 @@ include_directories(
     )
 
 add_subdirectory(pybind11)
+set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(submodules/dqrobotics/cpp)
 add_subdirectory(submodules/dqrobotics/cpp-interface-coppeliasim)
 add_subdirectory(submodules/dqrobotics/cpp-interface-coppeliasim-zmq)

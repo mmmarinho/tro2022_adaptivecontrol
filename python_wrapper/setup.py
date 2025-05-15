@@ -7,6 +7,11 @@ from pathlib import Path
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
+# read the contents of your README file
+from pathlib import Path
+repository_root = Path(__file__).parent.parent
+long_description = (repository_root / "README.md").read_text()
+
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
     "win32": "Win32",
@@ -126,7 +131,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="marinholab-papers-tro2022-adaptivecontrol",
-    version="25.5.2",
+    version="25.5.3",
     description="A Python implementation of an example of 'Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements'",
     author = "Murilo M. Marinho",
     author_email="murilomarinho@ieee.org",
@@ -138,7 +143,8 @@ setup(
     ext_modules=[CMakeExtension('marinholab.papers.tro2022.adaptive_control._core')],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    python_requires=">=3.7"
-    #readme = "README.md"
+    python_requires=">=3.7",
+    long_description=long_description,
+    long_description_content_type='text/markdown'
 )
 
