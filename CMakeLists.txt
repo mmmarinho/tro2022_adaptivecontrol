@@ -33,21 +33,22 @@ add_library(adaptive_control
         submodules/sas_core/src/sas_clock.cpp
 )
 
-add_executable(${PROJECT_NAME}
-    src/${PROJECT_NAME}.cpp
-    )
+# 2025.05.17 Not currently able to compile this given the missing features in CoppeliaSimInterfaceZMQ
+#add_executable(${PROJECT_NAME}
+#    src/${PROJECT_NAME}.cpp
+#    )
 
 
-target_link_libraries(${PROJECT_NAME}
-    -lqpOASES
-    -ldqrobotics
-    adaptive_control
+#target_link_libraries(${PROJECT_NAME}
+#    -lqpOASES
+#    -ldqrobotics
+#    adaptive_control
     #-ldqrobotics-interface-coppeliasim
     #-ldqrobotics-interface-coppeliasim-zmq
     #Threads::Threads
-    )
+#    )
 
-install(TARGETS
-    ${PROJECT_NAME}
-    DESTINATION ${CMAKE_SOURCE_DIR}/bin/)
+#install(TARGETS
+#    ${PROJECT_NAME}
+#    DESTINATION ${CMAKE_SOURCE_DIR}/bin/)
     
