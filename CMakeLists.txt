@@ -22,25 +22,29 @@ include_directories(
     submodules/sas_core/include
     )
 
+add_library(adaptive_control
+        src/example/Example_AdaptiveController.cpp
+        src/example/Example_VFI.cpp
+        src/example/Example_SerialManipulatorEDH.cpp
+        #src/example/Example_VS050VrepRobot.cpp
+        src/example/Example_MeasurementSpace.cpp
+
+        submodules/sas_core/src/sas_object.cpp
+        submodules/sas_core/src/sas_clock.cpp
+)
+
 add_executable(${PROJECT_NAME}
     src/${PROJECT_NAME}.cpp
-    src/example/Example_AdaptiveController.cpp
-    src/example/Example_VFI.cpp
-    src/example/Example_SerialManipulatorEDH.cpp
-    src/example/Example_VS050VrepRobot.cpp
-    src/example/Example_MeasurementSpace.cpp
-
-    submodules/sas_core/src/sas_object.cpp
-    submodules/sas_core/src/sas_clock.cpp
     )
 
 
 target_link_libraries(${PROJECT_NAME}
     -lqpOASES
     -ldqrobotics
-    -ldqrobotics-interface-coppeliasim
-    -ldqrobotics-interface-coppeliasim-zmq
-    Threads::Threads
+    adaptive_control
+    #-ldqrobotics-interface-coppeliasim
+    #-ldqrobotics-interface-coppeliasim-zmq
+    #Threads::Threads
     )
 
 install(TARGETS

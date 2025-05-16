@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Werror=return-type -fPIC)
 
 if(APPLE)
-    find_package(cppzmq)
-    message("Building not supported on this platform.")
     include_directories(
             /usr/local/include/
             /usr/local/include/eigen3
@@ -18,8 +16,6 @@ if(APPLE)
 endif()
 
 if(WIN32)
-    message("Building not supported on this platform.")
-
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
     FIND_PACKAGE(Eigen3 CONFIG REQUIRED)
     INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
@@ -28,41 +24,25 @@ endif()
 include_directories(
     include
     /usr/include/eigen3/
-    submodules/dqrobotics/cpp/include
-    submodules/dqrobotics/cpp-interface-coppeliasim/include
-    submodules/dqrobotics/cpp-interface-coppeliasim-zmq/include
+    dqrobotics_python/cpp/include
+    dqrobotics_python/interfaces/cpp-interface-coppeliasim/include
     submodules/qpOASES/include
     submodules/dqrobotics/cpp-interface-qpoases/include
-    submodules/sas_core/include
     )
 
-add_subdirectory(pybind11)
-set(BUILD_SHARED_LIBS OFF)
-add_subdirectory(submodules/dqrobotics/cpp)
-add_subdirectory(submodules/dqrobotics/cpp-interface-coppeliasim)
-add_subdirectory(submodules/dqrobotics/cpp-interface-coppeliasim-zmq)
-add_subdirectory(submodules/qpOASES)
-
+add_subdirectory(dqrobotics_python/pybind11)
 pybind11_add_module(_core MODULE
-
     src/adaptive_control_example_py.cpp
 
-    src/example/Example_AdaptiveController.cpp
-    src/example/Example_VFI.cpp
-    src/example/Example_SerialManipulatorEDH.cpp
-    #../src/example/Example_VS050VrepRobot.cpp
-    src/example/Example_MeasurementSpace.cpp
-
-    submodules/sas_core/src/sas_object.cpp
-    submodules/sas_core/src/sas_clock.cpp
-
     )
 
-if(APPLE)
-    target_link_libraries(_core PRIVATE dqrobotics dqrobotics-interface-coppeliasim-zmq cppzmq qpOASES ${Boost_LIBRARIES})
-endif()
-if(UNIX AND NOT APPLE)
-    target_link_libraries(_core PRIVATE dqrobotics dqrobotics-interface-coppeliasim-zmq zmq qpOASES ${Boost_LIBRARIES})
-endif()
+# CMAKE was not passing BUILD_SHARED_LIBS nicely to the add_subdirectory.
+# https://thatonegamedev.com/cpp/cmake/how-to-manage-dependencies-with-cmake/
+set(BUILD_SHARED_LIBS FALSE CACHE BOOL "x" FORCE)
+add_subdirectory(cpp_version)
+add_subdirectory(dqrobotics_python/cpp)
+add_subdirectory(submodules/qpOASES)
+
+target_link_libraries(_core PRIVATE adaptive_control dqrobotics qpOASES)
 
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
