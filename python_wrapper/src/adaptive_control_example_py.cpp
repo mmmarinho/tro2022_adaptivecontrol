@@ -182,7 +182,8 @@ PYBIND11_MODULE(_core, m) {
     // see test_python_wrapper.sh or look up the history if the file no longer exists.
     // However, this does not seem to always work. It might fail for the slightest of differences in versions.
     // https://pybind11.readthedocs.io/en/stable/advanced/misc.html
-    py::module_::import("dqrobotics");
+    // py::module_::import("dqrobotics");
+    // py::module_::import("dqrobotics.robot_modeling");
 
     //class Example_SerialManipulatorEDH : public DQ_SerialManipulator
     py::class_

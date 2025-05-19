@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import sys
+import platform
 from pathlib import Path
 
 from setuptools import Extension, setup
@@ -61,6 +62,7 @@ class CMakeBuild(build_ext):
         if "CMAKE_ARGS" in os.environ:
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
+
         # In this example, we pass in the version to C++. You might not need to.
         cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]
 
@@ -107,6 +109,13 @@ class CMakeBuild(build_ext):
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
+
+        # Without this, the results of some calculations will differ from the MATLAB version and cause the tests to
+        # fail.
+        if platform.machine() == "aarch64" or platform.machine() == "arm64":
+            cmake_args += ['-DCMAKE_CXX_FLAGS="-ffp-contract=off"']
+            # https://stackoverflow.com/questions/64036879/differing-floating-point-calculation-results-between-x86-64-and-armv8-2-a
+
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
