@@ -21,7 +21,7 @@ dependencies=[
     'dqrobotics>=23.4.0a49'
 ]
 description="A Python implementation of an example of 'Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements'"
-readme = "../README.md"
+readme = "README.md"
 requires-python = ">= 3.9"
 
 # https://pypi.org/project/setuptools-git-versioning/
