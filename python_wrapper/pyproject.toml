@@ -1,0 +1,32 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "ninja",
+    "cmake>=3.12",
+    "setuptools-git-versioning>=2.0,<3"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = 'marinholab-papers-tro2022-adaptivecontrol'
+authors = [
+    {name = "Murilo M. Marinho", email = "murilomarinho@ieee.org"}
+]
+maintainers = [
+    {name = "Murilo M. Marinho", email = "murilomarinho@ieee.org"}
+]
+dynamic = ["version"]
+dependencies=[
+    'dqrobotics>=23.4.0a49'
+]
+description="A Python implementation of an example of 'Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements'"
+readme = "../README.md"
+requires-python = ">= 3.9"
+
+# https://pypi.org/project/setuptools-git-versioning/
+[tool.setuptools-git-versioning]
+enabled = true
+# https://stackoverflow.com/questions/73605607/how-to-use-setuptools-scm
+dev_template = "{tag}.a{ccount}"
+dirty_template = "{tag}.a{ccount}"
