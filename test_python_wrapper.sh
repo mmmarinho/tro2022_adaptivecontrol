@@ -12,7 +12,7 @@ else
 fi
 
 python3 -m pip config set global.break-system-packages true
-python3 -m pip install setuptools wheel
+python3 -m pip install setuptools wheel setuptools-git-versioning
 
 python3 -m pip install dqrobotics --pre
 python3 -m pip install ./python_wrapper
