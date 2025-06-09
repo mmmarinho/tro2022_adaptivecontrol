@@ -73,7 +73,7 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
  * @param space_ see Example_MeasureSpace for possible values.
  * @return the closest invariant error, and the closest invariant itself as 1 or -1.
  */
-std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& space_)
+std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& space_, const DQ& t_e)
 {
     switch(space_)
     {
@@ -131,13 +131,13 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
     }
     case Example_MeasureSpace::Line:
     {
-        DQ ex = x - xd;
+        DQ ex = Ad(x, t_e) - xd;          //  w r t:  world frame
         double invariant = 1;
         return {vec8(ex),invariant};
     }
     case Example_MeasureSpace::Plane:
     {
-        DQ ex = x - xd;
+        DQ ex = Adsharp(x, t_e) - xd;          //  w r t:  world frame
         double invariant = 1;
         return {vec8(ex),invariant};
     }
@@ -146,6 +146,16 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
 
 
     throw std::runtime_error("Not supposed to be reachable");
+}
+
+
+
+// New 3-parameter overload
+std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd,
+                                                    const Example_MeasureSpace& space_)
+{
+    // Call 4-parameter version with default t_e = 1
+    return closest_invariant_error(x, xd, space_, DQ(1));
 }
 
 /**
@@ -190,7 +200,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat * t_e, xd, task_space);
+    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, task_space, t_e);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
