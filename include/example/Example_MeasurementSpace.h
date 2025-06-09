@@ -39,6 +39,8 @@ enum class Example_MeasureSpace
     Rotation,
     Translation,
     Distance,
+    Line,
+    Plane,
 };
 
 int get_measure_space_dimension(const Example_MeasureSpace &measure_space);

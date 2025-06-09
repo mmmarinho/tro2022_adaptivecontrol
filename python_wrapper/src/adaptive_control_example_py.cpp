@@ -27,6 +27,8 @@ PYBIND11_MODULE(_core, m) {
             .value("Rotation", Example_MeasureSpace::Rotation)
             .value("Translation", Example_MeasureSpace::Translation)
             .value("Distance", Example_MeasureSpace::Distance)
+            .value("Line", Example_MeasureSpace::Line)
+            .value("Plane", Example_MeasureSpace::Plane)
             .export_values();
 
     /// "example/Example_AdaptiveController.h"
@@ -77,7 +79,11 @@ PYBIND11_MODULE(_core, m) {
                  <const std::shared_ptr<Example_SerialManipulatorEDH>&,
                  const Example_SimulationParameters &
                  >())
-            .def("compute_setpoint_control_signal",&Example_AdaptiveController::compute_setpoint_control_signal,"");
+            .def("compute_setpoint_control_signal",&Example_AdaptiveController::compute_setpoint_control_signal,"")
+            .def("set_object",&Example_AdaptiveController::set_object,"")
+            .def("get_object_type",&Example_AdaptiveController::get_object_type,"")
+            .def("get_object_to_ee",&Example_AdaptiveController::get_object_to_ee,"");
+
 
     /// "example/Example_AdaptiveController.h"
 
