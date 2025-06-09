@@ -32,6 +32,8 @@ Contributors (aside from author):
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
  */
+
+ //     this is a set, where both Measure and Task(objective) spaces types come from. The name can be 'Example_SpaceType' in the future
 enum class Example_MeasureSpace
 {
     None=0,

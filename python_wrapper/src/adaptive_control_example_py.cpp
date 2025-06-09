@@ -80,9 +80,9 @@ PYBIND11_MODULE(_core, m) {
                  const Example_SimulationParameters &
                  >())
             .def("compute_setpoint_control_signal",&Example_AdaptiveController::compute_setpoint_control_signal,"")
-            .def("set_object",&Example_AdaptiveController::set_object,"")
-            .def("get_object_type",&Example_AdaptiveController::get_object_type,"")
-            .def("get_object_to_ee",&Example_AdaptiveController::get_object_to_ee,"");
+            .def("set_control_objective",&Example_AdaptiveController::set_control_objective,"")
+            .def("get_objective_type",&Example_AdaptiveController::get_objective_type,"")
+            .def("get_objective_to_ee",&Example_AdaptiveController::get_objective_to_ee,"");
 
 
     /// "example/Example_AdaptiveController.h"

@@ -82,12 +82,12 @@ private:
     DQ _convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
 
     VectorXd _smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
-    MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const Example_MeasureSpace& measure_space);
+    MatrixXd _convert_pose_jacobian_to_other_space(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const Example_MeasureSpace& measure_space);
     MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
  public:
-    DQ get_object_to_ee() const;
-    Example_MeasureSpace get_object_type() const;
-    void set_object(const Example_MeasureSpace& task_space_, const DQ& t_e_);
+    DQ get_objective_to_ee() const;
+    Example_MeasureSpace get_objective_type() const;
+    void set_control_objective(const Example_MeasureSpace& task_space_, const DQ& t_e_);
 
     Example_AdaptiveController()=delete;
     Example_AdaptiveController(Example_AdaptiveController&)=delete;

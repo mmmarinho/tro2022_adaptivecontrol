@@ -70,12 +70,13 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
  *
  * @param x the current (partial) pose.
  * @param xd the desired (partial) pose.
- * @param space_ see Example_MeasureSpace for possible values.
+ * @param space_type format of the object, see Example_MeasureSpace for possible values.
+ * @param t_e   the expression of the objective (tracking in the task) wrt the end-effector.
  * @return the closest invariant error, and the closest invariant itself as 1 or -1.
  */
-std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& space_, const DQ& t_e)
+std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& space_type, const DQ& t_e)
 {
-    switch(space_)
+    switch(space_type)
     {
     case Example_MeasureSpace::None:
         throw std::runtime_error("None is not a valid DQ_MeasureSpace");
@@ -243,7 +244,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         ///Task
         const MatrixXd J_x_q = robot_->pose_jacobian(q);
 //        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = _convert_pose_jacobian_to_measure_space(J_x_q, x_hat, xd, task_space);
+        const MatrixXd N_x_q = _convert_pose_jacobian_to_other_space(J_x_q, x_hat, xd, task_space);
 
         const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
         const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
@@ -291,7 +292,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         std::tie(y_tilde, y_invariant) = closest_invariant_error(y_hat_partial, y_partial, measure_space);
 
         const MatrixXd J_y_a = robot_->parameter_pose_jacobian(q);
-        const MatrixXd J_y_a_partial = _convert_pose_jacobian_to_measure_space(J_y_a, y_hat, y, measure_space);
+        const MatrixXd J_y_a_partial = _convert_pose_jacobian_to_other_space(J_y_a, y_hat, y, measure_space);
 
         ///Objective function
         const MatrixXd Hy = (J_y_a_partial.transpose()*J_y_a_partial + lambda*MatrixXd::Identity(p,p));
@@ -356,9 +357,9 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
 
  * Not only measurement space, the task space also call this function *
  */
-MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const Example_MeasureSpace& measure_space)
+MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_other_space(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const Example_MeasureSpace& space_type)
 {
-    switch(measure_space)
+    switch(space_type)
     {
     case Example_MeasureSpace::None:
         throw std::runtime_error("Measurespace None not acceptable.");
@@ -475,18 +476,18 @@ VectorXd Example_AdaptiveController::_smart_vec(const DQ& x, const Example_Measu
 
 
 // Method to set the object type and pose
-void Example_AdaptiveController::set_object(const Example_MeasureSpace& task_space_, const DQ& t_e_)
+void Example_AdaptiveController::set_control_objective(const Example_MeasureSpace& task_space_, const DQ& t_e_)
 {
     task_space = task_space_;
     t_e = t_e_;
 }
 
-Example_MeasureSpace Example_AdaptiveController::get_object_type() const
+Example_MeasureSpace Example_AdaptiveController::get_objective_type() const
 {
     return task_space;
 }
 
-DQ Example_AdaptiveController::get_object_to_ee() const
+DQ Example_AdaptiveController::get_objective_to_ee() const
 {
     return t_e;
 }
