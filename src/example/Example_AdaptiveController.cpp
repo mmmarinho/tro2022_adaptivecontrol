@@ -201,7 +201,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, task_space, t_e);
+    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, ControlObjective, t_e);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
@@ -244,7 +244,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         ///Task
         const MatrixXd J_x_q = robot_->pose_jacobian(q);
 //        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = _convert_pose_jacobian_to_other_space(J_x_q, x_hat, xd, task_space);
+        const MatrixXd N_x_q = _convert_pose_jacobian_to_other_space(J_x_q, x_hat, xd, ControlObjective);
 
         const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
         const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
@@ -414,7 +414,7 @@ Example_AdaptiveController::Example_AdaptiveController(const std::shared_ptr<Exa
     robot_(robot),
     simulation_arguments_(simulation_arguments),
     t_e(DQ(1)),
-    task_space(Example_MeasureSpace::Pose)
+    ControlObjective(Example_MeasureSpace::Pose)
 {
 
 }
@@ -476,15 +476,15 @@ VectorXd Example_AdaptiveController::_smart_vec(const DQ& x, const Example_Measu
 
 
 // Method to set the object type and pose
-void Example_AdaptiveController::set_control_objective(const Example_MeasureSpace& task_space_, const DQ& t_e_)
+void Example_AdaptiveController::set_control_objective(const Example_MeasureSpace& ControlObjective_, const DQ& t_e_)
 {
-    task_space = task_space_;
+    ControlObjective = ControlObjective_;
     t_e = t_e_;
 }
 
 Example_MeasureSpace Example_AdaptiveController::get_objective_type() const
 {
-    return task_space;
+    return ControlObjective;
 }
 
 DQ Example_AdaptiveController::get_objective_to_ee() const

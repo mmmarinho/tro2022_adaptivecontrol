@@ -73,7 +73,7 @@ private:
     const Example_SimulationParameters& simulation_arguments_;
     std::shared_ptr<Example_SerialManipulatorEDH> robot_;
 
-    Example_MeasureSpace task_space;
+    Example_MeasureSpace ControlObjective;
     DQ   t_e;       //  pose of the tool with respect to the end-effector
 
     DQ_QPOASESSolver task_space_solver_;
@@ -87,7 +87,7 @@ private:
  public:
     DQ get_objective_to_ee() const;
     Example_MeasureSpace get_objective_type() const;
-    void set_control_objective(const Example_MeasureSpace& task_space_, const DQ& t_e_);
+    void set_control_objective(const Example_MeasureSpace& ControlObjective_, const DQ& t_e_);
 
     Example_AdaptiveController()=delete;
     Example_AdaptiveController(Example_AdaptiveController&)=delete;
