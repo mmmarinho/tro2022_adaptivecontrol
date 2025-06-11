@@ -27,8 +27,6 @@ PYBIND11_MODULE(_core, m) {
             .value("Rotation", Example_MeasureSpace::Rotation)
             .value("Translation", Example_MeasureSpace::Translation)
             .value("Distance", Example_MeasureSpace::Distance)
-            .value("Line", Example_MeasureSpace::Line)
-            .value("Plane", Example_MeasureSpace::Plane)
             .export_values();
 
     /// "example/Example_AdaptiveController.h"
@@ -81,8 +79,7 @@ PYBIND11_MODULE(_core, m) {
                  >())
             .def("compute_setpoint_control_signal",&Example_AdaptiveController::compute_setpoint_control_signal,"")
             .def("set_control_objective",&Example_AdaptiveController::set_control_objective,"")
-            .def("get_objective_type",&Example_AdaptiveController::get_objective_type,"")
-            .def("get_objective_to_ee",&Example_AdaptiveController::get_objective_to_ee,"");
+            .def("set_primitive_to_effector",&Example_AdaptiveController::set_primitive_to_effector,"");
 
 
     /// "example/Example_AdaptiveController.h"

@@ -40,10 +40,6 @@ int get_measure_space_dimension(const Example_MeasureSpace &measure_space)
         return 4;
     case Example_MeasureSpace::Distance:
         return 1;
-    case Example_MeasureSpace::Line:
-        return 8;
-    case Example_MeasureSpace::Plane:
-        return 8;
     }
     throw std::runtime_error("Not supposed to be reachable");
 }

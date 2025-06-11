@@ -31,7 +31,7 @@ Contributors (aside from author):
  * doi: 10.1109/TRO.2022.3181047.
  */
 #include<tuple>
-
+#include <dqrobotics/robot_control/DQ_KinematicController.h>
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/solvers/DQ_QPOASESSolver.h>
 
@@ -73,8 +73,8 @@ private:
     const Example_SimulationParameters& simulation_arguments_;
     std::shared_ptr<Example_SerialManipulatorEDH> robot_;
 
-    Example_MeasureSpace ControlObjective;
-    DQ   t_e;       //  pose of the tool with respect to the end-effector
+    ControlObjective control_objective;
+    DQ   primitive;       //  pose of the tool with respect to the end-effector
 
     DQ_QPOASESSolver task_space_solver_;
     DQ_QPOASESSolver parameter_space_solver_;
@@ -82,12 +82,12 @@ private:
     DQ _convert_pose_to_measure_space(const DQ& x, const Example_MeasureSpace& measure_space);
 
     VectorXd _smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
-    MatrixXd _convert_pose_jacobian_to_other_space(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const Example_MeasureSpace& measure_space);
+    MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const Example_MeasureSpace& measure_space);
+    MatrixXd _convert_pose_jacobian_to_objective_space(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const ControlObjective& objective_space);
     MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
  public:
-    DQ get_objective_to_ee() const;
-    Example_MeasureSpace get_objective_type() const;
-    void set_control_objective(const Example_MeasureSpace& ControlObjective_, const DQ& t_e_);
+    void set_primitive_to_effector(const DQ& primitive_);
+    void set_control_objective(const ControlObjective& control_objective_);
 
     Example_AdaptiveController()=delete;
     Example_AdaptiveController(Example_AdaptiveController&)=delete;

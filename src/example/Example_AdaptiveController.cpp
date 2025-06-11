@@ -70,13 +70,12 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
  *
  * @param x the current (partial) pose.
  * @param xd the desired (partial) pose.
- * @param space_type format of the object, see Example_MeasureSpace for possible values.
- * @param t_e   the expression of the objective (tracking in the task) wrt the end-effector.
+ * @param measure_space format of the object, see Example_MeasureSpace for possible values.
  * @return the closest invariant error, and the closest invariant itself as 1 or -1.
  */
-std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& space_type, const DQ& t_e)
+std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& measure_space)
 {
-    switch(space_type)
+    switch(measure_space)
     {
     case Example_MeasureSpace::None:
         throw std::runtime_error("None is not a valid DQ_MeasureSpace");
@@ -130,33 +129,55 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
         }
         return {vec8(ex),invariant};
     }
-    case Example_MeasureSpace::Line:
-    {
-        DQ ex = Ad(x, t_e) - xd;          //  w r t:  world frame
-        double invariant = 1;
-        return {vec8(ex),invariant};
     }
-    case Example_MeasureSpace::Plane:
-    {
-        DQ ex = Adsharp(x, t_e) - xd;          //  w r t:  world frame
-        double invariant = 1;
-        return {vec8(ex),invariant};
-    }
-
-    }
-
-
     throw std::runtime_error("Not supposed to be reachable");
 }
 
 
-
-// New 3-parameter overload
-std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd,
-                                                    const Example_MeasureSpace& space_)
+/*
+    get the error between the desired target primitive (xd, in world frame) and the primitive (primitive_, in end-effector frame)
+    x:  pose of the robot, wrt world frame
+    xd: desired objective pose of the objective
+    control_objective_: type of the objective
+    primitive_: pose of the objective, wrt end-effector
+*/
+std::tuple<VectorXd,double> closest_invariant_primitive_error(const DQ& x, const DQ& xd, const ControlObjective& control_objective_, const DQ& primitive_)
 {
-    // Call 4-parameter version with default t_e = 1
-    return closest_invariant_error(x, xd, space_, DQ(1));
+    switch(control_objective_)
+    {
+    case ControlObjective::None:
+        throw std::runtime_error("None is not a valid ControlObjective");
+    case ControlObjective::Pose:
+    {
+        //Address double cover in pose space
+        const double ex_1_norm       = vec8(conj(x*primitive_)*xd - 1).norm();
+        const double ex_1minus_norm  = vec8(conj(x*primitive_)*xd + 1).norm();
+        DQ ex;
+        double invariant;
+        if(ex_1_norm<ex_1minus_norm)
+        {
+            ex = conj(x*primitive_)*xd - 1;
+            invariant = -1;
+        }
+        else
+        {
+            ex = conj(x*primitive_)*xd + 1;
+            invariant = +1;
+        }
+        return {vec8(ex),invariant};
+    }
+    case ControlObjective::Line:
+    {
+        DQ ex = Ad(x, primitive_) - xd;          //  w r t:  world frame
+        return {vec8(ex),1};
+    }
+    case ControlObjective::Plane:
+    {
+        DQ ex = Adsharp(x, primitive_) - xd;          //  w r t:  world frame
+        return {vec8(ex),1};
+    }
+    }
+    throw std::runtime_error("Not supposed to be reachable / not supported");
 }
 
 /**
@@ -201,7 +222,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, ControlObjective, t_e);
+    std::tie(x_tilde, x_invariant) = closest_invariant_primitive_error(x_hat, xd, control_objective, primitive);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
@@ -244,7 +265,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         ///Task
         const MatrixXd J_x_q = robot_->pose_jacobian(q);
 //        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = _convert_pose_jacobian_to_other_space(J_x_q, x_hat, xd, ControlObjective);
+        const MatrixXd N_x_q = _convert_pose_jacobian_to_objective_space(J_x_q, x_hat, xd, control_objective);
 
         const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
         const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
@@ -292,7 +313,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         std::tie(y_tilde, y_invariant) = closest_invariant_error(y_hat_partial, y_partial, measure_space);
 
         const MatrixXd J_y_a = robot_->parameter_pose_jacobian(q);
-        const MatrixXd J_y_a_partial = _convert_pose_jacobian_to_other_space(J_y_a, y_hat, y, measure_space);
+        const MatrixXd J_y_a_partial = _convert_pose_jacobian_to_measure_space(J_y_a, y_hat, y, measure_space);
 
         ///Objective function
         const MatrixXd Hy = (J_y_a_partial.transpose()*J_y_a_partial + lambda*MatrixXd::Identity(p,p));
@@ -357,9 +378,9 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
 
  * Not only measurement space, the task space also call this function *
  */
-MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_other_space(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const Example_MeasureSpace& space_type)
+MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const Example_MeasureSpace& measure_space)
 {
-    switch(space_type)
+    switch(measure_space)
     {
     case Example_MeasureSpace::None:
         throw std::runtime_error("Measurespace None not acceptable.");
@@ -371,13 +392,31 @@ MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_other_space(const
         return DQ_Kinematics::translation_jacobian(Jx, x);
     case Example_MeasureSpace::Distance:
         return DQ_Kinematics::point_to_point_distance_jacobian(DQ_Kinematics::translation_jacobian(Jx, x), translation(x), DQ(0));
-
-    case Example_MeasureSpace::Line:
-        return DQ_Kinematics::line_jacobian(Jx, x, P(t_e));
-    case Example_MeasureSpace::Plane:
-        return DQ_Kinematics::plane_jacobian(Jx, x, P(t_e));
     }
     throw std::runtime_error("Not supposed to be reachable");
+}
+
+/*
+    convert the pose jacobian of the robot to the objective primitive jacobian.
+    Jx: pose jacobian
+    x:  pose of the robot
+    xd: desired objective primitive
+    control_objective_: the primitive type
+*/
+MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_objective_space(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const ControlObjective& control_objective_)
+{
+    switch(control_objective_)
+    {
+    case ControlObjective::None:
+        throw std::runtime_error("Objective space None not acceptable.");
+    case ControlObjective::Pose:
+        return haminus8(xd)*C8()*Jx;
+    case ControlObjective::Line:
+        return DQ_Kinematics::line_jacobian(Jx, x, P(primitive));
+    case ControlObjective::Plane:
+        return DQ_Kinematics::plane_jacobian(Jx, x, P(primitive));
+    }
+    throw std::runtime_error("Not supported currently");
 }
 
 /**
@@ -413,8 +452,8 @@ MatrixXd Example_AdaptiveController::_get_complimentary_measure_space_jacobian(c
 Example_AdaptiveController::Example_AdaptiveController(const std::shared_ptr<Example_SerialManipulatorEDH> &robot, const Example_SimulationParameters &simulation_arguments):
     robot_(robot),
     simulation_arguments_(simulation_arguments),
-    t_e(DQ(1)),
-    ControlObjective(Example_MeasureSpace::Pose)
+    primitive(DQ(1)),
+    control_objective(ControlObjective::Pose)
 {
 
 }
@@ -443,11 +482,6 @@ DQ Example_AdaptiveController::_convert_pose_to_measure_space(const DQ& x, const
         return translation(x);
     case Example_MeasureSpace::Distance:
         return DQ(DQ_Geometry::point_to_point_squared_distance(translation(x), DQ(0)));
-
-    case Example_MeasureSpace::Line:
-        return Ad(x, t_e);
-    case Example_MeasureSpace::Plane:
-        return Adsharp(x, t_e);
     }
     throw std::runtime_error("Not supposed to be reachable");
 }
@@ -476,19 +510,22 @@ VectorXd Example_AdaptiveController::_smart_vec(const DQ& x, const Example_Measu
 
 
 // Method to set the object type and pose
-void Example_AdaptiveController::set_control_objective(const Example_MeasureSpace& ControlObjective_, const DQ& t_e_)
+void Example_AdaptiveController::set_control_objective(const ControlObjective& control_objective_)
 {
-    ControlObjective = ControlObjective_;
-    t_e = t_e_;
+    if (control_objective_ == ControlObjective::Pose || control_objective_ == ControlObjective::Line ||control_objective_ == ControlObjective::Plane )
+    {
+        control_objective = control_objective_;
+    }
+    else
+    {
+        throw std::runtime_error("Currently, only ControlObjective::Pose, ControlObjective::Line, and ControlObjective::Plane are supported");
+    }
+
+
 }
 
-Example_MeasureSpace Example_AdaptiveController::get_objective_type() const
+void Example_AdaptiveController::set_primitive_to_effector(const DQ& primitive_)
 {
-    return ControlObjective;
-}
-
-DQ Example_AdaptiveController::get_objective_to_ee() const
-{
-    return t_e;
+    primitive = primitive_;
 }
 
