@@ -70,7 +70,7 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
  *
  * @param x the current (partial) pose.
  * @param xd the desired (partial) pose.
- * @param measure_space format of the object, see Example_MeasureSpace for possible values.
+ * @param measure_space see Example_MeasureSpace for possible values.
  * @return the closest invariant error, and the closest invariant itself as 1 or -1.
  */
 std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const Example_MeasureSpace& measure_space)
@@ -265,7 +265,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
         ///Task
         const MatrixXd J_x_q = robot_->pose_jacobian(q);
 //        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = _convert_pose_jacobian_to_objective_space(J_x_q, x_hat, xd, control_objective);
+        const MatrixXd N_x_q = _convert_pose_jacobian_to_control_objective(J_x_q, x_hat, xd, control_objective);
 
         const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
         const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
@@ -375,10 +375,8 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> Example_AdaptiveControlle
  * @param xd the desired pose, used to calculate the rotation Jacobian.
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the (partial) Jacobian defined by Example_MeasureSpace.
-
- * Not only measurement space, the task space also call this function *
  */
-MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const Example_MeasureSpace& measure_space)
+MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x, const DQ& xd, const Example_MeasureSpace& measure_space)
 {
     switch(measure_space)
     {
@@ -403,12 +401,12 @@ MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_measure_space(con
     xd: desired objective primitive
     control_objective_: the primitive type
 */
-MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_objective_space(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const ControlObjective& control_objective_)
+MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_control_objective(const MatrixXd& Jx, const DQ& x,  const DQ& xd, const ControlObjective& control_objective_)
 {
     switch(control_objective_)
     {
     case ControlObjective::None:
-        throw std::runtime_error("Objective space None not acceptable.");
+        throw std::runtime_error("Control Objective None not acceptable.");
     case ControlObjective::Pose:
         return haminus8(xd)*C8()*Jx;
     case ControlObjective::Line:

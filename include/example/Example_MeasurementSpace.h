@@ -33,7 +33,6 @@ Contributors (aside from author):
  * doi: 10.1109/TRO.2022.3181047.
  */
 
- //     this is a set, where both Measure and Task(objective) spaces types come from. The name can be 'Example_SpaceType' in the future
 enum class Example_MeasureSpace
 {
     None=0,

@@ -83,7 +83,7 @@ private:
 
     VectorXd _smart_vec(const DQ& x, const Example_MeasureSpace& measure_space);
     MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const Example_MeasureSpace& measure_space);
-    MatrixXd _convert_pose_jacobian_to_objective_space(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const ControlObjective& objective_space);
+    MatrixXd _convert_pose_jacobian_to_control_objective(const MatrixXd& Jx, const DQ &x,  const DQ &xd, const ControlObjective& objective_space);
     MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const Example_MeasureSpace& measure_space);
  public:
     void set_primitive_to_effector(const DQ& primitive_);
