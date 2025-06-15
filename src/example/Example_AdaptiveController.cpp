@@ -139,7 +139,7 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
     x:  pose of the robot, wrt world frame
     xd: desired objective pose of the objective
     control_objective_: type of the objective
-    primitive_: pose of the objective, wrt end-effector
+    primitive_: expression of the control objective, can be a line, plane, or pose. wrt robot end-effector
 */
 std::tuple<VectorXd,double> closest_invariant_primitive_error(const DQ& x, const DQ& xd, const ControlObjective& control_objective_, const DQ& primitive_)
 {
