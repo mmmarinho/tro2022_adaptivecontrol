@@ -74,7 +74,7 @@ private:
     std::shared_ptr<Example_SerialManipulatorEDH> robot_;
 
     ControlObjective control_objective;
-    DQ   primitive;       //  pose of the tool with respect to the end-effector
+    DQ   primitive;       //  the control objective (in format of class ControObjective) with respect to the end-effector
 
     DQ_QPOASESSolver task_space_solver_;
     DQ_QPOASESSolver parameter_space_solver_;
