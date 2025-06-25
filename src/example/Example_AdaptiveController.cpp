@@ -150,18 +150,18 @@ std::tuple<VectorXd,double> closest_invariant_primitive_error(const DQ& x, const
     case ControlObjective::Pose:
     {
         //Address double cover in pose space
-        const double ex_1_norm       = vec8(conj(x*primitive_)*xd - 1).norm();
-        const double ex_1minus_norm  = vec8(conj(x*primitive_)*xd + 1).norm();
+        const double ex_1_norm       = vec8(conj(x)*xd - 1).norm();
+        const double ex_1minus_norm  = vec8(conj(x)*xd + 1).norm();
         DQ ex;
         double invariant;
         if(ex_1_norm<ex_1minus_norm)
         {
-            ex = conj(x*primitive_)*xd - 1;
+            ex = conj(x)*xd - 1;
             invariant = -1;
         }
         else
         {
-            ex = conj(x*primitive_)*xd + 1;
+            ex = conj(x)*xd + 1;
             invariant = +1;
         }
         return {vec8(ex),invariant};
@@ -410,9 +410,9 @@ MatrixXd Example_AdaptiveController::_convert_pose_jacobian_to_control_objective
     case ControlObjective::Pose:
         return haminus8(xd)*C8()*Jx;
     case ControlObjective::Line:
-        return DQ_Kinematics::line_jacobian(Jx, x, P(primitive));
+        return DQ_Kinematics::line_jacobian(Jx, x, Im(P(primitive)) );
     case ControlObjective::Plane:
-        return DQ_Kinematics::plane_jacobian(Jx, x, P(primitive));
+        return DQ_Kinematics::plane_jacobian(Jx, x, Im(P(primitive)) );
     }
     throw std::runtime_error("Not supported currently");
 }
@@ -524,6 +524,35 @@ void Example_AdaptiveController::set_control_objective(const ControlObjective& c
 
 void Example_AdaptiveController::set_primitive_to_effector(const DQ& primitive_)
 {
-    primitive = primitive_;
+    switch(control_objective)
+    {
+    case ControlObjective::Pose :
+        throw std::runtime_error("If the control objective is 'ControlObjective::Pose', please use set_effector_frame() instead.");
+        break;
+    case ControlObjective::Line :
+        if (is_line(primitive_))
+        {
+            primitive = primitive_;
+        }
+        else
+        {
+            throw std::runtime_error("The primitive type error. Line expected");
+        }
+        break;
+    case ControlObjective::Plane :
+    {
+        if (is_plane(primitive_))
+        {
+            primitive = primitive_;
+        }
+        else
+        {
+            throw std::runtime_error("The primitive type error. Plane expected");
+        }
+        break;
+    }
+    default:
+        throw std::runtime_error("Unsupported control objective type");
+    }
 }
 
