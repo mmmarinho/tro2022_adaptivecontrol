@@ -129,9 +129,7 @@ void M3_SerialManipulatorEDH::set_base_frame(const DQ &base)
     set_base_frame(base_parameters);
 
     //Verify if the rotation was correctly reconstructed
-    DQ base_rotation = rotation(base);
-    DQ reconstructed_rotation = rotation(get_base_frame());
-    if ( ((vec4(base_rotation)-vec4(reconstructed_rotation)).cwiseAbs().maxCoeff() > DQ_robotics::DQ_threshold) && (base_rotation != -reconstructed_rotation) )
+    if((vec4(rotation(base))-vec4(rotation(get_base_frame()))).cwiseAbs().maxCoeff() > DQ_robotics::DQ_threshold)
     {
         throw std::runtime_error("DQ_SerialManipulatorRDH::set_base_frame()::Error::Rotation quaternion could not be correctly reconstructed (a!=b). \n"
                                  "a= " + rotation(base).to_string() + " b=" + rotation(get_base_frame()).to_string() + "\n" +
