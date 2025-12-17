@@ -21,7 +21,8 @@ Author:
     Murilo M. Marinho (murilomarinho@ieee.org)
 
 Contributors (aside from author):
-    None
+    Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
+        - Add cylinder VFI
 */
 
 #include<memory>
@@ -37,7 +38,8 @@ enum class M3_Primitive
     None=0,
     Point,
     Plane,
-    Line
+    Line,
+    Cylinder
 };
 
 enum class M3_VFI_Direction
@@ -89,10 +91,16 @@ class M3_VFI
     const int joint_index_; //Needs to be correctly implemented in the future
     const DQ relative_displacement_to_joint_;
     const std::string cs_reference_name_;
+    std::vector<std::shared_ptr<M3_VFI>> primitives_;
 
     //New in this paper
     double last_estimated_distance_;
     double last_real_distance_;
+
+    std::tuple<bool, bool> check_if_point_is_inside_line_segment(
+        const DQ& point_in_line,
+        const DQ& line_segment_start_point,
+        const DQ& line_segment_end_point) const;
 public:
     M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
@@ -103,6 +111,10 @@ public:
                     const int& joint_index,
                     const DQ& relative_displacement_to_joint,
                     const std::string& cs_reference_name="");
+
+    M3_VFI(std::shared_ptr<M3_VFI> line,
+           std::shared_ptr<M3_VFI> start_point,
+           std::shared_ptr<M3_VFI> end_point);
 
     void initialize();
 
@@ -120,7 +132,7 @@ public:
 
     double get_safe_distance() const;
 
-    M3_VFI_DistanceType get_distance_type() const;
+    M3_VFI_DistanceType get_distance_type(const DQ &x) const;
 
     void set_last_real_distance(const DQ& y);
 
