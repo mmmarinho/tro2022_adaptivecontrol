@@ -181,7 +181,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     {
         M3_VFI& vfi = vfis[i];
         w_vfi(i) = vfi.get_distance_error(x_hat);
-        switch(vfi.get_distance_type())
+        switch(vfi.get_distance_type(x_hat))
         {
         case M3_VFI_DistanceType::None:
             throw std::runtime_error("Expected valid value");
