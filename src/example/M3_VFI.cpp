@@ -62,14 +62,28 @@ M3_VFI::M3_VFI(const std::string &workspace_entity_name,
  * @brief Overloaded constructor that accepts multiple workspace geometric primitives
  *        to define the VFI constraint.
  */
-M3_VFI::M3_VFI(std::shared_ptr<M3_VFI> line,
+M3_VFI::M3_VFI(const M3_Primitive &type,
+               const double &safe_distance,
+               const M3_VFI_Direction &vfi_direction,
+               std::shared_ptr<M3_VFI> line,
                std::shared_ptr<M3_VFI> start_point,
-               std::shared_ptr<M3_VFI> end_point):
-joint_index_(0) // placeholder initialization of const int joint_index_
+               std::shared_ptr<M3_VFI> end_point,
+               const DQ &relative_displacement_to_joint,
+               const std::string &cs_reference_name):
+safe_distance_(safe_distance),
+vfi_direction_(vfi_direction),
+joint_index_(0), // placeholder initialization of const int joint_index_
+relative_displacement_to_joint_(relative_displacement_to_joint),
+cs_reference_name_(cs_reference_name)
 {
-    line->initialize();
-    start_point->initialize();
-    end_point->initialize();
+    if (type == M3_Primitive::Cylinder)
+        type_ = type;
+    else
+        throw std::runtime_error("Expected valid type. Currently only supports M3_Primitive::Cylinder.");
+
+    // line->initialize();
+    // start_point->initialize();
+    // end_point->initialize();
 
     primitives_.push_back(line);
     primitives_.push_back(start_point);
@@ -197,7 +211,7 @@ void M3_VFI::set_value(const DQ &value)
         else
             throw std::runtime_error("Invalid line.");
     case M3_Primitive::Cylinder:
-        throw std::runtime_error("Expected valid type.");
+        throw std::runtime_error("Expected valid type. set_value() is not implemented to M3_Primitive::Cylinder.");
     }
 }
 
@@ -216,7 +230,7 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
     {
         const MatrixXd Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ t = translation(local_x);
-        DQ_Kinematics::point_to_point_distance_jacobian(local_Jx, t, get_value());
+        return DQ_Kinematics::point_to_point_distance_jacobian(local_Jx, t, get_value());
     }
     case M3_Primitive::Plane:
     {
@@ -286,7 +300,8 @@ double M3_VFI::get_distance(const DQ &x) const
     }
     case M3_Primitive::Point:
     {
-        throw std::runtime_error("Not implemented yet.");
+        const DQ& t = translation(local_x);
+        return DQ_Geometry::point_to_point_squared_distance(t, get_value());
     }
     case M3_Primitive::Plane:
     {
@@ -329,6 +344,16 @@ double M3_VFI::get_distance_error(const DQ &x) const
     case M3_VFI_Direction::FORBIDDEN_ZONE:
     {
         //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
+        // if (type_ == M3_Primitive::Cylinder){
+        //     std::cerr << "For the cylinder: distance = " << get_distance(x) << std::endl;
+        //     std::cerr << "For the cylinder: safe_distance = " << safe_distance_ << std::endl;
+        //     std::cerr << "For the cylinder: distance - safe_distance = " << get_distance(x) - safe_distance_ << std::endl;
+        // }
+        // if (type_ == M3_Primitive::Line){
+        //     std::cerr << "For the line: distance = " << get_distance(x) << std::endl;
+        //     std::cerr << "For the line: safe_distance = " << safe_distance_ << std::endl;
+        //     std::cerr << "For the line: distance - safe_distance = " << get_distance(x) - safe_distance_ << std::endl;
+        // }
         return (get_distance(x) - safe_distance_);
     }
     case M3_VFI_Direction::SAFE_ZONE:

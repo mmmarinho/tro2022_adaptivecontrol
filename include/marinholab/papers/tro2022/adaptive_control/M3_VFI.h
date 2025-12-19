@@ -112,9 +112,14 @@ public:
                     const DQ& relative_displacement_to_joint,
                     const std::string& cs_reference_name="");
 
-    M3_VFI(std::shared_ptr<M3_VFI> line,
+    M3_VFI(const M3_Primitive& type,
+           const double& safe_distance,
+           const M3_VFI_Direction& vfi_direction,
+           std::shared_ptr<M3_VFI> line,
            std::shared_ptr<M3_VFI> start_point,
-           std::shared_ptr<M3_VFI> end_point);
+           std::shared_ptr<M3_VFI> end_point,
+           const DQ& relative_displacement_to_joint,
+           const std::string& cs_reference_name="");
 
     void initialize();
 
