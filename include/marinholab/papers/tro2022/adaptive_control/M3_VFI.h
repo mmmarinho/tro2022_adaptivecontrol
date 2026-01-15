@@ -90,6 +90,7 @@ class M3_VFI
     M3_VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
     const DQ relative_displacement_to_joint_;
+    DQ relative_displacement_to_primitive_;
     const std::string cs_reference_name_;
     std::vector<std::shared_ptr<M3_VFI>> primitives_;
 
@@ -101,6 +102,8 @@ class M3_VFI
         const DQ& point_in_line,
         const DQ& line_segment_start_point,
         const DQ& line_segment_end_point) const;
+
+    void _update_dynamic_geometric_primitives(const DQ& x);
 public:
     M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
@@ -113,6 +116,7 @@ public:
                     const std::string& cs_reference_name="");
 
     M3_VFI(const M3_Primitive& type,
+           const std::shared_ptr<DQ_CoppeliaSimInterface>& vi,
            const double& safe_distance,
            const M3_VFI_Direction& vfi_direction,
            std::shared_ptr<M3_VFI> line,
