@@ -22,7 +22,7 @@ Author:
 
 Contributors (aside from author):
     Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
-        - Add cylinder VFI
+        - Add cylinder VFI and associated methods
 */
 
 #include<memory>
@@ -30,6 +30,7 @@ Contributors (aside from author):
 
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterface.h>
+#include <dqrobotics/robot_modeling/DQ_SerialManipulator.h>
 
 using namespace DQ_robotics;
 
@@ -102,8 +103,6 @@ class M3_VFI
         const DQ& point_in_line,
         const DQ& line_segment_start_point,
         const DQ& line_segment_end_point) const;
-
-    void _update_dynamic_geometric_primitives(const DQ& x);
 public:
     M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
@@ -126,6 +125,11 @@ public:
            const std::string& cs_reference_name="");
 
     void initialize();
+    void initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+                                                 const VectorXd& q);
+
+    void update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+                                             const VectorXd& q);
 
     DQ get_value() const;
 
@@ -142,6 +146,8 @@ public:
     double get_safe_distance() const;
 
     M3_VFI_DistanceType get_distance_type(const DQ &x) const;
+
+    M3_Primitive get_type() const;
 
     void set_last_real_distance(const DQ& y);
 

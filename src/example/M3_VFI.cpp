@@ -21,7 +21,7 @@ Author:
 
 Contributors (aside from author):
     Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
-        - Add cylinder VFI
+        - Add cylinder VFI and associated methods
 */
 
 /**
@@ -118,7 +118,7 @@ std::tuple<bool, bool> M3_VFI::check_if_point_is_inside_line_segment(
         line_segment_start_point,
         line_segment_end_point);
 
-    bool is_inside = ((D_p_start < segment_size) & (D_p_end < segment_size));
+    bool is_inside = ((D_p_start < segment_size) && (D_p_end < segment_size));
     bool is_closest_to_starting_point;
     if (D_p_start < D_p_end)
         is_closest_to_starting_point = true;
@@ -168,41 +168,63 @@ void M3_VFI::initialize()
         return;
     }
     case M3_Primitive::Cylinder:
-        // std::vector<DQ> cylinder;
-        // std::cerr << "Inside initialize()" << std::endl;
+        throw std::runtime_error("Does not support M3_Primitive::Cylinder type."
+                                 "Use initialize_dynamic_geometric_primitives() instead!");
+    }
+}
 
-        // Calculate the robot's entity pose
-        const DQ x =
-            vi_->get_object_pose(primitives_.at(0)->robot_entity_name_)*conj(primitives_.at(0)->relative_displacement_to_joint_);
+/**
+ * @brief Initialize dynamic VFI constraints. Currently only supports dynamic geometric primitives attached to a robot.
+ * @param robot_ptr A std::shared_ptr to a DQ_SerialManipulator object representing the robot.
+ * @param q A VectorXd representing the robot's configuration.
+ * @param joint_number a joint that will be used as reference for the relative transformation.
+ */
+void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+                                                     const VectorXd &q)
+{
+    //Reference pose is desired
+    DQ x_ref(1);
+    if (!cs_reference_name_.empty()) {
+        x_ref = vi_->get_object_pose(cs_reference_name_);
+    }
 
+    switch(type_)
+    {
+    case M3_Primitive::Cylinder:
+    {
         // Calculate the relative pose to the cylinder's line
-        primitives_.at(0)->relative_displacement_to_primitive_ =
-            conj(x)*conj(x_ref)*vi_->get_object_pose(primitives_.at(0)->workspace_entity_name_);
+        DQ robot_dh_frame = robot_ptr->fkm(q, primitives_.at(0)->joint_index_);
+        DQ x_primitive = vi_->get_object_pose(primitives_.at(0)->workspace_entity_name_);
+        primitives_.at(0)->relative_displacement_to_primitive_ = conj(robot_dh_frame)*conj(x_ref)*x_primitive;
 
         // Calculate the relative pose to the cylinder's starting point
-        primitives_.at(1)->relative_displacement_to_primitive_ =
-            conj(x)*conj(x_ref)*vi_->get_object_pose(primitives_.at(1)->workspace_entity_name_);
+        robot_dh_frame = robot_ptr->fkm(q, primitives_.at(1)->joint_index_);
+        x_primitive = vi_->get_object_pose(primitives_.at(1)->workspace_entity_name_);
+        primitives_.at(1)->relative_displacement_to_primitive_ = conj(robot_dh_frame)*conj(x_ref)*x_primitive;
+
 
         // Calculate the relative pose to the cylinder's ending point
-        primitives_.at(2)->relative_displacement_to_primitive_ =
-            conj(x)*conj(x_ref)*vi_->get_object_pose(primitives_.at(2)->workspace_entity_name_);
-
-        // // Initialize the basic primitives
-        // primitives_.at(0)->initialize();
-        // primitives_.at(1)->initialize();
-        // primitives_.at(2)->initialize();
+        robot_dh_frame = robot_ptr->fkm(q, primitives_.at(2)->joint_index_);
+        x_primitive = vi_->get_object_pose(primitives_.at(2)->workspace_entity_name_);
+        primitives_.at(2)->relative_displacement_to_primitive_ = conj(robot_dh_frame)*conj(x_ref)*x_primitive;
 
         return;
+    }
+    default:
+    {
+        throw std::runtime_error("Expected valid type. Currently only supports M3_Primitive::Cylinder.");
+    }
     }
 }
 
 /**
  * @brief Update a dynamic geometric primitive.
- * @param x A dual quaternion representing the pose of the robot entity to which the geometric primitive is given with respect to.
+ * @param robot_ptr A dual quaternion representing the pose of the robot entity to which the geometric primitive is given with respect to.
  */
-void M3_VFI::_update_dynamic_geometric_primitives(const DQ& x)
+void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+                                                 const VectorXd &q)
 {
-    const DQ& local_x = x*relative_displacement_to_primitive_;
+    const DQ& local_x = (robot_ptr->fkm(q, joint_index_))*relative_displacement_to_primitive_;
     switch(type_)
     {
     case M3_Primitive::None:
@@ -229,9 +251,9 @@ void M3_VFI::_update_dynamic_geometric_primitives(const DQ& x)
         return;
     }
     case M3_Primitive::Cylinder:
-        primitives_.at(0)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(1)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(2)->_update_dynamic_geometric_primitives(x);
+        primitives_.at(0)->update_dynamic_geometric_primitives(robot_ptr, q);
+        primitives_.at(1)->update_dynamic_geometric_primitives(robot_ptr, q);
+        primitives_.at(2)->update_dynamic_geometric_primitives(robot_ptr, q);
         return;
     }
 }
@@ -306,12 +328,6 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
         return DQ_Kinematics::point_to_line_distance_jacobian(Jt, t, get_value());
     }
     case M3_Primitive::Cylinder:
-        // Update the dynamic geometric primitives
-        primitives_.at(0)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(1)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(2)->_update_dynamic_geometric_primitives(x);
-
-        // Get the cylinder distance Jacobian
         DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
                                                                 primitives_.at(0)->get_value());
         bool is_inside, is_closest_to_starting_point;
@@ -381,12 +397,6 @@ double M3_VFI::get_distance(const DQ &x) const
         return DQ_Geometry::point_to_line_squared_distance(t, get_value());
     }
     case M3_Primitive::Cylinder:
-        // Update the dynamic geometric primitives
-        primitives_.at(0)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(1)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(2)->_update_dynamic_geometric_primitives(x);
-
-        // Get the distance to the cylinder
         DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
                                                                 primitives_.at(0)->get_value());
         bool is_inside, is_closest_to_starting_point;
@@ -416,17 +426,6 @@ double M3_VFI::get_distance_error(const DQ &x) const
         throw std::runtime_error("Expected valid type");
     case M3_VFI_Direction::FORBIDDEN_ZONE:
     {
-        //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
-        // if (type_ == M3_Primitive::Cylinder){
-        //     std::cerr << "For the cylinder: distance = " << get_distance(x) << std::endl;
-        //     std::cerr << "For the cylinder: safe_distance = " << safe_distance_ << std::endl;
-        //     std::cerr << "For the cylinder: distance - safe_distance = " << get_distance(x) - safe_distance_ << std::endl;
-        // }
-        // if (type_ == M3_Primitive::Line){
-        //     std::cerr << "For the line: distance = " << get_distance(x) << std::endl;
-        //     std::cerr << "For the line: safe_distance = " << safe_distance_ << std::endl;
-        //     std::cerr << "For the line: distance - safe_distance = " << get_distance(x) - safe_distance_ << std::endl;
-        // }
         return (get_distance(x) - safe_distance_);
     }
     case M3_VFI_Direction::SAFE_ZONE:
@@ -460,12 +459,6 @@ M3_VFI_DistanceType M3_VFI::get_distance_type(const DQ &x) const
         return M3_VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
     case M3_Primitive::Cylinder:
-        // Update the dynamic geometric primitives
-        primitives_.at(0)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(1)->_update_dynamic_geometric_primitives(x);
-        primitives_.at(2)->_update_dynamic_geometric_primitives(x);
-
-        // Get distance type
         const DQ& local_x = x*relative_displacement_to_joint_;
         DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
                                                                 primitives_.at(0)->get_value());
@@ -482,6 +475,11 @@ M3_VFI_DistanceType M3_VFI::get_distance_type(const DQ &x) const
         }
     }
     throw std::runtime_error("Unexpected end of method.");
+}
+
+M3_Primitive M3_VFI::get_type() const
+{
+    return type_;
 }
 
 void M3_VFI::set_last_real_distance(const DQ &y)
