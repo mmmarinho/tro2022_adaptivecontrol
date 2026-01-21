@@ -130,6 +130,7 @@ public:
 
     void update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
                                              const VectorXd& q);
+    void update_cylinder_vfi(const DQ& line, const DQ& start_point, const DQ& end_point);
 
     DQ get_value() const;
 

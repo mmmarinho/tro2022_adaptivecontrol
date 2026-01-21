@@ -258,6 +258,19 @@ void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipu
     }
 }
 
+/**
+ * @brief Update a cylinder VFI.
+ * @param line The cylinder's line.
+ * @param start_point The cylinder's starting point.
+ * @param end_point The cylinder's ending point.
+ */
+void M3_VFI::update_cylinder_vfi(const DQ& line, const DQ& start_point, const DQ& end_point)
+{
+    primitives_.at(0)->set_value(line);
+    primitives_.at(1)->set_value(start_point);
+    primitives_.at(2)->set_value(end_point);
+}
+
 DQ M3_VFI::get_value() const
 {
     return value_;
