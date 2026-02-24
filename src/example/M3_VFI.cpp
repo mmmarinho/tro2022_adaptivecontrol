@@ -435,6 +435,7 @@ double M3_VFI::get_distance_error(const DQ &x) const
         throw std::runtime_error("Expected valid type");
     case M3_VFI_Direction::FORBIDDEN_ZONE:
     {
+        //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
         return (get_distance(x) - safe_distance_);
     }
     case M3_VFI_Direction::SAFE_ZONE:
