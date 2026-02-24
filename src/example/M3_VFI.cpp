@@ -56,6 +56,7 @@ M3_VFI::M3_VFI(const std::string &workspace_entity_name,
     relative_displacement_to_joint_(relative_displacement_to_joint),
     cs_reference_name_(cs_reference_name)
 {
+     // Do nothing
 }
 
 /**
