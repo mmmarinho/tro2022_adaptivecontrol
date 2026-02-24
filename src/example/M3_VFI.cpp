@@ -83,10 +83,6 @@ cs_reference_name_(cs_reference_name)
     else
         throw std::runtime_error("Expected valid type. Currently only supports M3_Primitive::Cylinder.");
 
-    // line->initialize();
-    // start_point->initialize();
-    // end_point->initialize();
-
     primitives_.push_back(line);
     primitives_.push_back(start_point);
     primitives_.push_back(end_point);
