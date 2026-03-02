@@ -35,6 +35,7 @@ Contributors (aside from author):
 
 #include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
+#include <dqrobotics/internal/_dq_linesegment.h>
 #include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
 
 M3_VFI::M3_VFI(const std::string &workspace_entity_name,
@@ -88,7 +89,7 @@ cs_reference_name_(cs_reference_name)
     primitives_.push_back(start_point);
     primitives_.push_back(end_point);
 
-    workspace_entity_name_ = "cylinder";
+    workspace_entity_name_ = line->robot_entity_name_ + " to cylinder";
     robot_entity_name_ = line->workspace_entity_name_;
 }
 
@@ -361,23 +362,25 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
         return DQ_Kinematics::point_to_line_distance_jacobian(Jt, t, get_value());
     }
     case M3_Primitive::Cylinder:
-        DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
-                                                                primitives_.at(0)->get_value());
-        bool is_inside, is_closest_to_starting_point;
-        std::tie(is_inside, is_closest_to_starting_point) =
-            this->check_if_point_is_inside_line_segment(point_in_line,
-                                                        primitives_.at(1)->get_value(),
-                                                        primitives_.at(2)->get_value());
+        // Define a cylinder at the end-effector with its starting point equal to its ending point
+        // to create a sphere. This allow us to use DQ_robotics::internal::LineSegment::closest_elements_between_line_segments()
+        const DQ l = k_;
+        const DQ l_eff = l + E_*(DQ_robotics::cross(local_x.translation(), l));
 
-        if (is_inside){ // get point-to-line distance jacobian
+        auto ce = DQ_robotics::internal::LineSegment::closest_elements_between_line_segments(
+            {l_eff, local_x.translation(), local_x.translation()},
+            {primitives_.at(0)->get_value(), primitives_.at(1)->get_value(), primitives_.at(2)->get_value()});
+
+        switch(std::get<1>(std::get<0>(ce)))
+        {
+        case DQ_robotics::internal::LineSegment::Element::Line: // get point-to-line distance jacobian
             return primitives_.at(0)->get_distance_jacobian(x, Jx);
-        }else{
-            if (is_closest_to_starting_point){ // get point-to-point distance jacobian considering the cylinder's starting point
-                return primitives_.at(1)->get_distance_jacobian(x, Jx);
-            }else{ // get point-to-point distance jacobian considering the cylinder's ending point
-                return primitives_.at(2)->get_distance_jacobian(x, Jx);
-            }
+        case DQ_robotics::internal::LineSegment::Element::P1: // get point-to-point distance jacobian considering the cylinder's starting point
+            return primitives_.at(1)->get_distance_jacobian(x, Jx);
+        case DQ_robotics::internal::LineSegment::Element::P2: // get point-to-point distance jacobian considering the cylinder's ending point
+            return primitives_.at(2)->get_distance_jacobian(x, Jx);
         }
+        throw std::runtime_error("Unexpected type in M3_VFI::get_distance_jacobian()");
     }
     throw std::runtime_error("Unexpected end of method.");
 }
@@ -430,24 +433,6 @@ double M3_VFI::get_distance(const DQ &x) const
         return DQ_Geometry::point_to_line_squared_distance(t, get_value());
     }
     case M3_Primitive::Cylinder:
-        // DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
-        //                                                         primitives_.at(0)->get_value());
-        // bool is_inside, is_closest_to_starting_point;
-        // std::tie(is_inside, is_closest_to_starting_point) =
-        //     this->check_if_point_is_inside_line_segment(point_in_line,
-        //                                                 primitives_.at(1)->get_value(),
-        //                                                 primitives_.at(2)->get_value());
-
-        // if (is_inside){ // get point-to-line distance
-        //     return primitives_.at(0)->get_distance(x);
-        // }else{
-        //     if (is_closest_to_starting_point){ // get point-to-point distance considering the cylinder's starting point
-        //         return primitives_.at(1)->get_distance(x);
-        //     }else{ // get point-to-point distance considering the cylinder's ending point
-        //         return primitives_.at(2)->get_distance(x);
-        //     }
-        // }
-
         // Define a cylinder at the end-effector with its starting point equal to its ending point
         // to create a sphere. This allow us to use DQ_Geometry::line_segment_to_line_segment_squared_distance()
         const DQ l = k_;
@@ -506,19 +491,26 @@ M3_VFI_DistanceType M3_VFI::get_distance_type(const DQ &x) const
     }
     case M3_Primitive::Cylinder:
         const DQ& local_x = x*relative_displacement_to_joint_;
-        DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
-                                                                primitives_.at(0)->get_value());
-        bool is_inside, is_closest_to_starting_point;
-        std::tie(is_inside, is_closest_to_starting_point) =
-            this->check_if_point_is_inside_line_segment(point_in_line,
-                                                        primitives_.at(1)->get_value(),
-                                                        primitives_.at(2)->get_value());
 
-        if (is_inside){ // get point-to-line distance type
+        // Define a cylinder at the end-effector with its starting point equal to its ending point
+        // to create a sphere. This allow us to use DQ_robotics::internal::LineSegment::closest_elements_between_line_segments()
+        const DQ l = k_;
+        const DQ l_eff = l + E_*(DQ_robotics::cross(local_x.translation(), l));
+
+        auto ce = DQ_robotics::internal::LineSegment::closest_elements_between_line_segments(
+            {l_eff, local_x.translation(), local_x.translation()},
+            {primitives_.at(0)->get_value(), primitives_.at(1)->get_value(), primitives_.at(2)->get_value()});
+
+        switch(std::get<1>(std::get<0>(ce)))
+        {
+        case DQ_robotics::internal::LineSegment::Element::Line: // get point-to-line distance type
             return primitives_.at(0)->get_distance_type(local_x);
-        }else{ // get point-to-point distance type (it's the same whether closest to the cylinder's starting or ending point)
+        case DQ_robotics::internal::LineSegment::Element::P1: // get point-to-point distance type
             return primitives_.at(1)->get_distance_type(local_x);
+        case DQ_robotics::internal::LineSegment::Element::P2: // get point-to-point distance type
+            return primitives_.at(2)->get_distance_type(local_x);
         }
+        throw std::runtime_error("Unexpected type in M3_VFI::get_distance_jacobian()");
     }
     throw std::runtime_error("Unexpected end of method.");
 }
