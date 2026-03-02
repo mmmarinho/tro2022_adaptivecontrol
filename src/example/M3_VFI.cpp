@@ -87,6 +87,9 @@ cs_reference_name_(cs_reference_name)
     primitives_.push_back(line);
     primitives_.push_back(start_point);
     primitives_.push_back(end_point);
+
+    workspace_entity_name_ = "cylinder";
+    robot_entity_name_ = line->workspace_entity_name_;
 }
 
 /**
@@ -251,6 +254,17 @@ void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipu
         primitives_.at(0)->update_dynamic_geometric_primitives(robot_ptr, q);
         primitives_.at(1)->update_dynamic_geometric_primitives(robot_ptr, q);
         primitives_.at(2)->update_dynamic_geometric_primitives(robot_ptr, q);
+
+
+        // Make sure the points are properly projected into the line
+        DQ start_point_in_line = DQ_Geometry::point_projected_in_line(primitives_.at(1)->get_value(),
+                                                                      primitives_.at(0)->get_value());
+        primitives_.at(1)->set_value(start_point_in_line);
+
+        DQ end_point_in_line = DQ_Geometry::point_projected_in_line(primitives_.at(2)->get_value(),
+                                                                    primitives_.at(0)->get_value());
+        primitives_.at(2)->set_value(end_point_in_line);
+
         return;
     }
 }
@@ -266,6 +280,15 @@ void M3_VFI::update_cylinder_vfi(const DQ& line, const DQ& start_point, const DQ
     primitives_.at(0)->set_value(line);
     primitives_.at(1)->set_value(start_point);
     primitives_.at(2)->set_value(end_point);
+
+    // Make sure the points are properly projected into the line
+    DQ start_point_in_line = DQ_Geometry::point_projected_in_line(primitives_.at(1)->get_value(),
+                                                                  primitives_.at(0)->get_value());
+    primitives_.at(1)->set_value(start_point_in_line);
+
+    DQ end_point_in_line = DQ_Geometry::point_projected_in_line(primitives_.at(2)->get_value(),
+                                                                primitives_.at(0)->get_value());
+    primitives_.at(2)->set_value(end_point_in_line);
 }
 
 DQ M3_VFI::get_value() const
@@ -407,23 +430,35 @@ double M3_VFI::get_distance(const DQ &x) const
         return DQ_Geometry::point_to_line_squared_distance(t, get_value());
     }
     case M3_Primitive::Cylinder:
-        DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
-                                                                primitives_.at(0)->get_value());
-        bool is_inside, is_closest_to_starting_point;
-        std::tie(is_inside, is_closest_to_starting_point) =
-            this->check_if_point_is_inside_line_segment(point_in_line,
-                                                        primitives_.at(1)->get_value(),
-                                                        primitives_.at(2)->get_value());
+        // DQ point_in_line = DQ_Geometry::point_projected_in_line(local_x.translation(),
+        //                                                         primitives_.at(0)->get_value());
+        // bool is_inside, is_closest_to_starting_point;
+        // std::tie(is_inside, is_closest_to_starting_point) =
+        //     this->check_if_point_is_inside_line_segment(point_in_line,
+        //                                                 primitives_.at(1)->get_value(),
+        //                                                 primitives_.at(2)->get_value());
 
-        if (is_inside){ // get point-to-line distance
-            return primitives_.at(0)->get_distance(x);
-        }else{
-            if (is_closest_to_starting_point){ // get point-to-point distance considering the cylinder's starting point
-                return primitives_.at(1)->get_distance(x);
-            }else{ // get point-to-point distance considering the cylinder's ending point
-                return primitives_.at(2)->get_distance(x);
-            }
-        }
+        // if (is_inside){ // get point-to-line distance
+        //     return primitives_.at(0)->get_distance(x);
+        // }else{
+        //     if (is_closest_to_starting_point){ // get point-to-point distance considering the cylinder's starting point
+        //         return primitives_.at(1)->get_distance(x);
+        //     }else{ // get point-to-point distance considering the cylinder's ending point
+        //         return primitives_.at(2)->get_distance(x);
+        //     }
+        // }
+
+        // Define a cylinder at the end-effector with its starting point equal to its ending point
+        // to create a sphere. This allow us to use DQ_Geometry::line_segment_to_line_segment_squared_distance()
+        const DQ l = k_;
+        const DQ l_eff = l + E_*(DQ_robotics::cross(local_x.translation(), l));
+
+        return DQ_Geometry::line_segment_to_line_segment_squared_distance(l_eff, // end-effector line
+                                                                          local_x.translation(), // end-effecor position
+                                                                          local_x.translation(), // end-effecor position
+                                                                          primitives_.at(0)->get_value(),  // cylinder's line
+                                                                          primitives_.at(1)->get_value(),  // cylinder's starting point
+                                                                          primitives_.at(2)->get_value());  // cylinder's ending point
     }
     throw std::runtime_error("Unexpected end of method.");
 }
