@@ -98,11 +98,6 @@ class M3_VFI
     //New in this paper
     double last_estimated_distance_;
     double last_real_distance_;
-
-    std::tuple<bool, bool> check_if_point_is_inside_line_segment(
-        const DQ& point_in_line,
-        const DQ& line_segment_start_point,
-        const DQ& line_segment_end_point) const;
 public:
     M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,

@@ -94,42 +94,6 @@ cs_reference_name_(cs_reference_name)
 }
 
 /**
- * @brief Checks whether a point is inside a line segment.
- * @param point_in_line A pure quaternion representing a point in the line.
- * @param line_segment_start_point A pure quaternion representing the starting point of
- *        the line segment.
- * @param line_segment_end_point A pure quaternion representing the ending point of
- *        the line segment.
- * @return A tuple in which the first boolean indicates whether the point is inside the
- *         line segment and the second boolean indicates whether the point is closest to
- *         the starting point of the line segment.
- */
-std::tuple<bool, bool> M3_VFI::check_if_point_is_inside_line_segment(
-    const DQ& point_in_line,
-    const DQ& line_segment_start_point,
-    const DQ& line_segment_end_point) const
-{
-    double D_p_start = DQ_Geometry::point_to_point_squared_distance(
-        point_in_line,
-        line_segment_start_point);
-    double D_p_end = DQ_Geometry::point_to_point_squared_distance(
-        point_in_line,
-        line_segment_end_point);
-    double segment_size = DQ_Geometry::point_to_point_squared_distance(
-        line_segment_start_point,
-        line_segment_end_point);
-
-    bool is_inside = ((D_p_start < segment_size) && (D_p_end < segment_size));
-    bool is_closest_to_starting_point;
-    if (D_p_start < D_p_end)
-        is_closest_to_starting_point = true;
-    else
-        is_closest_to_starting_point = false;
-
-    return std::make_tuple(is_inside, is_closest_to_starting_point);
-}
-
-/**
  * @brief Initialize the VFI constraint.
  */
 void M3_VFI::initialize()
