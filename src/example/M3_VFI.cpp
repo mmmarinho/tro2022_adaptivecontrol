@@ -142,7 +142,6 @@ void M3_VFI::initialize()
  * @brief Initialize dynamic VFI constraints. Currently only supports dynamic geometric primitives attached to a robot.
  * @param robot_ptr A std::shared_ptr to a DQ_SerialManipulator object representing the robot.
  * @param q A VectorXd representing the robot's configuration.
- * @param joint_number a joint that will be used as reference for the relative transformation.
  */
 void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
                                                      const VectorXd &q)
@@ -183,8 +182,9 @@ void M3_VFI::initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialMa
 }
 
 /**
- * @brief Update a dynamic geometric primitive.
- * @param robot_ptr A dual quaternion representing the pose of the robot entity to which the geometric primitive is given with respect to.
+ * @brief Update a dynamic geometric primitive. Currently only supports dynamic geometric primitives attached to a robot.
+ * @param robot_ptr A std::shared_ptr to a DQ_SerialManipulator object representing the robot.
+ * @param q A VectorXd representing the robot's configuration.
  */
 void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
                                                  const VectorXd &q)
@@ -235,7 +235,7 @@ void M3_VFI::update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipu
 }
 
 /**
- * @brief Update a cylinder VFI.
+ * @brief Directly update a cylinder geometric primitive.
  * @param line The cylinder's line.
  * @param start_point The cylinder's starting point.
  * @param end_point The cylinder's ending point.
@@ -435,6 +435,13 @@ double M3_VFI::get_safe_distance() const
     return safe_distance_;
 }
 
+
+/**
+ * @brief Get the distance type of the VFI (e.g., Euclidean, Euclidean squared, etc.). For a cylinder VFI, we need the
+ *        end-effector pose to determine the closes primitive between line segments. For other VFIs, this parameter is
+ *        ignored.
+ * @param x An unit dual quaterion representing the robot's end-effector pose.
+ */
 M3_VFI_DistanceType M3_VFI::get_distance_type(const DQ &x) const
 {
     switch(type_)
@@ -479,6 +486,10 @@ M3_VFI_DistanceType M3_VFI::get_distance_type(const DQ &x) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
+/**
+ * @brief Get the VFI type.
+ * @return A M3_Primitive represeting the VFI type.
+ */
 M3_Primitive M3_VFI::get_type() const
 {
     return type_;
