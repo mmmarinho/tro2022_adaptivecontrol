@@ -437,12 +437,9 @@ double M3_VFI::get_safe_distance() const
 
 
 /**
- * @brief Get the distance type of the VFI (e.g., Euclidean, Euclidean squared, etc.). For a cylinder VFI, we need the
- *        end-effector pose to determine the closes primitive between line segments. For other VFIs, this parameter is
- *        ignored.
- * @param x An unit dual quaterion representing the robot's end-effector pose.
+ * @brief Get the distance type of the VFI (e.g., Euclidean, Euclidean squared, etc.).
  */
-M3_VFI_DistanceType M3_VFI::get_distance_type(const DQ &x) const
+M3_VFI_DistanceType M3_VFI::get_distance_type() const
 {
     switch(type_)
     {
@@ -461,27 +458,7 @@ M3_VFI_DistanceType M3_VFI::get_distance_type(const DQ &x) const
         return M3_VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
     case M3_Primitive::Cylinder:
-        const DQ& local_x = x*relative_displacement_to_joint_;
-
-        // Define a cylinder at the end-effector with its starting point equal to its ending point
-        // to create a sphere. This allow us to use DQ_robotics::internal::LineSegment::closest_elements_between_line_segments()
-        const DQ l = k_;
-        const DQ l_eff = l + E_*(DQ_robotics::cross(local_x.translation(), l));
-
-        auto ce = DQ_robotics::internal::LineSegment::closest_elements_between_line_segments(
-            {l_eff, local_x.translation(), local_x.translation()},
-            {primitives_.at(0)->get_value(), primitives_.at(1)->get_value(), primitives_.at(2)->get_value()});
-
-        switch(std::get<1>(std::get<0>(ce)))
-        {
-        case DQ_robotics::internal::LineSegment::Element::Line: // get point-to-line distance type
-            return primitives_.at(0)->get_distance_type(local_x);
-        case DQ_robotics::internal::LineSegment::Element::P1: // get point-to-point distance type
-            return primitives_.at(1)->get_distance_type(local_x);
-        case DQ_robotics::internal::LineSegment::Element::P2: // get point-to-point distance type
-            return primitives_.at(2)->get_distance_type(local_x);
-        }
-        throw std::runtime_error("Unexpected type in M3_VFI::get_distance_jacobian()");
+        return M3_VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
     throw std::runtime_error("Unexpected end of method.");
 }
