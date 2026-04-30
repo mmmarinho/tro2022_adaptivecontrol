@@ -141,7 +141,7 @@ public:
 
     double get_safe_distance() const;
 
-    M3_VFI_DistanceType get_distance_type(const DQ &x) const;
+    M3_VFI_DistanceType get_distance_type() const;
 
     M3_Primitive get_type() const;
 
