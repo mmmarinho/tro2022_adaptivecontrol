@@ -327,24 +327,22 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
     }
     case M3_Primitive::Cylinder:
         // Define a cylinder at the end-effector with its starting point equal to its ending point
-        // to create a sphere. This allow us to use DQ_robotics::internal::LineSegment::closest_elements_between_line_segments()
+        // to create a sphere. This allow us to use DQ_Kinematics::line_segment_to_line_segment_distance_jacobian()
         const DQ l = k_;
         const DQ l_eff = l + E_*(DQ_robotics::cross(local_x.translation(), l));
 
-        auto ce = DQ_robotics::internal::LineSegment::closest_elements_between_line_segments(
-            {l_eff, local_x.translation(), local_x.translation()},
-            {primitives_.at(0)->get_value(), primitives_.at(1)->get_value(), primitives_.at(2)->get_value()});
+        const MatrixXd J_l = DQ_Kinematics::line_jacobian(local_Jx, local_x, l);
+        const MatrixXd Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
 
-        switch(std::get<1>(std::get<0>(ce)))
-        {
-        case DQ_robotics::internal::LineSegment::Element::Line: // get point-to-line distance jacobian
-            return primitives_.at(0)->get_distance_jacobian(x, Jx);
-        case DQ_robotics::internal::LineSegment::Element::P1: // get point-to-point distance jacobian considering the cylinder's starting point
-            return primitives_.at(1)->get_distance_jacobian(x, Jx);
-        case DQ_robotics::internal::LineSegment::Element::P2: // get point-to-point distance jacobian considering the cylinder's ending point
-            return primitives_.at(2)->get_distance_jacobian(x, Jx);
-        }
-        throw std::runtime_error("Unexpected type in M3_VFI::get_distance_jacobian()");
+        return DQ_Kinematics::line_segment_to_line_segment_distance_jacobian(J_l, // end-effector line Jacobian
+                                                                             Jt, // end-effector translation Jacobian
+                                                                             Jt, // end-effector translation Jacobian
+                                                                             l_eff, // end-effector line
+                                                                             local_x.translation(), // end-effecor position
+                                                                             local_x.translation(), // end-effecor position
+                                                                             primitives_.at(0)->get_value(),  // cylinder's line
+                                                                             primitives_.at(1)->get_value(),  // cylinder's starting point
+                                                                             primitives_.at(2)->get_value());  // cylinder's ending point
     }
     throw std::runtime_error("Unexpected end of method.");
 }
