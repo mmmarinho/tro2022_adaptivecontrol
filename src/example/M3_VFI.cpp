@@ -329,7 +329,7 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
         // Define a cylinder at the end-effector with its starting point equal to its ending point
         // to create a sphere. This allow us to use DQ_Kinematics::line_segment_to_line_segment_distance_jacobian()
         const DQ l = k_;
-        const DQ l_eff = l + E_*(DQ_robotics::cross(local_x.translation(), l));
+        const DQ l_eff = Ad(local_x, l);
 
         const MatrixXd J_l = DQ_Kinematics::line_jacobian(local_Jx, local_x, l);
         const MatrixXd Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
@@ -398,7 +398,7 @@ double M3_VFI::get_distance(const DQ &x) const
         // Define a cylinder at the end-effector with its starting point equal to its ending point
         // to create a sphere. This allow us to use DQ_Geometry::line_segment_to_line_segment_squared_distance()
         const DQ l = k_;
-        const DQ l_eff = l + E_*(DQ_robotics::cross(local_x.translation(), l));
+        const DQ l_eff = Ad(local_x, l);
 
         return DQ_Geometry::line_segment_to_line_segment_squared_distance(l_eff, // end-effector line
                                                                           local_x.translation(), // end-effecor position
