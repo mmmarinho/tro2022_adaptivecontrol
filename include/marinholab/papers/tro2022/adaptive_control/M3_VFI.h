@@ -21,7 +21,8 @@ Author:
     Murilo M. Marinho (murilomarinho@ieee.org)
 
 Contributors (aside from author):
-    None
+    Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
+        - Add cylinder VFI and associated methods
 */
 
 #include<memory>
@@ -29,6 +30,7 @@ Contributors (aside from author):
 
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterface.h>
+#include <dqrobotics/robot_modeling/DQ_SerialManipulator.h>
 
 using namespace DQ_robotics;
 
@@ -37,7 +39,8 @@ enum class M3_Primitive
     None=0,
     Point,
     Plane,
-    Line
+    Line,
+    Cylinder
 };
 
 enum class M3_VFI_Direction
@@ -88,7 +91,9 @@ class M3_VFI
     M3_VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
     const DQ relative_displacement_to_joint_;
+    DQ relative_displacement_to_primitive_;
     const std::string cs_reference_name_;
+    std::vector<std::shared_ptr<M3_VFI>> primitives_;
 
     //New in this paper
     double last_estimated_distance_;
@@ -104,7 +109,23 @@ public:
                     const DQ& relative_displacement_to_joint,
                     const std::string& cs_reference_name="");
 
+    M3_VFI(const M3_Primitive& type,
+           const std::shared_ptr<DQ_CoppeliaSimInterface>& vi,
+           const double& safe_distance,
+           const M3_VFI_Direction& vfi_direction,
+           std::shared_ptr<M3_VFI> line,
+           std::shared_ptr<M3_VFI> start_point,
+           std::shared_ptr<M3_VFI> end_point,
+           const DQ& relative_displacement_to_joint,
+           const std::string& cs_reference_name="");
+
     void initialize();
+    void initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+                                                 const VectorXd& q);
+
+    void update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+                                             const VectorXd& q);
+    void update_cylinder_vfi(const DQ& line, const DQ& start_point, const DQ& end_point);
 
     DQ get_value() const;
 
@@ -121,6 +142,8 @@ public:
     double get_safe_distance() const;
 
     M3_VFI_DistanceType get_distance_type() const;
+
+    M3_Primitive get_type() const;
 
     void set_last_real_distance(const DQ& y);
 
