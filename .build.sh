@@ -27,9 +27,7 @@
 # use an order that makes sense with the dependencies
 # of you example.
 pkg_array=(
-"submodules/dqrobotics/cpp"
-"submodules/dqrobotics/cpp-interface-coppeliasim"
-"submodules/dqrobotics/cpp-interface-coppeliasim-zmq"
+"submodules/dqrobotics/python/cpp"
 "submodules/dqrobotics/cpp-interface-qpoases"
 "submodules/qpOASES"
 "." # This is the example itself, so don't forget it!

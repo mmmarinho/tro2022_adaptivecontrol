@@ -3,10 +3,10 @@
 # Requirements
 if [ "$(uname)" == "Darwin" ]; then
     echo "Installing prerequisites with brew..."
-    brew install eigen cppzmq boost
+    brew install eigen
 elif [ "$(expr substr "$(uname -s)" 1 5)" == "Linux" ]; then
     echo "Installing prerequisites with apt..."
-    sudo apt install python3-dev libeigen3-dev libzmq3-dev libboost-all-dev
+    sudo apt install python3-dev libeigen3-dev
 else
     echo "Unrecognized system."
 fi

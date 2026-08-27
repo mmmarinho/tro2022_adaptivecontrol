@@ -31,6 +31,7 @@ Contributors (aside from author):
  * doi: 10.1109/TRO.2022.3181047.
  */
 #include <marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h>
+#include <algorithm>
 
 M3_SerialManipulatorEDH::M3_SerialManipulatorEDH(const MatrixXd& dh_matrix):
     DQ_SerialManipulator(dh_matrix.cols()),
@@ -128,12 +129,18 @@ void M3_SerialManipulatorEDH::set_base_frame(const DQ &base)
     };
     set_base_frame(base_parameters);
 
-    //Verify if the rotation was correctly reconstructed
-    if((vec4(rotation(base))-vec4(rotation(get_base_frame()))).cwiseAbs().maxCoeff() > DQ_robotics::DQ_threshold)
+    //Verify if the rotation was correctly reconstructed. Quaternions come in
+    //sign-equivalent pairs (q and -q encode the same rotation), and the
+    //Euler-angle round-trip above can return the opposite sign, so compare the
+    //rotation in a sign-invariant way instead of strict quaternion equality.
+    const double base_rotation_error = std::min(
+        (vec4(rotation(base))-vec4(rotation(get_base_frame()))).norm(),
+        (vec4(rotation(base))+vec4(rotation(get_base_frame()))).norm());
+    if(base_rotation_error > DQ_robotics::DQ_threshold)
     {
         throw std::runtime_error("DQ_SerialManipulatorRDH::set_base_frame()::Error::Rotation quaternion could not be correctly reconstructed (a!=b). \n"
                                  "a= " + rotation(base).to_string() + " b=" + rotation(get_base_frame()).to_string() + "\n" +
-                                 + "error=" + std::to_string((vec4(rotation(base))-vec4(rotation(get_base_frame()))).cwiseAbs().maxCoeff()) );
+                                 + "error=" + std::to_string(base_rotation_error) );
     }
 }
 
@@ -213,12 +220,18 @@ void M3_SerialManipulatorEDH::set_effector_frame(const DQ &effector)
     };
     set_effector_frame(eff_parameters);
 
-    //Verify if the rotation was correctly reconstructed
-    if((vec4(rotation(effector))-vec4(rotation(get_effector_frame()))).cwiseAbs().maxCoeff() > DQ_robotics::DQ_threshold)
+    //Verify if the rotation was correctly reconstructed. Quaternions come in
+    //sign-equivalent pairs (q and -q encode the same rotation), and the
+    //Euler-angle round-trip above can return the opposite sign, so compare the
+    //rotation in a sign-invariant way instead of strict quaternion equality.
+    const double effector_rotation_error = std::min(
+        (vec4(rotation(effector))-vec4(rotation(get_effector_frame()))).norm(),
+        (vec4(rotation(effector))+vec4(rotation(get_effector_frame()))).norm());
+    if(effector_rotation_error > DQ_robotics::DQ_threshold)
     {
         throw std::runtime_error("DQ_SerialManipulatorRDH::set_effector_frame()::Error::Rotation quaternion could not be correctly reconstructed (a!=b). \n"
                                  "a= " + rotation(effector).to_string() + " b=" + rotation(get_effector_frame()).to_string() + "\n" +
-                                 + "error=" + std::to_string((vec4(rotation(effector))-vec4(rotation(get_effector_frame()))).cwiseAbs().maxCoeff()) );
+                                 + "error=" + std::to_string(effector_rotation_error) );
     }
 }
 
