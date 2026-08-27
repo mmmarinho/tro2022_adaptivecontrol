@@ -38,10 +38,13 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 
 ## Standalone Example
 
-- The red object represents the estimated robot, initially very wrong **on purpose** to evaluate the adaptation.
+- The estimated robot model starts out **on purpose** very wrong, to evaluate the adaptation.
 - The estimation usually converges within a few seconds using measurements from a simulated sensor.
-- Simultaneously, the robot proceeds through the box, toward the target poses, without collisions. 
-- You can change the pose of the `xd0` and `xd1` objects in the scene, as long as you do it **before** the simulation starts.
+- Simultaneously, the robot proceeds through the box toward the target poses, without collisions.
+- The example runs **headless** on the in-memory stand-in simulator (`M3_SimulatorDummy`), so no external simulator is required.
+- You can change the pose of the `xd0` and `xd1` target objects (see `M3_SimulatorDummy::load_reference_scene`), as long as you do it **before** the simulation starts.
+
+The paper's original demonstration (recorded with the robot model in the GUI):
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
@@ -56,23 +59,13 @@ tar -xvf tro2022_adaptivecontrol_example.tar.xz
 ```
 ### Running
 
-1. Open the example scene, namely `tro2022_adaptivecontrol_example/TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
-2. Run
 ```bash
 cd ~/tro2022_adaptivecontrol_example
 ./run_example.sh
 ```
 ### Troubleshooting
 
-If you have the error below when running the pre-compiled example, please use `Ubuntu 22.04` or later.
-
-```bash
-./run_example.sh
-bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by bin/adaptive_control_example) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.34' not found (required by bin/adaptive_control_example)
-bin/adaptive_control_example: /lib/x86_64-linux-gnu/libstdc++.so.6: version GLIBCXX_3.4.29' not found (required by bin/adaptive_control_example) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by lib/libdqrobotics.so)
-bin/adaptive_control_example: /lib/x86_64-linux-gnu/libstdc++.so.6: version GLIBCXX_3.4.29' not found (required by lib/libdqrobotics-interface-vrep.so) bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version GLIBC_2.32' not found (required by lib/libdqrobotics-interface-vrep.so)
-bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found (required by lib/libdqrobotics-interface-vrep.so)
-```
+If the pre-compiled example fails with a `GLIBC`/`GLIBCXX` version error, please use `Ubuntu 22.04` or later, or build from source (below).
 
 ## Known limitations *of this example*/*TODO* list/*Extra info*
 
@@ -80,9 +73,8 @@ bin/adaptive_control_example: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.
 - The initial convergence to measurements mentioned in the paper *TODO* for this example.
 - The estimated model is randomized so it might start in an implausible zone. Fixing this is *TODO* for this example.
 - Sample code for partial measurements is included, but they have not been tested in this example, only in the physical robot.
-The adaptation is supposed to move the parameters of the `estimated_robot` towards the ideal kinematic model defined by `real_robot` in the code. 
-The robot model in CoppeliaSim is for visualization only.
-- A different solver was used in the paper's experiments, in this example we use an open-source solver, so the behavior might be somewhat different.
+The adaptation is supposed to move the parameters of the `estimated_robot` towards the ideal kinematic model defined by `real_robot` in the code.
+- A different solver was used in the paper's experiments; in this example we use an open-source solver, so the behavior might be somewhat different.
 - The final target position is, **ON PURPOSE**, chosen as somewhere the robot cannot reach. It serves to show that even in such case the robot does not collide with the environment.
 
 ## Build from source
@@ -95,7 +87,7 @@ sudo apt install g++ cmake git libeigen3-dev
 
 ### `macos`
 ```bash
-brew install cmake eigen cppzmq boost
+brew install cmake eigen
 ```
 
 ### Download the repo
@@ -119,8 +111,8 @@ chmod +x .build.sh
 
 ## Running
 
-1. Open the example scene, namely `TRO2022_MarinhoAdorno_ReferenceScene.ttt` on CoppeliaSim.
-2. Run
+The example runs headless on the in-memory stand-in simulator (`M3_SimulatorDummy`):
+
 ```bash
 cd ~/git/tro2022_adaptivecontrol
 chmod +x .run.sh
@@ -154,14 +146,13 @@ Reference timeout for xd1
 
 - Ubuntu 22.04 `5.19.0-41-generic #42~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Apr 18 17:40:00 UTC 2 x86_64 x86_64 x86_64 GNU/Linux`
 - g++ --version `g++ (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0`
-- CoppeliaSim EDU 5.4.1 (rev4)
 - DQ Robotics cpp as shown in the submodule information.
-- DQ Robotics cpp-interface-vrep as shown in the submodule information.
 - DQ Robotics cpp-interface-qpoases as shown in the submodule information.
 - qpOASES as shown in the submodule information.
 - sas_core as shown in the submodule information.
 
 ## Changelog
 
-- 2025.05. Updating code to work with `DQ_CoppeliaSimInterfaceZMQ`.
+- 2026.08. Removed the dependency on the external robot simulator and its network interface: the example now runs headless on the in-memory stand-in simulator `M3_SimulatorDummy` (dry testing), so no external simulator is required to build or run it.
+- 2025.05. Updating code to work with an external-simulator-based interface.
 - 2025.06. Removed Python wrapper instructions now that it's available via PyPI.

@@ -8,4 +8,4 @@
 # you'll understand why this script was made in the
 # first place :0
 
-LD_LIBRARY_PATH=lib bin/adaptive_control_example
+LD_LIBRARY_PATH=lib bin/adaptive_control_cpp
