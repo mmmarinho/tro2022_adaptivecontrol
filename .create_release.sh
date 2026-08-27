@@ -15,7 +15,6 @@ cd ${release_folder}
 cp -r ../bin .
 cp -r ../lib .
 cp ../.run.sh run_example.sh
-cp ../*ttt .
 
 # Compress
 cd ..

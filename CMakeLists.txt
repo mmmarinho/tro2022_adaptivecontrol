@@ -6,11 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Werror=return-type)
 
+find_package(Threads REQUIRED)
+
 add_library(adaptive_control
         src/example/M3_AdaptiveController.cpp
         src/example/M3_VFI.cpp
         src/example/M3_SerialManipulatorEDH.cpp
-        #src/example/M3_VS050VrepRobot.cpp
+        src/example/M3_SimulatorDummy.cpp
         src/example/M3_MeasurementSpace.cpp
 
         submodules/sas_core/src/sas_object.cpp
@@ -36,7 +38,6 @@ target_include_directories(adaptive_control PUBLIC
     submodules/qpOASES/include
     submodules/sas_core/include
     submodules/dqrobotics/python/cpp/include
-    submodules/dqrobotics/python-interface-coppeliasim-zmq/submodules/dqrobotics/cpp-interface-coppeliasim/include
     submodules/dqrobotics/cpp-interface-qpoases/include
     )
 
@@ -44,28 +45,24 @@ target_include_directories(adaptive_control PUBLIC
 # https://thatonegamedev.com/cpp/cmake/how-to-manage-dependencies-with-cmake/
 set(BUILD_SHARED_LIBS FALSE CACHE BOOL "x" FORCE)
 add_subdirectory(submodules/dqrobotics/python/cpp)
-#add_subdirectory(submodules/dqrobotics/python-interface-coppeliasim-zmq/submodules/dqrobotics/cpp-interface-coppeliasim-zmq)
 add_subdirectory(submodules/qpOASES)
 
 target_link_libraries(adaptive_control PUBLIC dqrobotics qpOASES)
 
+# Stand-alone example. Runs headless on the in-memory M3_SimulatorDummy,
+# so it no longer requires any external simulator.
+add_executable(${PROJECT_NAME}
+    src/adaptive_control_example.cpp
+    )
 
-# 2025.05.17 Not currently able to compile this given the missing features in CoppeliaSimInterfaceZMQ
-#add_executable(${PROJECT_NAME}
-#    src/${PROJECT_NAME}.cpp
-#    )
+target_link_libraries(${PROJECT_NAME}
+    adaptive_control
+    dqrobotics
+    qpOASES
+    Threads::Threads
+    )
 
-
-#target_link_libraries(${PROJECT_NAME}
-#    -lqpOASES
-#    -ldqrobotics
-#    adaptive_control
-    #-ldqrobotics-interface-coppeliasim
-    #-ldqrobotics-interface-coppeliasim-zmq
-    #Threads::Threads
-#    )
-
-#install(TARGETS
-#    ${PROJECT_NAME}
-#    DESTINATION ${CMAKE_SOURCE_DIR}/bin/)
+install(TARGETS
+    ${PROJECT_NAME}
+    DESTINATION ${CMAKE_SOURCE_DIR}/bin/)
     

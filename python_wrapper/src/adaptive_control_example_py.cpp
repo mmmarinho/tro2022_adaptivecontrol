@@ -7,7 +7,7 @@
 #include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
 #include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
 #include "marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
-//#include "example/Example_VS050VrepRobot.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_SimulatorDummy.h"
 #include "marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
 
 #define STRINGIFY(x) #x
@@ -110,7 +110,7 @@ PYBIND11_MODULE(_core, m) {
                  const std::string&,
                  const std::string&,
                  const M3_Primitive&,
-                 const std::shared_ptr<DQ_CoppeliaSimInterface>&,
+                 const std::shared_ptr<M3_SimulatorDummy>&,
                  const double&,
                  const M3_VFI_Direction&,
                  const int&,
@@ -318,23 +318,23 @@ PYBIND11_MODULE(_core, m) {
     M3_SerialManipulatorEDH.def("get_dim_configuration_space",&M3_SerialManipulatorEDH::get_dim_configuration_space,"");
 
 
-    /// "example/Example_VS050VrepRobot.h"
+    /// "M3_SimulatorDummy.h"
 
-    //class Example_VS050VrepRobot: public DQ_SerialVrepRobot
-    // py::class_
-    //         <
-    //         Example_VS050VrepRobot,
-    //         std::shared_ptr<Example_VS050VrepRobot>,
-    //         DQ_SerialVrepRobot
-    //         >(m, "Example_VS050VrepRobot")
-    //         .def(py::init
-    //              <
-    //              const std::string&,
-    //              const std::shared_ptr<DQ_VrepInterface>&
-    //              >())
-    //         .def_static("raw_kinematics",&Example_VS050VrepRobot::raw_kinematics,"")
-    //         .def("get_base_frame",&Example_VS050VrepRobot::get_base_frame,"")
-    //         .def("set_base_frame",&Example_VS050VrepRobot::set_base_frame,"");
+    //class M3_SimulatorDummy
+    py::class_<M3_SimulatorDummy, std::shared_ptr<M3_SimulatorDummy>>(m, "M3_SimulatorDummy")
+            .def(py::init<>())
+            .def("get_object_pose", &M3_SimulatorDummy::get_object_pose, "", py::arg("object_name"))
+            .def("set_object_pose", &M3_SimulatorDummy::set_object_pose, "", py::arg("object_name"), py::arg("pose"))
+            .def("has_object", &M3_SimulatorDummy::has_object, "", py::arg("object_name"))
+            .def("get_object_names", &M3_SimulatorDummy::get_object_names)
+            .def("get_configuration_space_positions", &M3_SimulatorDummy::get_configuration_space_positions)
+            .def("set_configuration_space_positions", &M3_SimulatorDummy::set_configuration_space_positions, "", py::arg("q"))
+            .def("start_simulation", &M3_SimulatorDummy::start_simulation)
+            .def("stop_simulation", &M3_SimulatorDummy::stop_simulation)
+            .def("is_running", &M3_SimulatorDummy::is_running)
+            .def("load_reference_scene", &M3_SimulatorDummy::load_reference_scene)
+            .def_static("vs050_raw_kinematics", &M3_SimulatorDummy::vs050_raw_kinematics,
+                         "Return the VS050 kinematics of the TRO2022 example (ideal base/effector).");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

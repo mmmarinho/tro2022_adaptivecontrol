@@ -1,5 +1,5 @@
 /**
-(C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
+(C) Copyright 2020-2026 Murilo Marques Marinho (www.murilomarinho.info)
 
 This file is part of adaptive_control_example.
 
@@ -29,6 +29,10 @@ Contributors (aside from author):
  * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
+ *
+ * This example runs **headless**, on an in-memory stand-in simulator
+ * (M3_SimulatorDummy) that reconstructs the nominal TRO2022 reference scene.
+ * No external simulator is required.
  */
 
 #include <memory>
@@ -39,15 +43,14 @@ Contributors (aside from author):
 #include <dqrobotics/utils/DQ_Constants.h>
 #include <dqrobotics/utils/DQ_Math.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
-#include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterface.h>
-#include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 
 #include <sas_core/sas_clock.hpp>
 
-#include "example/Example_AdaptiveController.h"
-#include "example/Example_VFI.h"
-#include "example/Example_SerialManipulatorEDH.h"
-#include "example/Example_VS050VrepRobot.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_SimulatorDummy.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
 
 #include <csignal>
 #include <atomic>
@@ -57,7 +60,7 @@ void sig_int_handler(int)
     kill_this_process = true;
 }
 
-void set_parameter_space_boundaries(const std::shared_ptr<Example_SerialManipulatorEDH> &robot,
+void set_parameter_space_boundaries(const std::shared_ptr<M3_SerialManipulatorEDH> &robot,
                                     const double& base_linear_confidence_meters = 0.1,
                                     const double& base_angular_confidence_degrees = 20,
                                     const double& effector_linear_confidence_meters = 0.01,
@@ -65,12 +68,12 @@ void set_parameter_space_boundaries(const std::shared_ptr<Example_SerialManipula
                                     const double& other_parameters_linear_confidence_meters = 0.001,
                                     const double& other_parameters_angular_confidence_degrees = 1);
 
-std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_CoppeliaSimInterface>& vi);
+std::vector<M3_VFI> get_example_scene_vfis(const std::shared_ptr<M3_SimulatorDummy>& vi);
 
-void randomize_parameters(const std::shared_ptr<Example_SerialManipulatorEDH> &estimated_robot,
+void randomize_parameters(const std::shared_ptr<M3_SerialManipulatorEDH> &estimated_robot,
                           const std::tuple<VectorXd, VectorXd> &parameter_boundaries,
                           const VectorXd &q,
-                          const std::vector<Example_VFI> &vfis);
+                          const std::vector<M3_VFI> &vfis);
 
 
 int main(int, char**)
@@ -89,7 +92,8 @@ int main(int, char**)
 
         std::cout << "Disclaimer: \n"
                      "This code has been modified from the one used in the paper's experiments to not depend\n"
-                     "on ROS, sensors, etc.\n"
+                     "on ROS, sensors, etc. It runs headless on an in-memory stand-in simulator\n"
+                     "(M3_SimulatorDummy) that reconstructs the nominal TRO2022 reference scene.\n"
                      "Bugs might be present, so report them at https://github.com/mmmarinho/tro2022_adaptivecontrol/issues\n"
                   << std::endl;
 
@@ -97,7 +101,7 @@ int main(int, char**)
         /// there's no claim that they are optimal for any case, even only for this example.
 
         Example_SimulationParameters simulation_parameters;
-        simulation_parameters.measure_space = Example_MeasureSpace::Pose;
+        simulation_parameters.measure_space = M3_MeasureSpace::Pose;
         simulation_parameters.proportional_gain = 20.0;
         simulation_parameters.vfi_gain = 5;
         simulation_parameters.vfi_weight = 0.02;
@@ -106,33 +110,25 @@ int main(int, char**)
         simulation_parameters.reference_timeout_sec = 60;
 
         /// *********************************************************************
-        /// Connect to CoppeliaSim
+        /// Set up the (in-memory) simulator and load the reference scene
         /// *********************************************************************
 
-        std::cout << "[1] Connecting to CoppeliaSim..." << std::endl;
+        std::cout << "[1] Loading the reference scene (in-memory simulator)..." << std::endl;
 
-        auto vi = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
-        if(!vi->connect())
-        {
-            throw std::runtime_error("Failed to connect to CoppeliaSim. "
-                                     "Make sure that CoppeliaSim is running "
-                                     "with the correct scene file opened.");
-        }
-
-        vi->stop_simulation();
+        auto vi = std::make_shared<M3_SimulatorDummy>();
+        vi->load_reference_scene();
 
         /// ************************************************************************
-        /// CoppeliaSim Robot and Models
+        /// Robot and Models
         /// ************************************************************************
 
-        std::cout << "[2] Initializing CoppeliaSim robot and models..." << std::endl;
+        std::cout << "[2] Initializing robot and models..." << std::endl;
 
-        Example_VS050VrepRobot real_robot_in_vrep("VS050", vi);
-        VectorXd q_init(real_robot_in_vrep.get_configuration_space_positions());
+        VectorXd q_init(vi->get_configuration_space_positions());
 
         //Real base (representing the ideal robot parameters)
 
-        DQ real_base_frame(real_robot_in_vrep.get_base_frame());
+        DQ real_base_frame(vi->get_object_pose("VS050_reference_frame"));
 
         //Real effector (from the CAD model)
 
@@ -141,14 +137,14 @@ int main(int, char**)
 
         //Real robot (representing the ideal robot parameters)
 
-        auto real_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
+        auto real_robot = std::make_shared<M3_SerialManipulatorEDH>(M3_SimulatorDummy::vs050_raw_kinematics());
         real_robot->set_base_frame(real_base_frame);
         real_robot->set_effector_frame(effector_frame);
         set_parameter_space_boundaries(real_robot);
 
         //Estimated robot (the estimated kinematic model, the one that needs adaptation)
 
-        auto estimated_robot = std::make_shared<Example_SerialManipulatorEDH>(Example_VS050VrepRobot::raw_kinematics());
+        auto estimated_robot = std::make_shared<M3_SerialManipulatorEDH>(M3_SimulatorDummy::vs050_raw_kinematics());
         estimated_robot->set_base_frame(real_base_frame);
         estimated_robot->set_effector_frame(effector_frame);
         set_parameter_space_boundaries(estimated_robot);
@@ -158,6 +154,26 @@ int main(int, char**)
         const double& ROBOT_JOINT_VELOCITY_LIMIT = 0.1;
         estimated_robot->set_upper_q_dot_limit(ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
         estimated_robot->set_lower_q_dot_limit(-ROBOT_JOINT_VELOCITY_LIMIT*VectorXd::Ones(estimated_robot->get_dim_configuration_space()));
+
+        /// ************************************************************************
+        /// Keep the scene's end-effector reference and tool spheres consistent
+        /// with the control robot's kinematics. The VFI's protected points are
+        /// "tool spheres relative to the end effector" (conj(x_hat) * tool_sphere);
+        /// if x_hat and the tool spheres are not expressed in the same frame as the
+        /// robot's control-space end effector (which includes the base and effector
+        /// frames), the protected points end up misplaced and report spurious
+        /// penetrations. Rebuild them from the fully configured estimated robot so
+        /// that the VFI distances line up with the real end-effector pose.
+        /// ************************************************************************
+        {
+            const DQ x_hat_ee = estimated_robot->fkm(q_init);
+            vi->set_object_pose("x_hat", x_hat_ee);
+            for(int link_index = 0; link_index <= 5; link_index++)
+            {
+                vi->set_object_pose("tool_sphere_" + std::to_string(link_index + 1),
+                                    estimated_robot->fkm(q_init, link_index));
+            }
+        }
 
         /// ************************************************************************
         /// Initialize xd
@@ -178,7 +194,7 @@ int main(int, char**)
 
         std::cout << "[4] Initializing VFIs..." << std::endl;
 
-        std::vector<Example_VFI> vfis(get_example_scene_vfis(vi));
+        std::vector<M3_VFI> vfis(get_example_scene_vfis(vi));
 
         /// ************************************************************************
         /// Randomize the estimated parameters, so that our adaptive controller
@@ -198,10 +214,9 @@ int main(int, char**)
         /// Adaptive Control Loop
         /// ************************************************************************
 
-        Example_AdaptiveController adaptive_controller(estimated_robot,
+        M3_AdaptiveController adaptive_controller(estimated_robot,
                                                        simulation_parameters);
 
-        //vi->start_video_recording();
         vi->start_simulation();
 
         /// ************************************************************************
@@ -211,7 +226,7 @@ int main(int, char**)
             Example_AdaptiveControlStrategy::TASK_ONLY})
         {
             VectorXd q = q_init;
-            real_robot_in_vrep.set_configuration_space_positions(q_init);
+            vi->set_configuration_space_positions(q_init);
             estimated_robot->set_parameter_space_values(a_hat_init);
             VectorXd a_hat = a_hat_init;
 
@@ -257,7 +272,7 @@ int main(int, char**)
                     estimated_robot->set_parameter_space_values(a_hat);
 
                     q += uq * simulation_parameters.sampling_time_sec;
-                    real_robot_in_vrep.set_configuration_space_positions(q);
+                    vi->set_configuration_space_positions(q);
 
                     clock.update_and_sleep();
 
@@ -294,7 +309,7 @@ int main(int, char**)
 /**
  * @brief set_parameter_space_boundaries In this example, the confidence of the parameters of the base is lower than the confidence of the other
  * parameters of the robot. This function sets proper values for the boundaries, which are used by the adaptive controller.
- * @param robot a DQ_SerialManipulatorEDH with base and effector properly initialized.
+ * @param robot a M3_SerialManipulatorEDH with base and effector properly initialized.
  * @param base_linear_confidence_meters confidence interval for the linear parameters of the base [m].
  * @param base_angular_confidence_degrees confidence interval for the angular parameters of the base [deg].
  * @param effector_linear_confidence_meters confidence interval for the linear parameters of the effector [m].
@@ -302,7 +317,7 @@ int main(int, char**)
  * @param other_parameters_linear_confidence_meters confidence interval for the linear parameters of the other parameters [m].
  * @param other_parameters_angular_confidence_degrees confidence interval for the angular parameters of the other parameters [deg].
  */
-void set_parameter_space_boundaries(const std::shared_ptr<Example_SerialManipulatorEDH>& robot,
+void set_parameter_space_boundaries(const std::shared_ptr<M3_SerialManipulatorEDH>& robot,
                                     const double& base_linear_confidence_meters,
                                     const double& base_angular_confidence_degrees,
                                     const double& effector_linear_confidence_meters,
@@ -318,71 +333,69 @@ void set_parameter_space_boundaries(const std::shared_ptr<Example_SerialManipula
     const double& opl = other_parameters_linear_confidence_meters;
     const double& opa = other_parameters_angular_confidence_degrees;
 
-    std::vector<Example_ParameterSpaceEDH::Example_Parameter> bp = robot->get_base_parameters();
-    std::vector<Example_ParameterSpaceEDH::Example_Parameter> ep = robot->get_effector_parameters();
+    std::vector<M3_ParameterSpaceEDH::Example_Parameter> bp = robot->get_base_parameters();
+    std::vector<M3_ParameterSpaceEDH::Example_Parameter> ep = robot->get_effector_parameters();
 
-    const std::shared_ptr<Example_SerialManipulatorEDH>& r = robot;
-    std::vector<Example_ParameterSpaceEDH::Example_Parameter> parameter_space;
-
-    parameter_space    =
+    const std::shared_ptr<M3_SerialManipulatorEDH>& r = robot;
+    std::vector<M3_ParameterSpaceEDH::Example_Parameter> parameter_space =
     {
-        Example_ParameterSpaceEDH::Example_Parameter(-1, Example_ParameterSpaceEDH::Example_ParameterType::base_x,     bp[0].value_,     bp[0].value_-bl,            bp[0].value_+bl),
-        Example_ParameterSpaceEDH::Example_Parameter(-1, Example_ParameterSpaceEDH::Example_ParameterType::base_y,     bp[1].value_,     bp[1].value_-bl,            bp[1].value_+bl),
-        Example_ParameterSpaceEDH::Example_Parameter(-1, Example_ParameterSpaceEDH::Example_ParameterType::base_z,     bp[2].value_,     bp[2].value_-bl,            bp[2].value_+bl),
-        Example_ParameterSpaceEDH::Example_Parameter(-1, Example_ParameterSpaceEDH::Example_ParameterType::base_alpha, bp[3].value_,     bp[3].value_-deg2rad(ba),   bp[3].value_+deg2rad(ba)),
-        Example_ParameterSpaceEDH::Example_Parameter(-1, Example_ParameterSpaceEDH::Example_ParameterType::base_beta,  bp[4].value_,     bp[4].value_-deg2rad(ba),   bp[4].value_+deg2rad(ba)),
-        Example_ParameterSpaceEDH::Example_Parameter(-1, Example_ParameterSpaceEDH::Example_ParameterType::base_gamma, bp[5].value_,     bp[5].value_-deg2rad(ba),   bp[5].value_+deg2rad(ba)),
+        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_x,     bp[0].value_,     bp[0].value_-bl,            bp[0].value_+bl),
+        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_y,     bp[1].value_,     bp[1].value_-bl,            bp[1].value_+bl),
+        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_z,     bp[2].value_,     bp[2].value_-bl,            bp[2].value_+bl),
+        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_alpha, bp[3].value_,     bp[3].value_-deg2rad(ba),   bp[3].value_+deg2rad(ba)),
+        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_beta,  bp[4].value_,     bp[4].value_-deg2rad(ba),   bp[4].value_+deg2rad(ba)),
+        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_gamma, bp[5].value_,     bp[5].value_-deg2rad(ba),   bp[5].value_+deg2rad(ba)),
 
-        Example_ParameterSpaceEDH::Example_Parameter(0, Example_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(0),   r->get_theta(0)-deg2rad(opa),    r->get_theta(0)+deg2rad(opa)),
-        Example_ParameterSpaceEDH::Example_Parameter(0, Example_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(0),       r->get_d(0)-opl,                 r->get_d(0)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(0, Example_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(0),       r->get_a(0)-opl,                 r->get_a(0)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(0, Example_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(0),   r->get_alpha(0)-deg2rad(opa),    r->get_alpha(0)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(0, M3_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(0),   r->get_theta(0)-deg2rad(opa),    r->get_theta(0)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(0, M3_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(0),       r->get_d(0)-opl,                 r->get_d(0)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(0, M3_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(0),       r->get_a(0)-opl,                 r->get_a(0)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(0, M3_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(0),   r->get_alpha(0)-deg2rad(opa),    r->get_alpha(0)+deg2rad(opa)),
 
-        Example_ParameterSpaceEDH::Example_Parameter(1, Example_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(1),   r->get_theta(1)-deg2rad(opa),    r->get_theta(1)+deg2rad(opa)),
-        Example_ParameterSpaceEDH::Example_Parameter(1, Example_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(1),       r->get_d(1)-opl,                 r->get_d(1)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(1, Example_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(1),       r->get_a(1)-opl,                 r->get_a(1)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(1, Example_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(1),   r->get_alpha(1)-deg2rad(opa),    r->get_alpha(1)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(1, M3_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(1),   r->get_theta(1)-deg2rad(opa),    r->get_theta(1)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(1, M3_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(1),       r->get_d(1)-opl,                 r->get_d(1)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(1, M3_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(1),       r->get_a(1)-opl,                 r->get_a(1)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(1, M3_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(1),   r->get_alpha(1)-deg2rad(opa),    r->get_alpha(1)+deg2rad(opa)),
 
-        Example_ParameterSpaceEDH::Example_Parameter(2, Example_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(2),   r->get_theta(2)-deg2rad(opa),    r->get_theta(2)+deg2rad(opa)),
-        Example_ParameterSpaceEDH::Example_Parameter(2, Example_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(2),       r->get_d(2)-opl,                 r->get_d(2)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(2, Example_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(2),       r->get_a(2)-opl,                 r->get_a(2)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(2, Example_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(2),   r->get_alpha(2)-deg2rad(opa),    r->get_alpha(2)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(2, M3_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(2),   r->get_theta(2)-deg2rad(opa),    r->get_theta(2)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(2, M3_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(2),       r->get_d(2)-opl,                 r->get_d(2)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(2, M3_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(2),       r->get_a(2)-opl,                 r->get_a(2)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(2, M3_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(2),   r->get_alpha(2)-deg2rad(opa),    r->get_alpha(2)+deg2rad(opa)),
 
-        Example_ParameterSpaceEDH::Example_Parameter(3, Example_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(3),   r->get_theta(3)-deg2rad(opa),    r->get_theta(3)+deg2rad(opa)),
-        Example_ParameterSpaceEDH::Example_Parameter(3, Example_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(3),       r->get_d(3)-opl,                 r->get_d(3)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(3, Example_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(3),       r->get_a(3)-opl,                 r->get_a(3)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(3, Example_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(3),   r->get_alpha(3)-deg2rad(opa),    r->get_alpha(3)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(3, M3_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(3),   r->get_theta(3)-deg2rad(opa),    r->get_theta(3)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(3, M3_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(3),       r->get_d(3)-opl,                 r->get_d(3)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(3, M3_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(3),       r->get_a(3)-opl,                 r->get_a(3)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(3, M3_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(3),   r->get_alpha(3)-deg2rad(opa),    r->get_alpha(3)+deg2rad(opa)),
 
-        Example_ParameterSpaceEDH::Example_Parameter(4, Example_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(4),   r->get_theta(4)-deg2rad(opa),    r->get_theta(4)+deg2rad(opa)),
-        Example_ParameterSpaceEDH::Example_Parameter(4, Example_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(4),       r->get_d(4)-opl,                 r->get_d(4)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(4, Example_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(4),       r->get_a(4)-opl,                 r->get_a(4)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(4, Example_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(4),   r->get_alpha(4)-deg2rad(opa),    r->get_alpha(4)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(4, M3_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(4),   r->get_theta(4)-deg2rad(opa),    r->get_theta(4)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(4, M3_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(4),       r->get_d(4)-opl,                 r->get_d(4)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(4, M3_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(4),       r->get_a(4)-opl,                 r->get_a(4)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(4, M3_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(4),   r->get_alpha(4)-deg2rad(opa),    r->get_alpha(4)+deg2rad(opa)),
 
-        Example_ParameterSpaceEDH::Example_Parameter(5, Example_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(5),   r->get_theta(5)-deg2rad(opa),    r->get_theta(5)+deg2rad(opa)),
-        Example_ParameterSpaceEDH::Example_Parameter(5, Example_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(5),       r->get_d(5)-opl,                 r->get_d(5)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(5, Example_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(5),       r->get_a(5)-opl,                 r->get_a(5)+opl),
-        Example_ParameterSpaceEDH::Example_Parameter(5, Example_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(5),   r->get_alpha(5)-deg2rad(opa),    r->get_alpha(5)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(5, M3_ParameterSpaceEDH::Example_ParameterType::theta,       r->get_theta(5),   r->get_theta(5)-deg2rad(opa),    r->get_theta(5)+deg2rad(opa)),
+        M3_ParameterSpaceEDH::Example_Parameter(5, M3_ParameterSpaceEDH::Example_ParameterType::d,           r->get_d(5),       r->get_d(5)-opl,                 r->get_d(5)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(5, M3_ParameterSpaceEDH::Example_ParameterType::a,           r->get_a(5),       r->get_a(5)-opl,                 r->get_a(5)+opl),
+        M3_ParameterSpaceEDH::Example_Parameter(5, M3_ParameterSpaceEDH::Example_ParameterType::alpha,       r->get_alpha(5),   r->get_alpha(5)-deg2rad(opa),    r->get_alpha(5)+deg2rad(opa)),
 
-        Example_ParameterSpaceEDH::Example_Parameter(6, Example_ParameterSpaceEDH::Example_ParameterType::eff_x,     ep[0].value_,     ep[0].value_-el,           ep[0].value_+el),
-        Example_ParameterSpaceEDH::Example_Parameter(6, Example_ParameterSpaceEDH::Example_ParameterType::eff_y,     ep[1].value_,     ep[1].value_-el,           ep[1].value_+el),
-        Example_ParameterSpaceEDH::Example_Parameter(6, Example_ParameterSpaceEDH::Example_ParameterType::eff_z,     ep[2].value_,     ep[2].value_-el,           ep[2].value_+el),
-        Example_ParameterSpaceEDH::Example_Parameter(6, Example_ParameterSpaceEDH::Example_ParameterType::eff_alpha, ep[3].value_,     ep[3].value_-deg2rad(ea),   ep[3].value_+deg2rad(ea)),
-        Example_ParameterSpaceEDH::Example_Parameter(6, Example_ParameterSpaceEDH::Example_ParameterType::eff_beta,  ep[4].value_,     ep[4].value_-deg2rad(ea),   ep[4].value_+deg2rad(ea)),
-        Example_ParameterSpaceEDH::Example_Parameter(6, Example_ParameterSpaceEDH::Example_ParameterType::eff_gamma, ep[5].value_,     ep[5].value_-deg2rad(ea),   ep[5].value_+deg2rad(ea)),
+        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_x,     ep[0].value_,     ep[0].value_-el,           ep[0].value_+el),
+        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_y,     ep[1].value_,     ep[1].value_-el,           ep[1].value_+el),
+        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_z,     ep[2].value_,     ep[2].value_-el,           ep[2].value_+el),
+        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_alpha, ep[3].value_,     ep[3].value_-deg2rad(ea),   ep[3].value_+deg2rad(ea)),
+        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_beta,  ep[4].value_,     ep[4].value_-deg2rad(ea),   ep[4].value_+deg2rad(ea)),
+        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_gamma, ep[5].value_,     ep[5].value_-deg2rad(ea),   ep[5].value_+deg2rad(ea)),
     };
 
     robot->set_parameter_space(parameter_space);
 }
 
 /**
- * @brief get_example_scene_vfis Initializes the VFIs in the example CoppeliaSim scene,
- * TRO2022_MarinhoAdorno_ReferenceScene.ttt
- * @param vi a DQ_VrepInterface that has already connected.
- * @return a vector of VFI_Information containing all relevant VFIs in the scene.
+ * @brief get_example_scene_vfis Initializes the VFIs for the example scene
+ * (the nominal TRO2022 reference scene loaded into M3_SimulatorDummy).
+ * @param vi a M3_SimulatorDummy that has the reference scene loaded.
+ * @return a vector of M3_VFI containing all relevant VFIs in the scene.
  */
-std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_CoppeliaSimInterface>& vi)
+std::vector<M3_VFI> get_example_scene_vfis(const std::shared_ptr<M3_SimulatorDummy>& vi)
 {
-    std::vector<Example_VFI> vfis;
+    std::vector<M3_VFI> vfis;
 
     auto x_hat = vi->get_object_pose("x_hat");
     // x_hat * x_rel = x_ts1 --> x_rel = conj(x_hat)*x_ts1
@@ -399,64 +412,64 @@ std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_Coppeli
     {
         constexpr double tube_distance = 0.02;
         constexpr double wall_distance = 0.02;
-        vfis.push_back(Example_VFI("cube_40x40_wall_1",
+        vfis.push_back(M3_VFI("cube_40x40_wall_1",
                                    std::get<2>(tp),
-                                   Example_Primitive::Plane,
+                                   M3_Primitive::Plane,
                                    vi,
                                    std::get<double>(tp)+wall_distance,
-                                   Example_VFI_Direction::FORBIDDEN_ZONE,
+                                   M3_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
                        );
-        vfis.push_back(Example_VFI("cube_40x40_wall_2",
+        vfis.push_back(M3_VFI("cube_40x40_wall_2",
                                    std::get<2>(tp),
-                                   Example_Primitive::Plane,
+                                   M3_Primitive::Plane,
                                    vi,
                                    std::get<double>(tp)+wall_distance,
-                                   Example_VFI_Direction::FORBIDDEN_ZONE,
+                                   M3_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
                        );
-        vfis.push_back(Example_VFI("cube_40x40_wall_3",
+        vfis.push_back(M3_VFI("cube_40x40_wall_3",
                                    std::get<2>(tp),
-                                   Example_Primitive::Plane,
+                                   M3_Primitive::Plane,
                                    vi,
                                    std::get<double>(tp)+wall_distance,
-                                   Example_VFI_Direction::FORBIDDEN_ZONE,
+                                   M3_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
                        );
-        vfis.push_back(Example_VFI("cube_40x40_wall_4",
+        vfis.push_back(M3_VFI("cube_40x40_wall_4",
                                    std::get<2>(tp),
-                                   Example_Primitive::Plane,
+                                   M3_Primitive::Plane,
                                    vi,
                                    std::get<double>(tp)+wall_distance,
-                                   Example_VFI_Direction::FORBIDDEN_ZONE,
+                                   M3_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
                        );
-        vfis.push_back(Example_VFI("cube_40x40_tube_1",
+        vfis.push_back(M3_VFI("cube_40x40_tube_1",
                                    std::get<2>(tp),
-                                   Example_Primitive::Line,
+                                   M3_Primitive::Line,
                                    vi,
                                    std::pow(std::get<double>(tp)+tube_distance, 2.),
-                                   Example_VFI_Direction::FORBIDDEN_ZONE,
+                                   M3_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
                        );
 
-        vfis.push_back(Example_VFI("cube_40x40_tube_2",
+        vfis.push_back(M3_VFI("cube_40x40_tube_2",
                                    std::get<2>(tp),
-                                   Example_Primitive::Line,
+                                   M3_Primitive::Line,
                                    vi,
                                    std::pow(std::get<double>(tp)+tube_distance, 2.),
-                                   Example_VFI_Direction::FORBIDDEN_ZONE,
+                                   M3_VFI_Direction::FORBIDDEN_ZONE,
                                    7,
                                    std::get<DQ>(tp))
                        );
     }
 
-    for(Example_VFI& vfi: vfis)
+    for(M3_VFI& vfi: vfis)
     {
         vfi.initialize();
     }
@@ -470,13 +483,13 @@ std::vector<Example_VFI> get_example_scene_vfis(const std::shared_ptr<DQ_Coppeli
  * @param estimated_robot the estimated_robot whose parameters will be changed.
  * @param parameter_boundaries the {lower,upper} limits of the parameters.
  * @param q the current configuration of the robot.
- * @param vfis the std::vector of Example_VFIs with all VFIs to be checked.
+ * @param vfis the std::vector of M3_VFI with all VFIs to be checked.
  */
 void randomize_parameters(
-        const std::shared_ptr<Example_SerialManipulatorEDH>& estimated_robot,
+        const std::shared_ptr<M3_SerialManipulatorEDH>& estimated_robot,
         const std::tuple<VectorXd,VectorXd>& parameter_boundaries,
         const VectorXd& q,
-        const std::vector<Example_VFI>& vfis)
+        const std::vector<M3_VFI>& vfis)
 {
     bool found_suitable_parameters = false;
     sas::Clock find_suitable_parameters_clock(0.002);
@@ -502,20 +515,20 @@ void randomize_parameters(
         // The random parameters must not penetrate any obstacle
         const DQ x_hat = estimated_robot->fkm(q);
         found_suitable_parameters = true;
-        for(const Example_VFI& vfi: vfis)
+        for(const M3_VFI& vfi: vfis)
         {
             const double& distance_error = vfi.get_distance_error(x_hat);
             switch(vfi.get_distance_type())
             {
-            case Example_VFI_DistanceType::None:
+            case M3_VFI_DistanceType::None:
                 throw std::runtime_error("Expected valid type.");
-            case Example_VFI_DistanceType::EUCLIDEAN:
+            case M3_VFI_DistanceType::EUCLIDEAN:
                 if(distance_error < -0.001)
                 {
                     found_suitable_parameters = false;
                     break;
                 }
-            case Example_VFI_DistanceType::EUCLIDEAN_SQUARED:
+            case M3_VFI_DistanceType::EUCLIDEAN_SQUARED:
                 if(distance_error < -0.00001)
                 {
                     found_suitable_parameters = false;

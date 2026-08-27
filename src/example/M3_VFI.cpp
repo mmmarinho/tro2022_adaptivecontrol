@@ -39,7 +39,7 @@ Contributors (aside from author):
 M3_VFI::M3_VFI(const std::string &workspace_entity_name,
                const std::string& robot_entity_name,
                const M3_Primitive &type,
-               const std::shared_ptr<DQ_CoppeliaSimInterface> &vi,
+               const std::shared_ptr<M3_SimulatorDummy> &vi,
                const double &safe_distance,
                const M3_VFI_Direction &vfi_direction,
                const int &joint_index,

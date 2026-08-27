@@ -1,7 +1,7 @@
 [submodule "submodules/sas_core"]
 	path = submodules/sas_core
 	url = https://github.com/SmartArmStack/sas_core.git
-	branch = ros2
+	branch = jazzy
 [submodule "submodules/dqrobotics/cpp-interface-qpoases"]
 	path = submodules/dqrobotics/cpp-interface-qpoases
 	url = https://github.com/dqrobotics/cpp-interface-qpoases.git
@@ -12,6 +12,3 @@
 [submodule "submodules/dqrobotics/python"]
 	path = submodules/dqrobotics/python
 	url = https://github.com/dqrobotics/python.git
-[submodule "submodules/dqrobotics/python-interface-coppeliasim-zmq"]
-	path = submodules/dqrobotics/python-interface-coppeliasim-zmq
-	url = https://github.com/dqrobotics/python-interface-coppeliasim-zmq.git
