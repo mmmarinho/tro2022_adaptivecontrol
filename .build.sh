@@ -23,13 +23,11 @@
 # LIST UP SUBMODULES HERE
 ##########################
 
-# The packages will be built in this order, so
-# use an order that makes sense with the dependencies
-# of you example.
+# The top-level CMakeLists.txt builds every dependency (dqrobotics,
+# qpOASES) in-tree through add_subdirectory, so only the example itself
+# needs to be configured/built here. The standalone build skips the
+# pybind11 module (see -DBUILD_PYTHON_WRAPPER=OFF in BUILD below).
 pkg_array=(
-"submodules/dqrobotics/python/cpp"
-"submodules/dqrobotics/cpp-interface-qpoases"
-"submodules/qpOASES"
 "." # This is the example itself, so don't forget it!
 )
 
@@ -61,7 +59,9 @@ BUILD(){
   rm -rf build
   mkdir build
   cd build || return
-  cmake .. -DCMAKE_INSTALL_PREFIX="${repo_root_dir}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+  # The standalone C++ build does not need a Python interpreter, so the
+  # pybind11 module (built by `pip install .` through setup.py) is skipped.
+  cmake .. -DCMAKE_INSTALL_PREFIX="${repo_root_dir}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_PYTHON_WRAPPER=OFF
   if [ -z "$variable" ]
     then
       make -j"${phycores}"
