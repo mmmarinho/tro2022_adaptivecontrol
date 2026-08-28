@@ -1,6 +1,42 @@
+import glob
+import importlib.util
+import os
+import site
+import sys
+
 import numpy as np
 from numpy import pi
 from dqrobotics import *
+
+# When this script runs from the repository root, the source `marinholab/`
+# tree shadows the installed package (which contains the compiled `_core`
+# extension). Register the installed extension under the package name so the
+# import below resolves it. No-op when the package is already importable
+# (e.g. running from another directory or from an in-place build).
+_CORE_NAME = "marinholab.papers.tro2022.adaptive_control._core"
+try:
+    import marinholab.papers.tro2022.adaptive_control  # noqa: F401
+except ModuleNotFoundError:
+    _pkg_rel = os.path.join("marinholab", "papers", "tro2022", "adaptive_control")
+    _site_dirs = list(site.getsitepackages())
+    try:
+        _user_site = site.getusersitepackages()
+        if _user_site:
+            _site_dirs.append(_user_site)
+    except Exception:
+        pass
+    for _site_dir in _site_dirs:
+        for _pattern in ("_core*.so", "_core*.pyd", "_core*.dll"):
+            _hits = sorted(glob.glob(os.path.join(_site_dir, _pkg_rel, _pattern)))
+            if _hits:
+                _spec = importlib.util.spec_from_file_location(_CORE_NAME, _hits[0])
+                _module = importlib.util.module_from_spec(_spec)
+                sys.modules[_CORE_NAME] = _module
+                _spec.loader.exec_module(_module)
+                break
+        if _CORE_NAME in sys.modules:
+            break
+
 from marinholab.papers.tro2022.adaptive_control import *
 
 plot_enabled = None

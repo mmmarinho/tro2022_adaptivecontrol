@@ -16,7 +16,7 @@ python3 -m pip install --upgrade pip
 python3 -m pip install setuptools wheel setuptools-git-versioning
 
 python3 -m pip install dqrobotics --pre
-python3 -m pip install ./python_wrapper
+python3 -m pip install .
 
 cat adaptive_control_import_eval.py
 python3 adaptive_control_import_eval.py
