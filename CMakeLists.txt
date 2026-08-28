@@ -39,13 +39,22 @@ add_library(adaptive_control
         submodules/sas_core/src/sas_object.cpp
 )
 
+# Eigen does not ship a CMake config file, so find_package(Eigen3) is not
+# reliable (in particular with the macOS homebrew install, which places the
+# headers under /opt/homebrew/include/eigen3). sas_core.hpp includes
+# <eigen3/Eigen/Dense>, so the include path must contain the *parent*
+# directory (/opt/homebrew/include), not just the eigen3 subdir. These are
+# added as directory-scope includes so they apply to every target built here
+# (the adaptive_control library, the executable, and the _core module),
+# mirroring the original python_wrapper/CMakeLists.txt.
 if(APPLE)
-    target_include_directories(adaptive_control PRIVATE
-        /usr/local/include/
+    include_directories(
+        /usr/local/include
         /usr/local/include/eigen3
         # Most recent versions of brew install here
         /opt/homebrew/include
-        /opt/homebrew/include/eigen3)
+        /opt/homebrew/include/eigen3
+    )
 endif()
 if(WIN32)
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
