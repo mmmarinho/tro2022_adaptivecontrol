@@ -53,22 +53,26 @@ echo "Found ""${phycores}"" physical cores."
 # BUILD FUNCTION
 ##########################
 
-# The only unusual thing here is the -DCMAKE_INSTALL_PREFIX that we set
-# so everything is installed locally.
+# After `make`, the example executable is placed in `build/`. We copy it into
+# `bin/` (where `.run.sh` expects it) instead of running `make install`: the
+# in-tree dependency projects (dqrobotics, qpOASES) have their own install
+# rules that would scatter their headers/sources into the repo's `include/`
+# and `src/` when the install prefix is the repo root.
 BUILD(){
   rm -rf build
   mkdir build
   cd build || return
   # The standalone C++ build does not need a Python interpreter, so the
   # pybind11 module (built by `pip install .` through setup.py) is skipped.
-  cmake .. -DCMAKE_INSTALL_PREFIX="${repo_root_dir}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_PYTHON_WRAPPER=OFF
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_PYTHON_WRAPPER=OFF
   if [ -z "$variable" ]
     then
       make -j"${phycores}"
     else
       make
   fi
-  make install
+  mkdir -p "${repo_root_dir}/bin"
+  cp "${repo_root_dir}/build/adaptive_control_cpp" "${repo_root_dir}/bin/"
 }
 
 ######################################

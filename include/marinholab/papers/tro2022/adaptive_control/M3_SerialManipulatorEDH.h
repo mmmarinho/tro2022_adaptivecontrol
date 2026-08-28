@@ -1,6 +1,6 @@
 #pragma once
 /**
-(C) Copyright 2029-2023 Murilo Marques Marinho (www.murilomarinho.info)
+(C) Copyright 2020-2023 Murilo Marques Marinho (www.murilomarinho.info)
 
 This file is part of adaptive_control_example.
 
