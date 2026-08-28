@@ -1,0 +1,12 @@
+# Build artifacts
+build/
+bin/
+lib/
+dist/
+*.whl
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+venv/

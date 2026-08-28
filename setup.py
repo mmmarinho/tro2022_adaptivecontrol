@@ -10,7 +10,7 @@ from setuptools.command.build_ext import build_ext
 
 # read the contents of your README file
 from pathlib import Path
-repository_root = Path(__file__).parent.parent
+repository_root = Path(__file__).parent
 long_description = (repository_root / "README.md").read_text()
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -142,7 +142,6 @@ setup(
     license="MIT",
     packages=[
         "marinholab.papers.tro2022.adaptive_control",
-        "marinholab.papers.tro2022.adaptive_control.Example_ParameterSpaceEDH"
     ],
     ext_modules=[CMakeExtension('marinholab.papers.tro2022.adaptive_control._core')],
     cmdclass={"build_ext": CMakeBuild},
