@@ -33,27 +33,8 @@ Contributors (aside from author):
 
 #include "marinholab/papers/tro2022/adaptive_control/M3_SimulatorDummy.h"
 
+#include <cmath>
 #include <stdexcept>
-
-namespace
-{
-// Builds a unit dual quaternion for a pose from a unit rotation quaternion @p P
-// and a translation vector @p t. This mirrors DQ::unitDQ:
-//     h = P + E_*(0.5 * p * P),   where p = (0, tx, ty, tz) is the position quaternion.
-// (For a unit DQ, translation(h) == t by construction.)
-DQ make_pose(const DQ& P, const Vector3d& t)
-{
-    const DQ p(0., t(0), t(1), t(2)); // position quaternion (0,tx,ty,tz), dual part 0
-    return P + E_*(0.5 * p * P);
-}
-
-// Rotation quaternion for an angle (rad) about a unit axis.
-DQ make_rotation(const Vector3d& axis, const double& angle)
-{
-    const double s = std::sin(angle / 2.0);
-    return DQ(std::cos(angle / 2.0), s * axis(0), s * axis(1), s * axis(2), 0., 0., 0., 0.);
-}
-}
 
 DQ M3_SimulatorDummy::get_object_pose(const std::string& object_name) const
 {
@@ -109,46 +90,68 @@ bool M3_SimulatorDummy::is_running() const
 
 void M3_SimulatorDummy::load_reference_scene()
 {
-    const DQ identity(1., 0., 0., 0., 0., 0., 0., 0.);
-    const Vector3d x_axis(1., 0., 0.);
-    const Vector3d y_axis(0., 1., 0.);
+    // The poses below are built with the dual-quaternion algebra written
+    // explicitly (no helper functions), so the construction is visible in place:
+    //   * a rotation of angle phi about the unit vector v is the quaternion
+    //         r = cos(phi/2) + v*sin(phi/2)
+    //   * a translation t is written in the DQ basis {i_, j_, k_}
+    //         t = tx*i_ + ty*j_ + tz*k_
+    //   * a pose (unit dual quaternion) combines the two as
+    //         x = r + 0.5*E_*t*r
+    // (E_ is the dual unit; for a unit DQ, translation(x) == t.)
+    const DQ i_ = DQ::i;
+    const DQ j_ = DQ::j;
+    const DQ k_ = DQ::k;
 
     // Half-size of the 40 cm box workspace (in x and y; open in z).
     const double h = 0.2;
 
-    // Robot base frame (world frame). The ideal robot uses the identity base.
+    // Robot base frame (world frame). The ideal robot uses the identity base:
+    // r = 1 (no rotation), t = 0 (no translation)  ->  x = 1.
+    const DQ identity = DQ(1.);
     set_object_pose("VS050_reference_frame", identity);
 
     // Four vertical walls of the box. Each wall object's pose encodes the plane:
     //   normal = the object's k-axis,  plane passes through the object's position.
     // The normals point inward so that the FORBIDDEN_ZONE VFIs keep the robot
-    // inside the box.
-    // Wall at x=+h, inward normal -i  (rotate k -> -i: -90 deg about y)
-    set_object_pose("cube_40x40_wall_1",
-                    make_pose(make_rotation(y_axis, -pi / 2.0), Vector3d(h, 0., 0.)));
-    // Wall at x=-h, inward normal +i  (rotate k -> +i: +90 deg about y)
-    set_object_pose("cube_40x40_wall_2",
-                    make_pose(make_rotation(y_axis, pi / 2.0), Vector3d(-h, 0., 0.)));
-    // Wall at y=+h, inward normal -j  (rotate k -> -j: +90 deg about x)
-    set_object_pose("cube_40x40_wall_3",
-                    make_pose(make_rotation(x_axis, pi / 2.0), Vector3d(0., h, 0.)));
-    // Wall at y=-h, inward normal +j  (rotate k -> +j: -90 deg about x)
-    set_object_pose("cube_40x40_wall_4",
-                    make_pose(make_rotation(x_axis, -pi / 2.0), Vector3d(0., -h, 0.)));
+    // inside the box. A wall's orientation is the rotation r that turns its k-axis
+    // into the desired inward normal; t is where the plane passes through.
+
+    // Wall at x=+h, inward normal -i: rotate k -> -i, i.e. -90 deg about j.
+    const DQ r_wall1 = std::cos(-pi / 4.0) + j_ * std::sin(-pi / 4.0);
+    const DQ t_wall1 = h * i_;
+    set_object_pose("cube_40x40_wall_1", r_wall1 + 0.5 * E_ * t_wall1 * r_wall1);
+
+    // Wall at x=-h, inward normal +i: rotate k -> +i, i.e. +90 deg about j.
+    const DQ r_wall2 = std::cos(pi / 4.0) + j_ * std::sin(pi / 4.0);
+    const DQ t_wall2 = -h * i_;
+    set_object_pose("cube_40x40_wall_2", r_wall2 + 0.5 * E_ * t_wall2 * r_wall2);
+
+    // Wall at y=+h, inward normal -j: rotate k -> -j, i.e. +90 deg about i.
+    const DQ r_wall3 = std::cos(pi / 4.0) + i_ * std::sin(pi / 4.0);
+    const DQ t_wall3 = h * j_;
+    set_object_pose("cube_40x40_wall_3", r_wall3 + 0.5 * E_ * t_wall3 * r_wall3);
+
+    // Wall at y=-h, inward normal +j: rotate k -> +j, i.e. -90 deg about i.
+    const DQ r_wall4 = std::cos(-pi / 4.0) + i_ * std::sin(-pi / 4.0);
+    const DQ t_wall4 = -h * j_;
+    set_object_pose("cube_40x40_wall_4", r_wall4 + 0.5 * E_ * t_wall4 * r_wall4);
 
     // Two vertical tubes (lines) along z, inside the box. The tube object's
-    // k-axis is the tube axis (no rotation); the line passes through the
-    // object's position.
-    set_object_pose("cube_40x40_tube_1", make_pose(identity, Vector3d(0., 0.12, 0.)));
-    set_object_pose("cube_40x40_tube_2", make_pose(identity, Vector3d(0., -0.12, 0.)));
+    // k-axis is the tube axis (no rotation, r = 1); the line passes through t.
+    const DQ t_tube1 = 0.12 * j_;
+    set_object_pose("cube_40x40_tube_1", identity + 0.5 * E_ * t_tube1 * identity);
+    const DQ t_tube2 = -0.12 * j_;
+    set_object_pose("cube_40x40_tube_2", identity + 0.5 * E_ * t_tube2 * identity);
 
     // Task targets.
-    // xd0: a safe approach pose inside the box, in front of the opening.
-    set_object_pose("xd0", make_pose(identity, Vector3d(0.0, 0.0, 0.0)));
+    // xd0: a safe approach pose inside the box, in front of the opening (r = 1, t = 0).
+    set_object_pose("xd0", identity);
     // xd1: the final target, chosen (as in the original example) as a pose the
     // robot cannot reach; it serves to show that even then the robot does not
     // collide with the environment.
-    set_object_pose("xd1", make_pose(identity, Vector3d(0.0, 0.0, 0.55)));
+    const DQ t_xd1 = 0.55 * k_;
+    set_object_pose("xd1", identity + 0.5 * E_ * t_xd1 * identity);
 
     // A plausible initial robot configuration. It is a folded posture that keeps
     // every link/tool point inside the nominal box workspace, with enough
