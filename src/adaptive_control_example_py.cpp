@@ -7,6 +7,7 @@
 #include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
 #include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
 #include "marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_Simulator.h"
 #include "marinholab/papers/tro2022/adaptive_control/M3_SimulatorDummy.h"
 #include "marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
 
@@ -15,6 +16,26 @@
 
 namespace py = pybind11;
 using namespace DQ_robotics;
+
+// Trampoline so M3_Simulator can be subclassed from Python: a Python subclass
+// can override draw_scene (the visualization hook). The base class keeps a
+// no-op default, so this falls back to the (headless) no-op when a Python
+// override is absent. It inherits py::trampoline_self_life_support as required
+// when the class is exposed with py::smart_holder (see the M3_Simulator
+// binding below).
+class PyM3_Simulator : public M3_Simulator, public py::trampoline_self_life_support
+{
+public:
+    using M3_Simulator::M3_Simulator; // Inherit the constructors
+    void draw_scene() override
+    {
+        PYBIND11_OVERRIDE(
+            void,         // Return type
+            M3_Simulator, // Parent class
+            draw_scene    // Name of the function in C++ (must match the Python name)
+        );
+    }
+};
 
 PYBIND11_MODULE(_core, m) {
 
@@ -110,7 +131,7 @@ PYBIND11_MODULE(_core, m) {
                  const std::string&,
                  const std::string&,
                  const M3_Primitive&,
-                 const std::shared_ptr<M3_SimulatorDummy>&,
+                 const std::shared_ptr<M3_Simulator>&,
                  const double&,
                  const M3_VFI_Direction&,
                  const int&,
@@ -318,20 +339,56 @@ PYBIND11_MODULE(_core, m) {
     M3_SerialManipulatorEDH.def("get_dim_configuration_space",&M3_SerialManipulatorEDH::get_dim_configuration_space,"");
 
 
+    /// "M3_Simulator.h"
+
+    //class M3_Simulator (base; exposed with a trampoline so it can be
+    // subclassed from Python, e.g. a pyplot-based visualization backend).
+    // smart_holder (py::classh) is used because M3_Simulator is subclassed from
+    // Python and also converted to std::shared_ptr<M3_Simulator> in C++ (e.g.
+    // M3_VFI): per the pybind11 docs, smart_holder avoids inheritance slicing
+    // for such trampoline classes.
+    py::classh<M3_Simulator, PyM3_Simulator>(
+            m, "M3_Simulator",
+            "Base class of a robot-scene simulator. Holds a named set of scene "
+            "object poses (DQ), the robot configuration (joint-space) and the "
+            "simulation start/stop state. Exposed with a trampoline so it can be "
+            "subclassed from Python by overriding draw_scene.")
+            .def(py::init<>())
+            .def("draw_scene", &M3_Simulator::draw_scene,
+                 "Draw the scene (robots, obstacles, targets). Headless default does "
+                 "nothing; a visualization backend overrides this.")
+            .def("get_object_pose", &M3_Simulator::get_object_pose,
+                 "Return the pose of the named object.", py::arg("object_name"))
+            .def("get_object_pose_or_default", &M3_Simulator::get_object_pose_or_default,
+                 "Return the pose of the named object, or default_pose if absent.",
+                 py::arg("object_name"), py::arg("default_pose"))
+            .def("set_object_pose", &M3_Simulator::set_object_pose,
+                 "Set (or create) the pose of the named object.",
+                 py::arg("object_name"), py::arg("pose"))
+            .def("has_object", &M3_Simulator::has_object,
+                 "Whether an object with the given name exists in the scene.",
+                 py::arg("object_name"))
+            .def("get_object_names", &M3_Simulator::get_object_names,
+                 "The names of all objects currently in the scene.")
+            .def("get_configuration_space_positions",
+                 &M3_Simulator::get_configuration_space_positions,
+                 "The current robot configuration (joint-space).")
+            .def("set_configuration_space_positions",
+                 &M3_Simulator::set_configuration_space_positions,
+                 "Set the robot configuration (joint-space).", py::arg("q"))
+            .def("start_simulation", &M3_Simulator::start_simulation)
+            .def("stop_simulation", &M3_Simulator::stop_simulation)
+            .def("is_running", &M3_Simulator::is_running);
+
     /// "M3_SimulatorDummy.h"
 
-    //class M3_SimulatorDummy
-    py::class_<M3_SimulatorDummy, std::shared_ptr<M3_SimulatorDummy>>(m, "M3_SimulatorDummy")
+    //class M3_SimulatorDummy : public M3_Simulator
+    // Same smart_holder as its base so the whole hierarchy converts cleanly to
+    // std::shared_ptr<M3_Simulator> (e.g. for M3_VFI).
+    py::classh<M3_SimulatorDummy, M3_Simulator>(
+            m, "M3_SimulatorDummy",
+            "In-memory, headless M3_Simulator backend (no real simulator).")
             .def(py::init<>())
-            .def("get_object_pose", &M3_SimulatorDummy::get_object_pose, "", py::arg("object_name"))
-            .def("set_object_pose", &M3_SimulatorDummy::set_object_pose, "", py::arg("object_name"), py::arg("pose"))
-            .def("has_object", &M3_SimulatorDummy::has_object, "", py::arg("object_name"))
-            .def("get_object_names", &M3_SimulatorDummy::get_object_names)
-            .def("get_configuration_space_positions", &M3_SimulatorDummy::get_configuration_space_positions)
-            .def("set_configuration_space_positions", &M3_SimulatorDummy::set_configuration_space_positions, "", py::arg("q"))
-            .def("start_simulation", &M3_SimulatorDummy::start_simulation)
-            .def("stop_simulation", &M3_SimulatorDummy::stop_simulation)
-            .def("is_running", &M3_SimulatorDummy::is_running)
             .def("load_reference_scene", &M3_SimulatorDummy::load_reference_scene)
             .def_static("vs050_raw_kinematics", &M3_SimulatorDummy::vs050_raw_kinematics,
                          "Return the VS050 kinematics of the TRO2022 example (ideal base/effector).");

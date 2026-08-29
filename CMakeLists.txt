@@ -30,6 +30,7 @@ add_library(adaptive_control
         src/example/M3_AdaptiveController.cpp
         src/example/M3_VFI.cpp
         src/example/M3_SerialManipulatorEDH.cpp
+        src/example/M3_Simulator.cpp
         src/example/M3_SimulatorDummy.cpp
         src/example/M3_MeasurementSpace.cpp
 

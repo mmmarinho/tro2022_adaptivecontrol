@@ -1,0 +1,62 @@
+# Example scene for the TRO2022 adaptive-control example.
+# Mirrors the nominal TRO2022 reference scene used by M3_SimulatorDummy:
+# a 6-DoF VS050 robot, a 40 cm cube workspace (4 walls), 2 vertical tubes and
+# the two task targets (xd0 safe approach, xd1 unreachable target).
+#
+# Conventions (match M3_VFI):
+#   * a plane is given by a point (`position`) and its (unit) `normal`;
+#   * a line  is given by a point (`position`) and its (unit) `direction`;
+#   * the initial configuration `q0` is in radians.
+
+robots:
+  - name: vs050
+    dh:
+      # [theta; d; a; alpha; offset]   (radians)
+      - [-1.5707963,  1.5707963, -1.5707963, 0.0,  1.5707963, 0.0]
+      - [ 0.345,      0.0,        0.0,       0.255, 0.0,      0.07]
+      - [ 0.0,        0.25,       0.01,      0.0,   0.0,      0.0]
+      - [ 1.5707963,  0.0,       -1.5707963, 1.5707963, 1.5707963, 0.0]
+      - [ 0.0,        0.0,        0.0,       0.0,   0.0,      0.0]
+    limits:
+      lower: [-170., -100., -60., -265., -119., -355.]
+      upper: [ 170.,  100., 124.,  265.,  89.9, 355.]
+      unit: deg
+
+# Four walls of the 40 cm cube (half-size 0.2 in x and y; open in z).
+# The normals point inward (FORBIDDEN_ZONE keeps the robot inside the box).
+planes:
+  - name: wall_1      # x = +0.2, inward normal -i
+    position: [ 0.2, 0.0, 0.0]
+    normal:   [-1.0, 0.0, 0.0]
+  - name: wall_2      # x = -0.2, inward normal +i
+    position: [-0.2, 0.0, 0.0]
+    normal:   [ 1.0, 0.0, 0.0]
+  - name: wall_3      # y = +0.2, inward normal -j
+    position: [0.0,  0.2, 0.0]
+    normal:   [ 0.0, -1.0, 0.0]
+  - name: wall_4      # y = -0.2, inward normal +j
+    position: [0.0, -0.2, 0.0]
+    normal:   [ 0.0,  1.0, 0.0]
+
+# Two vertical tubes (lines) along z, at y = +/- 0.12.
+lines:
+  - name: tube_1
+    position: [0.0,  0.12, 0.0]
+    direction: [0.0, 0.0, 1.0]
+  - name: tube_2
+    position: [0.0, -0.12, 0.0]
+    direction: [0.0, 0.0, 1.0]
+
+# Task targets.
+points:
+  - name: xd0          # safe approach pose (the world origin)
+    pos:    [0.0, 0.0, 0.0]
+    radius: 0.03
+    color:  g
+  - name: xd1          # unreachable target (z = 0.55)
+    pos:    [0.0, 0.0, 0.55]
+    radius: 0.03
+    color:  r
+
+# Initial robot configuration (radians), a folded posture inside the box.
+q0: [2.32698, -0.427311, 0.681903, 1.4088, -0.759787, 0.879927]

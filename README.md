@@ -18,6 +18,32 @@
     python3 -m pip install marinholab-papers-tro2022-adaptivecontrol --break-system-packages
 ```
 
+### Optional scene visualization
+
+The `M3_Simulator` base class (which `M3_SimulatorDummy` derives from) can be
+subclassed in Python to provide a scene-visualization backend. The package
+ships `M3_PyPlotSimulator`, which loads a scene from YAML and draws it with
+[`dqrobotics-pyplot`](https://pypi.org/project/dqrobotics-pyplot/):
+
+```commandline
+    python3 -m pip install "marinholab-papers-tro2022-adaptivecontrol[viz]"
+```
+
+```python
+from marinholab.papers.tro2022.adaptive_control import M3_PyPlotSimulator
+import matplotlib.pyplot as plt
+
+sim = M3_PyPlotSimulator()
+sim.load_scene("scenes/example.yaml")   # robot + walls + tubes + targets
+fig = plt.figure(); plt.axes(projection="3d")
+sim.draw_scene()                        # overrides M3_Simulator.draw_scene()
+plt.show()
+```
+
+`M3_VFI` accepts any `M3_Simulator` subclass (it holds a
+`std::shared_ptr<M3_Simulator>`), so the visualization backend can be used
+directly with the adaptive controller.
+
 ## Reference
 
 Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/TRO.2022.3181047).

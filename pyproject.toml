@@ -24,6 +24,17 @@ description="A Python implementation of an example of 'Adaptive Constrained Kine
 readme = "README.md"
 requires-python = ">= 3.9"
 
+# The core package (adaptive control + headless M3_SimulatorDummy) only needs
+# dqrobotics. The optional visualization backend (M3_PyPlotSimulator, which
+# loads a YAML scene and draws it with dqrobotics-pyplot) is provided as the
+# "viz" extra and imports its dependencies lazily, so the base package can be
+# installed and used headless without them (python3 -m pip install .[viz]).
+[project.optional-dependencies]
+viz = [
+    'dqrobotics-pyplot',
+    'PyYAML',
+]
+
 # https://pypi.org/project/setuptools-git-versioning/
 [tool.setuptools-git-versioning]
 enabled = true

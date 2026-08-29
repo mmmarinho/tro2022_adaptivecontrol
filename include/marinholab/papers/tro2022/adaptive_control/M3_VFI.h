@@ -28,7 +28,7 @@ Contributors (aside from author):
 #include<string>
 
 #include<dqrobotics/DQ.h>
-#include "marinholab/papers/tro2022/adaptive_control/M3_SimulatorDummy.h"
+#include "marinholab/papers/tro2022/adaptive_control/M3_Simulator.h"
 
 using namespace DQ_robotics;
 
@@ -83,7 +83,7 @@ class M3_VFI
     std::string robot_entity_name_;
     M3_Primitive type_;
     DQ value_;
-    std::shared_ptr<M3_SimulatorDummy> vi_;
+    std::shared_ptr<M3_Simulator> vi_;
     double safe_distance_;
     M3_VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
@@ -97,7 +97,7 @@ public:
     M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
                     const M3_Primitive& type,
-                    const std::shared_ptr<M3_SimulatorDummy>& vi,
+                    const std::shared_ptr<M3_Simulator>& vi,
                     const double& safe_distance,
                     const M3_VFI_Direction& vfi_direction,
                     const int& joint_index,

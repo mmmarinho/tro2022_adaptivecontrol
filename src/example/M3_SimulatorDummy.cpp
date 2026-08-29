@@ -36,58 +36,6 @@ Contributors (aside from author):
 #include <cmath>
 #include <stdexcept>
 
-DQ M3_SimulatorDummy::get_object_pose(const std::string& object_name) const
-{
-    const auto it = object_poses_.find(object_name);
-    if(it == object_poses_.end())
-        throw std::runtime_error("M3_SimulatorDummy: object \"" + object_name + "\" not found in the scene.");
-    return it->second;
-}
-
-void M3_SimulatorDummy::set_object_pose(const std::string& object_name, const DQ& pose)
-{
-    object_poses_[object_name] = pose;
-}
-
-bool M3_SimulatorDummy::has_object(const std::string& object_name) const
-{
-    return object_poses_.find(object_name) != object_poses_.end();
-}
-
-std::vector<std::string> M3_SimulatorDummy::get_object_names() const
-{
-    std::vector<std::string> names;
-    names.reserve(object_poses_.size());
-    for(const auto& kv : object_poses_)
-        names.push_back(kv.first);
-    return names;
-}
-
-const VectorXd& M3_SimulatorDummy::get_configuration_space_positions() const
-{
-    return q_;
-}
-
-void M3_SimulatorDummy::set_configuration_space_positions(const VectorXd& q)
-{
-    q_ = q;
-}
-
-void M3_SimulatorDummy::start_simulation()
-{
-    running_ = true;
-}
-
-void M3_SimulatorDummy::stop_simulation()
-{
-    running_ = false;
-}
-
-bool M3_SimulatorDummy::is_running() const
-{
-    return running_;
-}
-
 void M3_SimulatorDummy::load_reference_scene()
 {
     // The poses below are built with the dual-quaternion algebra written
