@@ -397,11 +397,13 @@ class M3_PyPlotSimulator(M3_Simulator):
         (see :meth:`draw_scene`), which is far cheaper than redrawing the whole
         scene per frame and keeps the artist count constant.
 
-        If ``save_as`` is given (e.g. ``"traj.gif"``) the animation is written
-        to that file; GIF always works, other formats need ffmpeg (e.g.
-        ``"traj.mp4"``). Extra ``anim_kwargs`` are forwarded to
-        ``FuncAnimation`` (``interval``, ``blit`` (default False), ``fps`` when
-        saving, ...). Returns the ``FuncAnimation`` object.
+        If ``save_as`` is given (e.g. ``"traj.gif"`` or ``"traj.mp4"``) the
+        animation is written to that file: GIF always works (PillowWriter),
+        other containers use ffmpeg when it is on PATH (FFMpegWriter). ``fps``
+        (used only when saving; defaults to ``1000 / interval``) and the
+        remaining ``anim_kwargs`` are forwarded to ``FuncAnimation``
+        (``interval``, ``blit`` (default False), ...). Returns the
+        ``FuncAnimation`` object.
         """
         if self._scene is None:
             raise RuntimeError("no scene loaded; call load_scene(path) first")
@@ -410,6 +412,7 @@ class M3_PyPlotSimulator(M3_Simulator):
 
         configs = _as_configuration_sequence(q)
         fpp = max(1, int(frames_per_step))
+        fps = anim_kwargs.pop("fps", None)        # save()-only keyword
 
         fig = plt.figure()
         axes = plt.axes(projection="3d")
@@ -426,6 +429,7 @@ class M3_PyPlotSimulator(M3_Simulator):
         anim = manim.FuncAnimation(fig, _update, frames=len(configs) * fpp,
                                    **anim_kwargs)
         if save_as is not None:
-            fps = anim_kwargs.get("fps", 1000.0 / anim_kwargs["interval"])
+            if fps is None:
+                fps = 1000.0 / anim_kwargs["interval"]
             anim.save(save_as, writer=_animation_writer(save_as, fps))
         return anim
