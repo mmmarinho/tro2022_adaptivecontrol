@@ -37,6 +37,14 @@ Single-tree layout, consolidated from the old `python_wrapper/` design:
 - `dqrobotics` + wrapper share `__pybind11_internals_v11`
   (pybind11 v3.0 branch pinned in `dqrobotics/python/.gitmodules`).
 
+## Code style
+- Prefer the `dqrobotics` functions over numpy wherever they exist (in Python:
+  `dot`, `cross`, `norm`, `translation`, `rotation`, `Ad`, `DQ.normalize()`,
+  and the `DQ()` constructor — `DQ([x,y,z])` builds a pure quaternion from a
+  3-vector). Keep vectors as `DQ` end-to-end instead of bouncing through
+  numpy. Note: `DQ.normalize()` returns a **new** normalized DQ (not in-place);
+  the dual unit satisfies `E_*E_ == 0` (nilpotent, not `-1`).
+
 ## Verified commands
 - C++: `./build/adaptive_control_cpp` → steps [1]-[7], adaptation error
   ~0.13 m final.
