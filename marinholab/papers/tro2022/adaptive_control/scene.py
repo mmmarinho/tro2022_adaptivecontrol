@@ -241,6 +241,48 @@ def _draw_lines(ax, scene: Scene):
         dqp.plot(l_dq, line=True, scale=0.5, color=color, ax=ax)
 
 
+def _as_configuration_sequence(q) -> List[np.ndarray]:
+    """Normalize ``q`` into a list of configuration arrays.
+
+    Accepts a single 1-D configuration, a list/tuple of configurations, or a
+    2-D array of shape ``(n, dim)`` (one configuration per row). A list/tuple
+    of scalars is treated as one configuration.
+    """
+    if isinstance(q, (list, tuple)):
+        # A list of scalars is a single configuration; a list of sequences is
+        # a sequence of configurations.
+        if q and np.asarray(q[0]).ndim == 0:
+            return [np.asarray(q, dtype=float)]
+        return [np.asarray(c, dtype=float) for c in q]
+    arr = np.asarray(q, dtype=float)
+    if arr.ndim == 1:
+        return [arr]
+    if arr.ndim == 2:
+        return [arr[i] for i in range(arr.shape[0])]
+    raise ValueError(
+        f"expected a 1-D configuration or a 2-D array of shape (n, dim), got "
+        f"an array of shape {arr.shape}"
+    )
+
+
+def _animation_writer(path: str, fps: float):
+    """Pick a matplotlib ``MovieWriter`` for ``path`` (GIF, or ffmpeg-based)."""
+    import os
+    import shutil
+
+    import matplotlib.animation as manim
+
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".gif":
+        return manim.PillowWriter(fps=fps)
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError(
+            f"writing '{path}' needs ffmpeg, which is not on PATH; use a "
+            f".gif path instead (always available)"
+        )
+    return manim.FFMpegWriter(fps=fps)
+
+
 class M3_PyPlotSimulator(M3_Simulator):
     """A visualization backend for :class:`M3_Simulator`.
 
@@ -250,7 +292,7 @@ class M3_PyPlotSimulator(M3_Simulator):
     trampoline), so it is a concrete example of subclassing ``M3_Simulator``
     from Python.
 
-    Example:
+    Example (single image):
 
         import matplotlib.pyplot as plt
         from marinholab.papers.tro2022.adaptive_control import M3_PyPlotSimulator
@@ -262,8 +304,18 @@ class M3_PyPlotSimulator(M3_Simulator):
         sim.draw_scene()
         plt.show()
 
-    The current matplotlib axes is used (the dqrobotics_extensions.pyplot
-    convention); a 3d axes is created on demand if none is current.
+    ``draw_scene`` is idempotent: the static scene elements (points, planes,
+    lines) are drawn once per axes and only the robot is redrawn afterwards,
+    so repeated calls do not create new axes or accumulate artists. That is
+    also what makes :meth:`animation` cheap.
+
+    Example (matplotlib animation):
+
+        sim.load_scene("scene.yaml")
+        qs = [q0, q1, ..., qn]             # configurations to animate
+        anim = sim.animation(qs)                    # interactive backends
+        # or headless (no display needed):
+        anim = sim.animation(qs, save_as="traj.gif")
     """
 
     def __init__(self):
@@ -275,16 +327,105 @@ class M3_PyPlotSimulator(M3_Simulator):
         self._scene = load_scene(path, self)
         return self._scene
 
-    def draw_scene(self):
-        """Draw the loaded scene onto the current (3d) matplotlib axes."""
+    def draw_scene(self, axes=None):
+        """Draw the loaded scene onto a (3d) matplotlib axes.
+
+        If ``axes`` is given (an ``Axes3D``) it is used directly; otherwise the
+        current axes is used and a new 3d axes is created if the current one is
+        not 3d. Calling this repeatedly on the same axes only redraws the
+        robot (the static scene elements are kept), so it can be used as the
+        per-frame update of a matplotlib animation.
+        """
         if self._scene is None:
             raise RuntimeError("no scene loaded; call load_scene(path) first")
         from matplotlib import pyplot as plt
 
-        ax = plt.gca()
-        if not hasattr(ax, "proj3d"):
-            ax = plt.axes(projection="3d")
-        _draw_robot(ax, self._scene, self)
-        _draw_points(ax, self._scene, self)
-        _draw_planes(ax, self._scene)
-        _draw_lines(ax, self._scene)
+        if axes is None:
+            from mpl_toolkits.mplot3d.axes3d import Axes3D
+
+            axes = plt.gca()
+            if not isinstance(axes, Axes3D):
+                axes = plt.axes(projection="3d")
+        self._draw_scene(axes)
+
+    def _draw_scene(self, axes):
+        static_drawn = getattr(axes, "_tro2022_static_drawn", False)
+        scene_id = getattr(axes, "_tro2022_scene_id", None)
+        if static_drawn and scene_id == id(self._scene):
+            self._redraw_robot(axes)
+        else:
+            self._clear_data_artists(axes)          # stale static/robot artists
+            _draw_points(axes, self._scene, self)
+            _draw_planes(axes, self._scene)
+            _draw_lines(axes, self._scene)
+            axes._tro2022_static_drawn = True
+            axes._tro2022_scene_id = id(self._scene)
+            self._redraw_robot(axes)
+
+    def _redraw_robot(self, axes):
+        """Clear the previous robot artists and redraw the robot (tagged)."""
+        self._clear_data_artists(axes, robot_only=True)
+        before = {id(o) for o in axes.get_children()}
+        _draw_robot(axes, self._scene, self)
+        for o in axes.get_children():               # tag the new (robot) artists
+            if id(o) not in before:
+                o._tro2022_robot = True
+
+    def _clear_data_artists(self, axes, robot_only: bool = False):
+        """Remove the artists drawn by ``_draw_robot`` (or all data artists)."""
+        from matplotlib.collections import LineCollection, PolyCollection
+        from matplotlib.lines import Line2D
+
+        for o in list(axes.get_children()):
+            # Line2D also covers 3d lines (Line3D); LineCollection covers the
+            # quivers (Line3DCollection); PolyCollection covers plot_surface.
+            if isinstance(o, (Line2D, LineCollection, PolyCollection)) and (
+                not robot_only or getattr(o, "_tro2022_robot", False)
+            ):
+                o.remove()
+
+    def animation(self, q, frames_per_step: int = 1, save_as: Optional[str] = None,
+                  **anim_kwargs):
+        """Animate robot configurations with matplotlib's ``FuncAnimation``.
+
+        ``q`` is a single 1-D configuration, a list/tuple of configurations, or
+        a 2-D array of shape ``(n, dim)`` (one configuration per row);
+        ``frames_per_step`` repeats each configuration for that many animation
+        frames (default 1).
+
+        The static scene is drawn once and each frame only redraws the robot
+        (see :meth:`draw_scene`), which is far cheaper than redrawing the whole
+        scene per frame and keeps the artist count constant.
+
+        If ``save_as`` is given (e.g. ``"traj.gif"``) the animation is written
+        to that file; GIF always works, other formats need ffmpeg (e.g.
+        ``"traj.mp4"``). Extra ``anim_kwargs`` are forwarded to
+        ``FuncAnimation`` (``interval``, ``blit`` (default False), ``fps`` when
+        saving, ...). Returns the ``FuncAnimation`` object.
+        """
+        if self._scene is None:
+            raise RuntimeError("no scene loaded; call load_scene(path) first")
+        import matplotlib.pyplot as plt
+        import matplotlib.animation as manim
+
+        configs = _as_configuration_sequence(q)
+        fpp = max(1, int(frames_per_step))
+
+        fig = plt.figure()
+        axes = plt.axes(projection="3d")
+        self.draw_scene(axes)                       # static scene + first robot
+
+        def _update(frame):
+            i = (frame // fpp) % len(configs)
+            self.set_configuration_space_positions(configs[i])
+            self._redraw_robot(axes)
+            return []
+
+        anim_kwargs.setdefault("blit", False)
+        anim_kwargs.setdefault("interval", 100)
+        anim = manim.FuncAnimation(fig, _update, frames=len(configs) * fpp,
+                                   **anim_kwargs)
+        if save_as is not None:
+            fps = anim_kwargs.get("fps", 1000.0 / anim_kwargs["interval"])
+            anim.save(save_as, writer=_animation_writer(save_as, fps))
+        return anim
