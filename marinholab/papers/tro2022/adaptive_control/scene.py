@@ -83,26 +83,19 @@ class Scene:
     sim: M3_Simulator
 
 
-def _vector_to_dq(v) -> DQ:
-    """Build a pure-vector DQ from a 3-vector ``v = [vx, vy, vz]``."""
-    v = np.asarray(v, dtype=float)
-    if v.shape != (3,):
-        raise ValueError(f"expected a 3-vector [vx, vy, vz], got {v!r}")
-    return v[0] * i_ + v[1] * j_ + v[2] * k_
-
-
 def _unit(v):
+    """The unit vector of a non-zero 3-vector ``v`` (via DQ.normalize)."""
     v = np.asarray(v, dtype=float)
-    n = np.linalg.norm(v)
-    if n < 1e-12:
+    if np.linalg.norm(v) < 1e-12:
         raise ValueError("expected a non-zero vector, got a zero vector")
-    return v / n
+    # DQ() on a 3-vector is a pure quaternion; normalize() returns the
+    # normalized DQ (a pure unit quaternion), so the vector part is q[1:4].
+    return np.array(DQ(v).normalize().q[1:4])
 
 
 def _pose_from_translation(t) -> DQ:
     """A DQ pose from a translation ``t`` and the identity rotation."""
-    t_dq = _vector_to_dq(t)
-    return DQ([1.0]) + 0.5 * E_ * t_dq * DQ([1.0])
+    return DQ([1.0]) + 0.5 * E_ * DQ(np.asarray(t, dtype=float)) * DQ([1.0])
 
 
 def _rotation_quat_between(a, b) -> DQ:
@@ -125,19 +118,19 @@ def _rotation_quat_between(a, b) -> DQ:
 
 def _frame_pose(r: DQ, t) -> DQ:
     """A frame pose: rotation ``r`` (unit quaternion DQ) + translation ``t``."""
-    return r + 0.5 * E_ * _vector_to_dq(t) * r
+    return r + 0.5 * E_ * DQ(np.asarray(t, dtype=float)) * r
 
 
 def _plane_dq(position, normal) -> DQ:
     """Plane DQ (VFI convention) for unit ``normal`` through ``position``."""
-    n_dq = _vector_to_dq(normal)
-    return n_dq + E_ * dot(_vector_to_dq(position), n_dq)
+    n_dq = DQ(np.asarray(normal, dtype=float))
+    return n_dq + E_ * dot(DQ(np.asarray(position, dtype=float)), n_dq)
 
 
 def _line_dq(position, direction) -> DQ:
     """Line DQ (VFI convention) for unit ``direction`` through ``position``."""
-    l_dq = _vector_to_dq(direction)
-    return l_dq + E_ * cross(_vector_to_dq(position), l_dq)
+    l_dq = DQ(np.asarray(direction, dtype=float))
+    return l_dq + E_ * cross(DQ(np.asarray(position, dtype=float)), l_dq)
 
 
 def load_scene(path: str, sim: M3_Simulator) -> Scene:
