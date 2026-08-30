@@ -117,12 +117,12 @@ def _frame_pose(r: DQ, t: DQ) -> DQ:
     return r + 0.5 * E_ * t * r
 
 
-def _plane_dq(position: DQ, normal: DQ) -> DQ:
+def plane(position: DQ, normal: DQ) -> DQ:
     """Plane DQ (VFI convention) for unit ``normal`` through ``position``."""
     return normal + E_ * dot(position, normal)
 
 
-def _line_dq(position: DQ, direction: DQ) -> DQ:
+def line(position: DQ, direction: DQ) -> DQ:
     """Line DQ (VFI convention) for unit ``direction`` through ``position``."""
     return direction + E_ * cross(position, direction)
 
@@ -180,7 +180,7 @@ def load_scene(path: str, sim: M3_Simulator) -> Scene:
         p0 = DQ(np.asarray(p["position"], dtype=float))
         r = _rotation_quat_between(DQ([0.0, 0.0, 1.0]), normal)
         sim.set_object_pose(name, _frame_pose(r, p0))
-        planes.append((name, _plane_dq(p0, normal), p.get("color", "g")))
+        planes.append((name, plane(p0, normal), p.get("color", "g")))
 
     lines: List[Tuple[str, DQ, str]] = []
     for l in data.get("lines", []) or []:
@@ -189,7 +189,7 @@ def load_scene(path: str, sim: M3_Simulator) -> Scene:
         p0 = DQ(np.asarray(l["position"], dtype=float))
         r = _rotation_quat_between(DQ([0.0, 0.0, 1.0]), d_vec)
         sim.set_object_pose(name, _frame_pose(r, p0))
-        lines.append((name, _line_dq(p0, d_vec), l.get("color", "r")))
+        lines.append((name, line(p0, d_vec), l.get("color", "r")))
 
     q0 = None
     if "q0" in data:
