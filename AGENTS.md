@@ -73,4 +73,7 @@ was removed. Linux is unaffected (`/usr/include/eigen3` via libeigen3-dev).
   axes, only the robot is redrawn afterwards) and
   `M3_PyPlotSimulator.animation(q, ...)` builds a `FuncAnimation` on top of
   that (static drawn once, robot-only redraw per frame). GIF always works via
-  `PillowWriter`; mp4 etc. need ffmpeg on PATH.
+  `PillowWriter`; mp4/avi etc. need ffmpeg on PATH (uses `FFMpegWriter`).
+- matplotlib's `Animation.__init__` **rejects `fps`** (it belongs to
+  `Animation.save`). If you build a `FuncAnimation` from user kwargs, pop
+  `fps` before the constructor and only pass it to `.save(...)`.
