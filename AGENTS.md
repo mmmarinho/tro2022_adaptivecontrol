@@ -60,3 +60,17 @@ Eigen has no CMake config; the root CMakeLists therefore uses
 directory-scope `include_directories()` (APPLE-gated) so the path reaches
 every target (lib, exe, `_core`). `find_package(Eigen3)` is unreliable and
 was removed. Linux is unaffected (`/usr/include/eigen3` via libeigen3-dev).
+
+## matplotlib / animation gotchas (3.x)
+- To detect a 3d axes use `isinstance(ax, Axes3D)` — the old
+  `hasattr(ax, 'proj3d')` check is **always False** on mpl 3.x (the `proj3d`
+  property was removed); the buggy check made every `draw_scene` call create
+  a NEW 3d axes and leak one per call.
+- `plt.axes(projection='3d')` always creates a NEW axes even if a 3d one is
+  current — never a reuse. Capture the returned object or reuse the existing
+  one explicitly.
+- `M3_PyPlotSimulator.draw_scene` is idempotent (static scene drawn once per
+  axes, only the robot is redrawn afterwards) and
+  `M3_PyPlotSimulator.animation(q, ...)` builds a `FuncAnimation` on top of
+  that (static drawn once, robot-only redraw per frame). GIF always works via
+  `PillowWriter`; mp4 etc. need ffmpeg on PATH.
