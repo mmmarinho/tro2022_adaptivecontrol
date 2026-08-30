@@ -83,14 +83,12 @@ class Scene:
     sim: M3_Simulator
 
 
-def _unit(v):
-    """The unit vector of a non-zero 3-vector ``v`` (via DQ.normalize)."""
-    v = np.asarray(v, dtype=float)
-    if np.linalg.norm(v) < 1e-12:
+def _unit(v) -> DQ:
+    """Pure unit quaternion DQ of a non-zero 3-vector ``v`` (via DQ.normalize)."""
+    v_dq = DQ(np.asarray(v, dtype=float))
+    if float(norm(v_dq).q[0]) < 1e-12:
         raise ValueError("expected a non-zero vector, got a zero vector")
-    # DQ() on a 3-vector is a pure quaternion; normalize() returns the
-    # normalized DQ (a pure unit quaternion), so the vector part is q[1:4].
-    return np.array(DQ(v).normalize().q[1:4])
+    return v_dq.normalize()
 
 
 def _pose_from_translation(t) -> DQ:
@@ -98,39 +96,35 @@ def _pose_from_translation(t) -> DQ:
     return DQ([1.0]) + 0.5 * E_ * DQ(np.asarray(t, dtype=float)) * DQ([1.0])
 
 
-def _rotation_quat_between(a, b) -> DQ:
+def _rotation_quat_between(a: DQ, b: DQ) -> DQ:
     """Unit quaternion (as a DQ) rotating unit vector ``a`` onto unit vector ``b``."""
-    a = _unit(a)
-    b = _unit(b)
-    cosang = float(np.clip(np.dot(a, b), -1.0, 1.0))
+    cosang = float(np.clip(dot(a, b).q[0], -1.0, 1.0))
     if cosang > 1.0 - 1e-12:            # same direction: identity
         return DQ([1.0, 0.0, 0.0, 0.0])
     if cosang < -1.0 + 1e-12:           # opposite: 180 deg about an orthogonal axis
-        tmp = np.array([1.0, 0.0, 0.0]) if abs(a[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
-        v = np.cross(a, tmp)
-        return DQ([0.0, v[0], v[1], v[2]])
-    v = np.cross(a, b)
-    vhat = v / np.linalg.norm(v)
+        tmp = DQ([1.0, 0.0, 0.0]) if abs(a.q[1]) < 0.9 else DQ([0.0, 1.0, 0.0])
+        # cross(a, tmp) is a pure quaternion; normalized, it is the 180-degree
+        # (half-angle 90-degree) quaternion about that axis.
+        return cross(a, tmp).normalize()
+    vhat = cross(a, b).normalize()      # pure unit quaternion = the rotation axis
     half_cos = float(np.sqrt((1.0 + cosang) / 2.0))
     half_sin = float(np.sqrt((1.0 - cosang) / 2.0))
-    return DQ([half_cos, vhat[0] * half_sin, vhat[1] * half_sin, vhat[2] * half_sin])
+    return half_cos + half_sin * vhat
 
 
-def _frame_pose(r: DQ, t) -> DQ:
+def _frame_pose(r: DQ, t: DQ) -> DQ:
     """A frame pose: rotation ``r`` (unit quaternion DQ) + translation ``t``."""
-    return r + 0.5 * E_ * DQ(np.asarray(t, dtype=float)) * r
+    return r + 0.5 * E_ * t * r
 
 
-def _plane_dq(position, normal) -> DQ:
+def _plane_dq(position: DQ, normal: DQ) -> DQ:
     """Plane DQ (VFI convention) for unit ``normal`` through ``position``."""
-    n_dq = DQ(np.asarray(normal, dtype=float))
-    return n_dq + E_ * dot(DQ(np.asarray(position, dtype=float)), n_dq)
+    return normal + E_ * dot(position, normal)
 
 
-def _line_dq(position, direction) -> DQ:
+def _line_dq(position: DQ, direction: DQ) -> DQ:
     """Line DQ (VFI convention) for unit ``direction`` through ``position``."""
-    l_dq = DQ(np.asarray(direction, dtype=float))
-    return l_dq + E_ * cross(DQ(np.asarray(position, dtype=float)), l_dq)
+    return direction + E_ * cross(position, direction)
 
 
 def load_scene(path: str, sim: M3_Simulator) -> Scene:
@@ -182,18 +176,18 @@ def load_scene(path: str, sim: M3_Simulator) -> Scene:
     planes: List[Tuple[str, DQ, str]] = []
     for p in data.get("planes", []) or []:
         name = p["name"]
-        n_vec = _unit(p["normal"])
-        p0 = np.asarray(p["position"], dtype=float)
-        r = _rotation_quat_between(np.array([0.0, 0.0, 1.0]), n_vec)
+        normal = _unit(p["normal"])
+        p0 = DQ(np.asarray(p["position"], dtype=float))
+        r = _rotation_quat_between(DQ([0.0, 0.0, 1.0]), normal)
         sim.set_object_pose(name, _frame_pose(r, p0))
-        planes.append((name, _plane_dq(p0, n_vec), p.get("color", "g")))
+        planes.append((name, _plane_dq(p0, normal), p.get("color", "g")))
 
     lines: List[Tuple[str, DQ, str]] = []
     for l in data.get("lines", []) or []:
         name = l["name"]
         d_vec = _unit(l["direction"])
-        p0 = np.asarray(l["position"], dtype=float)
-        r = _rotation_quat_between(np.array([0.0, 0.0, 1.0]), d_vec)
+        p0 = DQ(np.asarray(l["position"], dtype=float))
+        r = _rotation_quat_between(DQ([0.0, 0.0, 1.0]), d_vec)
         sim.set_object_pose(name, _frame_pose(r, p0))
         lines.append((name, _line_dq(p0, d_vec), l.get("color", "r")))
 
