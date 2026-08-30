@@ -117,14 +117,18 @@ def _frame_pose(r: DQ, t: DQ) -> DQ:
     return r + 0.5 * E_ * t * r
 
 
-def plane(position: DQ, normal: DQ) -> DQ:
-    """Plane DQ (VFI convention) for unit ``normal`` through ``position``."""
-    return normal + E_ * dot(position, normal)
+def plane(n: DQ, p: DQ) -> DQ:
+    """Plane DQ (VFI convention) for a unit normal ``n`` through the point
+    ``p``. ``n`` and ``p`` are pure quaternions (``p`` is a translation, i.e.
+    a point on the plane)."""
+    return n + E_ * dot(p, n)
 
 
-def line(position: DQ, direction: DQ) -> DQ:
-    """Line DQ (VFI convention) for unit ``direction`` through ``position``."""
-    return direction + E_ * cross(position, direction)
+def line(l: DQ, p: DQ) -> DQ:
+    """Line DQ (VFI convention) for a unit direction ``l`` through the point
+    ``p``. ``l`` and ``p`` are pure quaternions (``p`` is a translation, i.e.
+    a point on the line)."""
+    return l + E_ * cross(p, l)
 
 
 def load_scene(path: str, sim: M3_Simulator) -> Scene:
@@ -174,22 +178,22 @@ def load_scene(path: str, sim: M3_Simulator) -> Scene:
         points.append((name, float(p.get("radius", 0.02)), p.get("color", "b")))
 
     planes: List[Tuple[str, DQ, str]] = []
-    for p in data.get("planes", []) or []:
-        name = p["name"]
-        normal = _unit(p["normal"])
-        p0 = DQ(np.asarray(p["position"], dtype=float))
+    for pl in data.get("planes", []) or []:
+        name = pl["name"]
+        normal = _unit(pl["normal"])
+        p0 = DQ(np.asarray(pl["position"], dtype=float))
         r = _rotation_quat_between(DQ([0.0, 0.0, 1.0]), normal)
         sim.set_object_pose(name, _frame_pose(r, p0))
-        planes.append((name, plane(p0, normal), p.get("color", "g")))
+        planes.append((name, plane(normal, p0), pl.get("color", "g")))
 
     lines: List[Tuple[str, DQ, str]] = []
-    for l in data.get("lines", []) or []:
-        name = l["name"]
-        d_vec = _unit(l["direction"])
-        p0 = DQ(np.asarray(l["position"], dtype=float))
+    for ln in data.get("lines", []) or []:
+        name = ln["name"]
+        d_vec = _unit(ln["direction"])
+        p0 = DQ(np.asarray(ln["position"], dtype=float))
         r = _rotation_quat_between(DQ([0.0, 0.0, 1.0]), d_vec)
         sim.set_object_pose(name, _frame_pose(r, p0))
-        lines.append((name, line(p0, d_vec), l.get("color", "r")))
+        lines.append((name, line(d_vec, p0), ln.get("color", "r")))
 
     q0 = None
     if "q0" in data:
