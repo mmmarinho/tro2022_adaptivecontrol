@@ -41,7 +41,7 @@ jobs:
         # Not a website build: run the real example instead of skipping it.
         CI: 'false'
       run: |
-        python3 -m jupyter nbconvert --to notebook --execute \
+        python3 -m jupyter nbconvert --to notebook --execute --inplace \
           adaptive_control_tutorial.ipynb \
           --ExecutePreprocessor.kernel_name=python3 \
           --ExecutePreprocessor.timeout=300
@@ -83,7 +83,7 @@ jobs:
     - name: Execute notebook (no package, CI mode -> graceful skip)
       working-directory: book
       run: |
-        python3 -m jupyter nbconvert --to notebook --execute \
+        python3 -m jupyter nbconvert --to notebook --execute --inplace \
           adaptive_control_tutorial.ipynb \
           --ExecutePreprocessor.kernel_name=python3 \
           --ExecutePreprocessor.timeout=300
