@@ -1,0 +1,100 @@
+name: Check Book
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master", "no_vrep" ]
+  pull_request:
+    branches: [ "master", "no_vrep" ]
+
+jobs:
+  # Execute the book notebook with the compiled example package built and
+  # installed, i.e. the real example runs end-to-end. Fails if the package build
+  # breaks or if the notebook cells stop matching the no_vrep API.
+  execute-with-package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: init submodules
+      run: git submodule update --init --recursive
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+    - name: configure (Eigen)
+      run: |
+       sudo apt-get update
+       sudo apt-get install libeigen3-dev
+    - name: Install the compiled example
+      run: python3 -m pip install .
+    - name: Install notebook tooling
+      run: python3 -m pip install jupytext pyyaml nbconvert ipykernel
+    - name: Convert MyST notebook to .ipynb
+      run: python3 book/convert_to_ipynb.py
+    - name: Execute notebook (real example)
+      env:
+        # Not a website build: run the real example instead of skipping it.
+        CI: 'false'
+      run: |
+        python3 -m jupyter nbconvert --to notebook --execute \
+          book/adaptive_control_tutorial.ipynb \
+          --ExecutePreprocessor.kernel_name=python3 \
+          --ExecutePreprocessor.timeout=300
+    - name: Assert example ran (no errors, figure produced)
+      run: |
+        python3 - <<'PY'
+        import json
+        nb = json.load(open('book/adaptive_control_tutorial.ipynb'))
+        errors = figs = 0
+        for c in nb['cells']:
+            for o in c.get('outputs', []):
+                if o.get('output_type') == 'error':
+                    errors += 1
+                if 'image/png' in o.get('data', {}):
+                    figs += 1
+        assert errors == 0, f'{errors} error output(s) in the notebook'
+        assert figs >= 1, 'expected the comparison figure'
+        print(f'OK: executed with 0 errors and {figs} figure(s)')
+        PY
+
+  # Execute the notebook in a fresh environment WITHOUT the compiled package,
+  # as the book's website build does. Verifies the notebook degrades gracefully:
+  # it must still convert, execute and render with 0 errors.
+  execute-without-package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+    - name: Install notebook tooling
+      run: python3 -m pip install numpy matplotlib jupytext pyyaml nbconvert ipykernel
+    - name: Convert MyST notebook to .ipynb
+      run: python3 book/convert_to_ipynb.py
+    - name: Execute notebook (no package, CI mode -> graceful skip)
+      run: |
+        python3 -m jupyter nbconvert --to notebook --execute \
+          book/adaptive_control_tutorial.ipynb \
+          --ExecutePreprocessor.kernel_name=python3 \
+          --ExecutePreprocessor.timeout=300
+    - name: Assert graceful degradation (no errors, no figure)
+      run: |
+        python3 - <<'PY'
+        import json
+        nb = json.load(open('book/adaptive_control_tutorial.ipynb'))
+        errors = figs = 0
+        for c in nb['cells']:
+            for o in c.get('outputs', []):
+                if o.get('output_type') == 'error':
+                    errors += 1
+                if 'image/png' in o.get('data', {}):
+                    figs += 1
+        assert errors == 0, f'{errors} error output(s) in the notebook'
+        assert figs == 0, 'no package -> example skipped -> no figure expected'
+        print('OK: executed gracefully with 0 errors and 0 figures')
+        PY
