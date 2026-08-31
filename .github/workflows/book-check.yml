@@ -34,19 +34,23 @@ jobs:
     - name: Convert MyST notebook to .ipynb
       run: python3 book/convert_to_ipynb.py
     - name: Execute notebook (real example)
+      # Run from book/ so the repo's own marinholab/ source tree does NOT shadow
+      # the freshly installed compiled package (it has no _core there).
+      working-directory: book
       env:
         # Not a website build: run the real example instead of skipping it.
         CI: 'false'
       run: |
         python3 -m jupyter nbconvert --to notebook --execute \
-          book/adaptive_control_tutorial.ipynb \
+          adaptive_control_tutorial.ipynb \
           --ExecutePreprocessor.kernel_name=python3 \
           --ExecutePreprocessor.timeout=300
     - name: Assert example ran (no errors, figure produced)
+      working-directory: book
       run: |
         python3 - <<'PY'
         import json
-        nb = json.load(open('book/adaptive_control_tutorial.ipynb'))
+        nb = json.load(open('adaptive_control_tutorial.ipynb'))
         errors = figs = 0
         for c in nb['cells']:
             for o in c.get('outputs', []):
@@ -77,16 +81,18 @@ jobs:
     - name: Convert MyST notebook to .ipynb
       run: python3 book/convert_to_ipynb.py
     - name: Execute notebook (no package, CI mode -> graceful skip)
+      working-directory: book
       run: |
         python3 -m jupyter nbconvert --to notebook --execute \
-          book/adaptive_control_tutorial.ipynb \
+          adaptive_control_tutorial.ipynb \
           --ExecutePreprocessor.kernel_name=python3 \
           --ExecutePreprocessor.timeout=300
     - name: Assert graceful degradation (no errors, no figure)
+      working-directory: book
       run: |
         python3 - <<'PY'
         import json
-        nb = json.load(open('book/adaptive_control_tutorial.ipynb'))
+        nb = json.load(open('adaptive_control_tutorial.ipynb'))
         errors = figs = 0
         for c in nb['cells']:
             for o in c.get('outputs', []):
