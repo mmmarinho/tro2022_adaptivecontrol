@@ -1,0 +1,29 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+
+project:
+  jupyter: true # https://mystmd.org/guide/integrating-jupyter
+  title: "Adaptive Constrained Kinematic Control - Python Example"
+  github: https://github.com/mmmarinho/tro2022_adaptivecontrol
+  math:
+    '\myvec': '\mathbf{\boldsymbol{ #1 }}'
+    '\mymatrix': '\mathbf{\boldsymbol{ #1 }}'
+    '\quat': '\mathbf{\boldsymbol{ #1 }}'
+    '\dual': '\varepsilon'
+  authors:
+    - name: Murilo M. Marinho
+      email: murilo.marinho@manchester.ac.uk
+      url: https://mmmarinho.github.io
+      note: Lecturer in Robotics
+      orcid: 0000-0003-2795-9484
+      affiliations:
+      - id: MMM
+        institution: The University of Manchester
+        department: EEE
+        ror: 027m9bs27
+  license:
+    content:
+      id: MIT
+  toc:
+    - file: README.md
+    - file: adaptive_control_tutorial.ipynb
