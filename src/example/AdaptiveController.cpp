@@ -33,8 +33,12 @@
 #include <dqrobotics/utils/DQ_Math.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
 
-#include "marinholab/papers/tro2022/adaptive_control/M3_AdaptiveController.h"
+#include "marinholab/papers/tro2022/adaptive_control/AdaptiveController.h"
 
+
+
+namespace marinholab::papers::tro2022::adaptive_control
+{
 
 std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd& q, const std::tuple<VectorXd, VectorXd>& boundaries, const VectorXd& damping_matrix_diagonal=VectorXd())
 {
@@ -74,20 +78,20 @@ std::tuple<MatrixXd, VectorXd> get_variable_boundary_inequalities(const VectorXd
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the closest invariant error, and the closest invariant itself as 1 or -1.
  */
-std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space)
+std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, const MeasureSpace& measure_space)
 {
     switch(measure_space)
     {
-    case M3_MeasureSpace::None:
+    case MeasureSpace::None:
         throw std::runtime_error("None is not a valid DQ_MeasureSpace");
-    case M3_MeasureSpace::Distance:
+    case MeasureSpace::Distance:
     {
         //There is no double cover in distance
         VectorXd e_d(1);
         e_d << (static_cast<double>(x)-static_cast<double>(xd));
         return {e_d, 1};
     }
-    case M3_MeasureSpace::Rotation:
+    case MeasureSpace::Rotation:
     {
         //Address double cover in rotation space
         double er_1_norm       = vec4(conj(x)*xd - 1).norm();
@@ -106,12 +110,12 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
         }
         return {vec4(er),invariant};
     }
-    case M3_MeasureSpace::Translation:
+    case MeasureSpace::Translation:
     {
         //There is no double cover in translation
         return {vec4(x-xd),1};
     }
-    case M3_MeasureSpace::Pose:
+    case MeasureSpace::Pose:
         //Address double cover in pose space
         const double ex_1_norm       = vec8(conj(x)*xd - 1).norm();
         const double ex_1minus_norm  = vec8(conj(x)*xd + 1).norm();
@@ -151,11 +155,11 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
  * y_tilde: the measurement error,
  * y_partial: the measurement error in the partial space when the measurements are not pose.
  */
-std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::compute_setpoint_control_signal(const Example_AdaptiveControlStrategy& control_strategy,
+std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> AdaptiveController::compute_setpoint_control_signal(const Example_AdaptiveControlStrategy& control_strategy,
                                                                                        const VectorXd&q,
                                                                                        const DQ& xd,
                                                                                        const DQ& y,
-                                                                                       std::vector<M3_VFI>& vfis)
+                                                                                       std::vector<VFI>& vfis)
 {
     const int n = robot_->get_dim_configuration_space();
     const int p = robot_->get_dim_parameter_space();
@@ -164,7 +168,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     const double& vfi_gain = simulation_arguments_.vfi_gain;
     const double& vfi_weight = simulation_arguments_.vfi_weight;
     const double& lambda = simulation_arguments_.damping;
-    const M3_MeasureSpace& measure_space = simulation_arguments_.measure_space;
+    const MeasureSpace& measure_space = simulation_arguments_.measure_space;
 
     const double& MAX_ACCEPTABLE_CONSTRAINT_PENETRATION = 0.001;
     const double& MAX_ACCEPTABLE_CONSTRAINT_PENETRATION_SQUARED = MAX_ACCEPTABLE_CONSTRAINT_PENETRATION*MAX_ACCEPTABLE_CONSTRAINT_PENETRATION;
@@ -174,19 +178,19 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, M3_MeasureSpace::Pose);
+    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, MeasureSpace::Pose);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
     for(int i=0;i<vfis_size;i++)
     {
-        M3_VFI& vfi = vfis[i];
+        VFI& vfi = vfis[i];
         w_vfi(i) = vfi.get_distance_error(x_hat);
         switch(vfi.get_distance_type())
         {
-        case M3_VFI_DistanceType::None:
+        case VFI_DistanceType::None:
             throw std::runtime_error("Expected valid value");
-        case M3_VFI_DistanceType::EUCLIDEAN:
+        case VFI_DistanceType::EUCLIDEAN:
         {
             if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION)
             {
@@ -194,7 +198,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
                 //throw std::runtime_error("Distance to obstacle point over threshold " + std::to_string(w_vfi(i)));
             }
         }
-        case M3_VFI_DistanceType::EUCLIDEAN_SQUARED:
+        case VFI_DistanceType::EUCLIDEAN_SQUARED:
         {
             if(w_vfi(i) < -MAX_ACCEPTABLE_CONSTRAINT_PENETRATION_SQUARED)
             {
@@ -230,7 +234,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         MatrixXd W_vfi_q(vfis_size, n);
         for(int i=0;i<vfis_size;i++)
         {
-            M3_VFI& vfi = vfis[i];
+            VFI& vfi = vfis[i];
             W_vfi_q.row(i) = vfi.get_vfi_matrix(x_hat, J_x_q);
         }
 
@@ -279,7 +283,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         MatrixXd W_vfi_a(vfis_size, p);
         for(int i=0; i<vfis_size; i++)
         {
-            const M3_VFI& vfi = vfis.at(i);
+            const VFI& vfi = vfis.at(i);
             W_vfi_a.row(i) = vfi.get_vfi_matrix(x_hat, J_y_a);
         }
 
@@ -325,19 +329,19 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the (partial) Jacobian defined by Example_MeasureSpace.
  */
-MatrixXd M3_AdaptiveController::_convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space)
+MatrixXd AdaptiveController::_convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ& x, const DQ& xd, const MeasureSpace& measure_space)
 {
     switch(measure_space)
     {
-    case M3_MeasureSpace::None:
+    case MeasureSpace::None:
         throw std::runtime_error("Measurespace None not acceptable.");
-    case M3_MeasureSpace::Pose:
+    case MeasureSpace::Pose:
         return haminus8(xd)*C8()*Jx;
-    case M3_MeasureSpace::Rotation:
+    case MeasureSpace::Rotation:
         return haminus4(rotation(xd))*C4()*DQ_Kinematics::rotation_jacobian(Jx);
-    case M3_MeasureSpace::Translation:
+    case MeasureSpace::Translation:
         return DQ_Kinematics::translation_jacobian(Jx, x);
-    case M3_MeasureSpace::Distance:
+    case MeasureSpace::Distance:
         return DQ_Kinematics::point_to_point_distance_jacobian(DQ_Kinematics::translation_jacobian(Jx, x), translation(x), DQ(0));
     }
     throw std::runtime_error("Not supposed to be reachable");
@@ -354,26 +358,26 @@ MatrixXd M3_AdaptiveController::_convert_pose_jacobian_to_measure_space(const Ma
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the complimentary of the (partial) Jacobian defined by Example_MeasureSpace.
  */
-MatrixXd M3_AdaptiveController::_get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const M3_MeasureSpace& measure_space)
+MatrixXd AdaptiveController::_get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const MeasureSpace& measure_space)
 {
     switch(measure_space)
     {
-    case M3_MeasureSpace::None:
+    case MeasureSpace::None:
         throw std::runtime_error("Measure space None not acceptable.");
-    case M3_MeasureSpace::Pose:
+    case MeasureSpace::Pose:
         return MatrixXd(0,0);
-    case M3_MeasureSpace::Rotation:
+    case MeasureSpace::Rotation:
         return DQ_Kinematics::translation_jacobian(Jx, x);
-    case M3_MeasureSpace::Translation:
+    case MeasureSpace::Translation:
         return DQ_Kinematics::rotation_jacobian(Jx);
-    case M3_MeasureSpace::Distance:
+    case MeasureSpace::Distance:
         //TODO Update with the code that was used in the experiment with the robot.
         throw std::runtime_error("NOT IMPLEMENTED YET");
     }
     throw std::runtime_error("Not supposed to be reachable");
 }
 
-M3_AdaptiveController::M3_AdaptiveController(const std::shared_ptr<M3_SerialManipulatorEDH> &robot, const Example_SimulationParameters &simulation_arguments):
+AdaptiveController::AdaptiveController(const std::shared_ptr<SerialManipulatorEDH> &robot, const Example_SimulationParameters &simulation_arguments):
     robot_(robot),
     simulation_arguments_(simulation_arguments)
 {
@@ -390,43 +394,43 @@ M3_AdaptiveController::M3_AdaptiveController(const std::shared_ptr<M3_SerialMani
  * @param measure_space see Example_MeasureSpace for possible values.
  * @return the (partial) measurement defined by Example_MeasureSpace.
  */
-DQ M3_AdaptiveController::_convert_pose_to_measure_space(const DQ& x, const M3_MeasureSpace &measure_space)
+DQ AdaptiveController::_convert_pose_to_measure_space(const DQ& x, const MeasureSpace &measure_space)
 {
     switch(measure_space)
     {
-    case M3_MeasureSpace::None:
+    case MeasureSpace::None:
         throw std::runtime_error("None is not a valid DQ_MeasureSpace");
-    case M3_MeasureSpace::Pose:
+    case MeasureSpace::Pose:
         return x;
-    case M3_MeasureSpace::Rotation:
+    case MeasureSpace::Rotation:
         return rotation(x);
-    case M3_MeasureSpace::Translation:
+    case MeasureSpace::Translation:
         return translation(x);
-    case M3_MeasureSpace::Distance:
+    case MeasureSpace::Distance:
         return DQ(DQ_Geometry::point_to_point_squared_distance(translation(x), DQ(0)));
     }
     throw std::runtime_error("Not supposed to be reachable");
 }
 
-VectorXd M3_AdaptiveController::_smart_vec(const DQ& x, const M3_MeasureSpace& measure_space)
+VectorXd AdaptiveController::_smart_vec(const DQ& x, const MeasureSpace& measure_space)
 {
     switch(measure_space)
     {
-    case M3_MeasureSpace::None:
+    case MeasureSpace::None:
         throw std::runtime_error("None is not a valid DQ_MeasureSpace");
-    case M3_MeasureSpace::Distance:
+    case MeasureSpace::Distance:
     {
         VectorXd x_vec(1); x_vec << static_cast<double>(x);
         return x_vec;
     }
-    case M3_MeasureSpace::Rotation:
+    case MeasureSpace::Rotation:
         return vec4(x);
-    case M3_MeasureSpace::Translation:
+    case MeasureSpace::Translation:
         return vec4(x);
-    case M3_MeasureSpace::Pose:
+    case MeasureSpace::Pose:
         return vec8(x);
     }
     throw std::runtime_error("Not supposed to be reachable");
 }
 
-
+}  // namespace marinholab::papers::tro2022::adaptive_control

@@ -32,30 +32,34 @@
  * doi: 10.1109/TRO.2022.3181047.
  */
 
-#include "marinholab/papers/tro2022/adaptive_control/M3_SimulatorDummy.h"
+#include "marinholab/papers/tro2022/adaptive_control/SimulatorDummy.h"
 
 #include <cmath>
 #include <stdexcept>
 
-DQ M3_SimulatorDummy::get_object_pose(const std::string& object_name) const
+
+namespace marinholab::papers::tro2022::adaptive_control
+{
+
+DQ SimulatorDummy::get_object_pose(const std::string& object_name) const
 {
     const auto it = object_poses_.find(object_name);
     if(it == object_poses_.end())
-        throw std::runtime_error("M3_SimulatorDummy: object \"" + object_name + "\" not found in the scene.");
+        throw std::runtime_error("SimulatorDummy: object \"" + object_name + "\" not found in the scene.");
     return it->second;
 }
 
-void M3_SimulatorDummy::set_object_pose(const std::string& object_name, const DQ& pose)
+void SimulatorDummy::set_object_pose(const std::string& object_name, const DQ& pose)
 {
     object_poses_[object_name] = pose;
 }
 
-bool M3_SimulatorDummy::has_object(const std::string& object_name) const
+bool SimulatorDummy::has_object(const std::string& object_name) const
 {
     return object_poses_.find(object_name) != object_poses_.end();
 }
 
-std::vector<std::string> M3_SimulatorDummy::get_object_names() const
+std::vector<std::string> SimulatorDummy::get_object_names() const
 {
     std::vector<std::string> names;
     names.reserve(object_poses_.size());
@@ -64,32 +68,32 @@ std::vector<std::string> M3_SimulatorDummy::get_object_names() const
     return names;
 }
 
-const VectorXd& M3_SimulatorDummy::get_configuration_space_positions() const
+const VectorXd& SimulatorDummy::get_configuration_space_positions() const
 {
     return q_;
 }
 
-void M3_SimulatorDummy::set_configuration_space_positions(const VectorXd& q)
+void SimulatorDummy::set_configuration_space_positions(const VectorXd& q)
 {
     q_ = q;
 }
 
-void M3_SimulatorDummy::start_simulation()
+void SimulatorDummy::start_simulation()
 {
     running_ = true;
 }
 
-void M3_SimulatorDummy::stop_simulation()
+void SimulatorDummy::stop_simulation()
 {
     running_ = false;
 }
 
-bool M3_SimulatorDummy::is_running() const
+bool SimulatorDummy::is_running() const
 {
     return running_;
 }
 
-void M3_SimulatorDummy::load_reference_scene()
+void SimulatorDummy::load_reference_scene()
 {
     // The poses below are built with the dual-quaternion algebra written
     // explicitly (no helper functions), so the construction is visible in place:
@@ -170,7 +174,7 @@ void M3_SimulatorDummy::load_reference_scene()
     // (DQ link index N-1, so the last sphere coincides with the end effector).
     // Their pose relative to "x_hat" (the end-effector) is what the VFI uses as
     // the protected point on the arm.
-    const M3_SerialManipulatorEDH robot = vs050_raw_kinematics();
+    const SerialManipulatorEDH robot = vs050_raw_kinematics();
     const DQ x_hat_ee = robot.fkm(q_init);
     set_object_pose("x_hat", x_hat_ee);
     for(int link_index = 0; link_index <= 5; link_index++)
@@ -180,7 +184,7 @@ void M3_SimulatorDummy::load_reference_scene()
     }
 }
 
-M3_SerialManipulatorEDH M3_SimulatorDummy::vs050_raw_kinematics()
+SerialManipulatorEDH SimulatorDummy::vs050_raw_kinematics()
 {
     MatrixXd VS050_dh_matrix(5,6);
 
@@ -194,10 +198,12 @@ M3_SerialManipulatorEDH M3_SimulatorDummy::vs050_raw_kinematics()
     VectorXd lower_joint_limits(6); lower_joint_limits << -170.,-100.,-60.,-265.,-119.,-355.; lower_joint_limits = deg2rad(lower_joint_limits);
     VectorXd upper_joint_limits(6); upper_joint_limits <<  170., 100.,124., 265., 89.9, 355.; upper_joint_limits = deg2rad(upper_joint_limits);
 
-    M3_SerialManipulatorEDH robot(VS050_dh_matrix);
+    SerialManipulatorEDH robot(VS050_dh_matrix);
     robot.set_lower_q_limit(lower_joint_limits);
     robot.set_upper_q_limit(upper_joint_limits);
     robot.set_base_frame(DQ(1.));
     robot.set_effector_frame(DQ(1.));
     return robot;
 }
+
+}  // namespace marinholab::papers::tro2022::adaptive_control
