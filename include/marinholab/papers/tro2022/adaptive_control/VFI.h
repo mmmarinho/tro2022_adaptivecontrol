@@ -29,11 +29,15 @@
 #include<string>
 
 #include<dqrobotics/DQ.h>
-#include "marinholab/papers/tro2022/adaptive_control/M3_SimulatorDummy.h"
+#include "marinholab/papers/tro2022/adaptive_control/SimulatorDummy.h"
+
+
+namespace marinholab::papers::tro2022::adaptive_control
+{
 
 using namespace DQ_robotics;
 
-enum class M3_Primitive
+enum class Primitive
 {
     None=0,
     Point,
@@ -41,14 +45,14 @@ enum class M3_Primitive
     Line
 };
 
-enum class M3_VFI_Direction
+enum class VFI_Direction
 {
     None=0,
     FORBIDDEN_ZONE,//-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
     SAFE_ZONE//Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
 };
 
-enum class M3_VFI_DistanceType
+enum class VFI_DistanceType
 {
     None=0,
     EUCLIDEAN,
@@ -78,15 +82,15 @@ enum class M3_VFI_DistanceType
  * Murilo Marques Marinho, Juan José Quiroz-Omaña, Kanako Harada
  * https://arxiv.org/abs/2210.11877
  */
-class M3_VFI
+class VFI
 {
     std::string workspace_entity_name_;
     std::string robot_entity_name_;
-    M3_Primitive type_;
+    Primitive type_;
     DQ value_;
-    std::shared_ptr<M3_SimulatorDummy> vi_;
+    std::shared_ptr<SimulatorDummy> vi_;
     double safe_distance_;
-    M3_VFI_Direction vfi_direction_;
+    VFI_Direction vfi_direction_;
     const int joint_index_; //Needs to be correctly implemented in the future
     const DQ relative_displacement_to_joint_;
     const std::string cs_reference_name_;
@@ -95,12 +99,12 @@ class M3_VFI
     double last_estimated_distance_;
     double last_real_distance_;
 public:
-    M3_VFI(const std::string& workspace_entity_name,
+    VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
-                    const M3_Primitive& type,
-                    const std::shared_ptr<M3_SimulatorDummy>& vi,
+                    const Primitive& type,
+                    const std::shared_ptr<SimulatorDummy>& vi,
                     const double& safe_distance,
-                    const M3_VFI_Direction& vfi_direction,
+                    const VFI_Direction& vfi_direction,
                     const int& joint_index,
                     const DQ& relative_displacement_to_joint,
                     const std::string& cs_reference_name="");
@@ -121,7 +125,7 @@ public:
 
     double get_safe_distance() const;
 
-    M3_VFI_DistanceType get_distance_type() const;
+    VFI_DistanceType get_distance_type() const;
 
     void set_last_real_distance(const DQ& y);
 
@@ -133,3 +137,5 @@ public:
 
     std::string get_vfi_name() const;
 };
+
+}  // namespace marinholab::papers::tro2022::adaptive_control

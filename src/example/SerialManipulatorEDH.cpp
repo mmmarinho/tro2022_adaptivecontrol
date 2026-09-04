@@ -31,10 +31,14 @@
  * in IEEE Transactions on Robotics, vol. 38, no. 6, pp. 3498-3513, Dec. 2022,
  * doi: 10.1109/TRO.2022.3181047.
  */
-#include <marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h>
+#include <marinholab/papers/tro2022/adaptive_control/SerialManipulatorEDH.h>
 #include <algorithm>
 
-M3_SerialManipulatorEDH::M3_SerialManipulatorEDH(const MatrixXd& dh_matrix):
+
+namespace marinholab::papers::tro2022::adaptive_control
+{
+
+SerialManipulatorEDH::SerialManipulatorEDH(const MatrixXd& dh_matrix):
     DQ_SerialManipulator(dh_matrix.cols()),
     dh_matrix_(dh_matrix)
 {
@@ -63,7 +67,7 @@ M3_SerialManipulatorEDH::M3_SerialManipulatorEDH(const MatrixXd& dh_matrix):
  *
  * @return a DQ representing the base of the robot.
  */
-DQ M3_SerialManipulatorEDH::get_base_frame() const
+DQ SerialManipulatorEDH::get_base_frame() const
 {
     if(base_parameters_.size()==6)
     {
@@ -91,7 +95,7 @@ DQ M3_SerialManipulatorEDH::get_base_frame() const
     }
 }
 
-std::vector<M3_ParameterSpaceEDH::Example_Parameter> M3_SerialManipulatorEDH::get_base_parameters() const
+std::vector<ParameterSpaceEDH::Example_Parameter> SerialManipulatorEDH::get_base_parameters() const
 {
     if(base_parameters_.size()==6)
         return base_parameters_;
@@ -99,7 +103,7 @@ std::vector<M3_ParameterSpaceEDH::Example_Parameter> M3_SerialManipulatorEDH::ge
         throw std::runtime_error("DQ_SerialManipulatorDH::get_base_parameters()::Error::The parameters must be initialized before usage.");
 }
 
-void M3_SerialManipulatorEDH::set_base_frame(const std::vector<M3_ParameterSpaceEDH::Example_Parameter>& base_parameters)
+void SerialManipulatorEDH::set_base_frame(const std::vector<ParameterSpaceEDH::Example_Parameter>& base_parameters)
 {
     _check_base_parameters(base_parameters);
     base_parameters_ = base_parameters;
@@ -112,7 +116,7 @@ void M3_SerialManipulatorEDH::set_base_frame(const std::vector<M3_ParameterSpace
  *
  * @see get_base_frame for a detailed explanation on the parameters.
  */
-void M3_SerialManipulatorEDH::set_base_frame(const DQ &base)
+void SerialManipulatorEDH::set_base_frame(const DQ &base)
 {
     //The vector constructor of Eigen3 changes the order of the quaternion with scalar last.
     //The constructor using doubles has the "correct" order with scalar first
@@ -120,13 +124,13 @@ void M3_SerialManipulatorEDH::set_base_frame(const DQ &base)
     Vector3d base_euler = Quaterniond(base.q[0],base.q[1],base.q[2],base.q[3]).toRotationMatrix().eulerAngles(0, 1, 2);
 
     Vector3d base_t = vec3(translation(base));
-    std::vector<M3_ParameterSpaceEDH::Example_Parameter> base_parameters = {
-        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_x,     base_t(0)),
-        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_y,     base_t(1)),
-        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_z,     base_t(2)),
-        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_alpha, base_euler(0)),
-        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_beta,  base_euler(1)),
-        M3_ParameterSpaceEDH::Example_Parameter(-1, M3_ParameterSpaceEDH::Example_ParameterType::base_gamma, base_euler(2)),
+    std::vector<ParameterSpaceEDH::Example_Parameter> base_parameters = {
+        ParameterSpaceEDH::Example_Parameter(-1, ParameterSpaceEDH::Example_ParameterType::base_x,     base_t(0)),
+        ParameterSpaceEDH::Example_Parameter(-1, ParameterSpaceEDH::Example_ParameterType::base_y,     base_t(1)),
+        ParameterSpaceEDH::Example_Parameter(-1, ParameterSpaceEDH::Example_ParameterType::base_z,     base_t(2)),
+        ParameterSpaceEDH::Example_Parameter(-1, ParameterSpaceEDH::Example_ParameterType::base_alpha, base_euler(0)),
+        ParameterSpaceEDH::Example_Parameter(-1, ParameterSpaceEDH::Example_ParameterType::base_beta,  base_euler(1)),
+        ParameterSpaceEDH::Example_Parameter(-1, ParameterSpaceEDH::Example_ParameterType::base_gamma, base_euler(2)),
     };
     set_base_frame(base_parameters);
 
@@ -153,7 +157,7 @@ void M3_SerialManipulatorEDH::set_base_frame(const DQ &base)
  *
  * @see get_base_frame for a detailed explanation on the parameters.
  */
-DQ M3_SerialManipulatorEDH::get_effector_frame() const
+DQ SerialManipulatorEDH::get_effector_frame() const
 {
     if(eff_parameters_.size()==6)
     {
@@ -181,7 +185,7 @@ DQ M3_SerialManipulatorEDH::get_effector_frame() const
     }
 }
 
-std::vector<M3_ParameterSpaceEDH::Example_Parameter> M3_SerialManipulatorEDH::get_effector_parameters() const
+std::vector<ParameterSpaceEDH::Example_Parameter> SerialManipulatorEDH::get_effector_parameters() const
 {
     if(eff_parameters_.size() == 6)
         return eff_parameters_;
@@ -189,7 +193,7 @@ std::vector<M3_ParameterSpaceEDH::Example_Parameter> M3_SerialManipulatorEDH::ge
         throw std::runtime_error("DQ_SerialManipulatorDH::get_effector_parameters()::Error::The parameters must be initialized before usage.");
 }
 
-void M3_SerialManipulatorEDH::set_effector_frame(const std::vector<M3_ParameterSpaceEDH::Example_Parameter> &effector_parameters)
+void SerialManipulatorEDH::set_effector_frame(const std::vector<ParameterSpaceEDH::Example_Parameter> &effector_parameters)
 {
     _check_eff_parameters(effector_parameters);
     eff_parameters_ = effector_parameters;
@@ -203,7 +207,7 @@ void M3_SerialManipulatorEDH::set_effector_frame(const std::vector<M3_ParameterS
  *
  * @see get_base_frame for a detailed explanation on the parameters.
  */
-void M3_SerialManipulatorEDH::set_effector_frame(const DQ &effector)
+void SerialManipulatorEDH::set_effector_frame(const DQ &effector)
 {
     //The vector constructor of Eigen3 changes the order of the quaternion with scalar last.
     //The constructor using doubles has the "correct" order with scalar first
@@ -211,13 +215,13 @@ void M3_SerialManipulatorEDH::set_effector_frame(const DQ &effector)
     Vector3d eff_euler = Quaterniond(effector.q[0],effector.q[1],effector.q[2],effector.q[3]).toRotationMatrix().eulerAngles(0, 1, 2);
     Vector3d eff_t = vec3(translation(effector));
 
-    std::vector<M3_ParameterSpaceEDH::Example_Parameter> eff_parameters = {
-        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_x,     eff_t(0)),
-        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_y,     eff_t(1)),
-        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_z,     eff_t(2)),
-        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_alpha, eff_euler(0)),
-        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_beta,  eff_euler(1)),
-        M3_ParameterSpaceEDH::Example_Parameter(6, M3_ParameterSpaceEDH::Example_ParameterType::eff_gamma, eff_euler(2)),
+    std::vector<ParameterSpaceEDH::Example_Parameter> eff_parameters = {
+        ParameterSpaceEDH::Example_Parameter(6, ParameterSpaceEDH::Example_ParameterType::eff_x,     eff_t(0)),
+        ParameterSpaceEDH::Example_Parameter(6, ParameterSpaceEDH::Example_ParameterType::eff_y,     eff_t(1)),
+        ParameterSpaceEDH::Example_Parameter(6, ParameterSpaceEDH::Example_ParameterType::eff_z,     eff_t(2)),
+        ParameterSpaceEDH::Example_Parameter(6, ParameterSpaceEDH::Example_ParameterType::eff_alpha, eff_euler(0)),
+        ParameterSpaceEDH::Example_Parameter(6, ParameterSpaceEDH::Example_ParameterType::eff_beta,  eff_euler(1)),
+        ParameterSpaceEDH::Example_Parameter(6, ParameterSpaceEDH::Example_ParameterType::eff_gamma, eff_euler(2)),
     };
     set_effector_frame(eff_parameters);
 
@@ -236,7 +240,7 @@ void M3_SerialManipulatorEDH::set_effector_frame(const DQ &effector)
     }
 }
 
-void M3_SerialManipulatorEDH::set_parameter_space(const std::vector<M3_ParameterSpaceEDH::Example_Parameter> &parameter_space)
+void SerialManipulatorEDH::set_parameter_space(const std::vector<ParameterSpaceEDH::Example_Parameter> &parameter_space)
 {
     parameter_space_ = parameter_space;
     VectorXd parameter_space_values = VectorXd(parameter_space.size());
@@ -247,217 +251,217 @@ void M3_SerialManipulatorEDH::set_parameter_space(const std::vector<M3_Parameter
     set_parameter_space_values(parameter_space_values);
 }
 
-int M3_SerialManipulatorEDH::get_dim_parameter_space() const
+int SerialManipulatorEDH::get_dim_parameter_space() const
 {
     return parameter_space_.size();
 }
 
-bool M3_SerialManipulatorEDH::is_parameter_space_set() const
+bool SerialManipulatorEDH::is_parameter_space_set() const
 {
     return (get_dim_parameter_space()>0);
 }
 
-M3_ParameterSpaceEDH::Example_Parameter M3_SerialManipulatorEDH::_get_parameter(const int &parameter_index) const
+ParameterSpaceEDH::Example_Parameter SerialManipulatorEDH::_get_parameter(const int &parameter_index) const
 {
     return parameter_space_[parameter_index];
 }
 
-double M3_SerialManipulatorEDH::_get_parameter_space_value(const M3_ParameterSpaceEDH::Example_Parameter &parameter) const
+double SerialManipulatorEDH::_get_parameter_space_value(const ParameterSpaceEDH::Example_Parameter &parameter) const
 {
     switch (parameter.type_)
     {
-    case M3_ParameterSpaceEDH::Example_ParameterType::theta:
+    case ParameterSpaceEDH::Example_ParameterType::theta:
         return get_theta(parameter.link_index_);
-    case M3_ParameterSpaceEDH::Example_ParameterType::d:
+    case ParameterSpaceEDH::Example_ParameterType::d:
         return get_d(parameter.link_index_);
-    case M3_ParameterSpaceEDH::Example_ParameterType::a:
+    case ParameterSpaceEDH::Example_ParameterType::a:
         return get_a(parameter.link_index_);
-    case M3_ParameterSpaceEDH::Example_ParameterType::alpha:
+    case ParameterSpaceEDH::Example_ParameterType::alpha:
         return get_alpha(parameter.link_index_);
 
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_x:
+    case ParameterSpaceEDH::Example_ParameterType::base_x:
         return base_parameters_.at(0).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_y:
+    case ParameterSpaceEDH::Example_ParameterType::base_y:
         return base_parameters_.at(1).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_z:
+    case ParameterSpaceEDH::Example_ParameterType::base_z:
         return base_parameters_.at(2).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_alpha:
+    case ParameterSpaceEDH::Example_ParameterType::base_alpha:
         return base_parameters_.at(3).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_beta:
+    case ParameterSpaceEDH::Example_ParameterType::base_beta:
         return base_parameters_.at(4).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_gamma:
+    case ParameterSpaceEDH::Example_ParameterType::base_gamma:
         return base_parameters_.at(5).value_;
 
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_x:
+    case ParameterSpaceEDH::Example_ParameterType::eff_x:
         return eff_parameters_.at(0).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_y:
+    case ParameterSpaceEDH::Example_ParameterType::eff_y:
         return eff_parameters_.at(1).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_z:
+    case ParameterSpaceEDH::Example_ParameterType::eff_z:
         return eff_parameters_.at(2).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_alpha:
+    case ParameterSpaceEDH::Example_ParameterType::eff_alpha:
         return eff_parameters_.at(3).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_beta:
+    case ParameterSpaceEDH::Example_ParameterType::eff_beta:
         return eff_parameters_.at(4).value_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_gamma:
+    case ParameterSpaceEDH::Example_ParameterType::eff_gamma:
         return eff_parameters_.at(5).value_;
     }
     throw std::runtime_error("Invalid parameter type in _get_parameter_space_value");
 }
 
-void M3_SerialManipulatorEDH::_set_parameter_space_value(const M3_ParameterSpaceEDH::Example_Parameter &parameter, const double &value)
+void SerialManipulatorEDH::_set_parameter_space_value(const ParameterSpaceEDH::Example_Parameter &parameter, const double &value)
 {
     switch (parameter.type_)
     {
-    case M3_ParameterSpaceEDH::Example_ParameterType::theta:
+    case ParameterSpaceEDH::Example_ParameterType::theta:
         set_theta(parameter.link_index_, value);
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::d:
+    case ParameterSpaceEDH::Example_ParameterType::d:
         set_d(parameter.link_index_, value);
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::a:
+    case ParameterSpaceEDH::Example_ParameterType::a:
         set_a(parameter.link_index_, value);
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::alpha:
+    case ParameterSpaceEDH::Example_ParameterType::alpha:
         set_alpha(parameter.link_index_, value);
         return;
 
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_x:
+    case ParameterSpaceEDH::Example_ParameterType::base_x:
         base_parameters_[0].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_y:
+    case ParameterSpaceEDH::Example_ParameterType::base_y:
         base_parameters_[1].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_z:
+    case ParameterSpaceEDH::Example_ParameterType::base_z:
         base_parameters_[2].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_alpha:
+    case ParameterSpaceEDH::Example_ParameterType::base_alpha:
         base_parameters_[3].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_beta:
+    case ParameterSpaceEDH::Example_ParameterType::base_beta:
         base_parameters_[4].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_gamma:
+    case ParameterSpaceEDH::Example_ParameterType::base_gamma:
         base_parameters_[5].value_ = value;
         return;
 
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_x:
+    case ParameterSpaceEDH::Example_ParameterType::eff_x:
         eff_parameters_[0].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_y:
+    case ParameterSpaceEDH::Example_ParameterType::eff_y:
         eff_parameters_[1].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_z:
+    case ParameterSpaceEDH::Example_ParameterType::eff_z:
         eff_parameters_[2].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_alpha:
+    case ParameterSpaceEDH::Example_ParameterType::eff_alpha:
         eff_parameters_[3].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_beta:
+    case ParameterSpaceEDH::Example_ParameterType::eff_beta:
         eff_parameters_[4].value_ = value;
         return;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_gamma:
+    case ParameterSpaceEDH::Example_ParameterType::eff_gamma:
         eff_parameters_[5].value_ = value;
         return;
     }
     throw std::runtime_error("Invalid parameter type in _set_parameter_space_value");
 }
 
-VectorXd M3_SerialManipulatorEDH::get_parameter_space_values() const
+VectorXd SerialManipulatorEDH::get_parameter_space_values() const
 {
     VectorXd parameter_space_vector(get_dim_parameter_space());
 
     for(int parameter_index=0; parameter_index < get_dim_parameter_space(); parameter_index++)
     {
-        const M3_ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_index];
+        const ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_index];
         parameter_space_vector(parameter_index) = _get_parameter_space_value(parameter);
     }
 
     return parameter_space_vector;
 }
 
-void M3_SerialManipulatorEDH::set_parameter_space_values(const VectorXd &parameter_space_vector)
+void SerialManipulatorEDH::set_parameter_space_values(const VectorXd &parameter_space_vector)
 {
     if(parameter_space_vector.size() != get_dim_parameter_space())
         throw std::runtime_error("parameter_space_vector incompatible with dim_parameter_space in set_parameter_space_vector");
 
     for(int parameter_index=0; parameter_index < get_dim_parameter_space(); parameter_index++)
     {
-        const M3_ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_index];
+        const ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_index];
         switch (parameter.type_)
         {
-        case M3_ParameterSpaceEDH::Example_ParameterType::theta:
+        case ParameterSpaceEDH::Example_ParameterType::theta:
             set_theta(parameter.link_index_, parameter_space_vector(parameter_index));
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::d:
+        case ParameterSpaceEDH::Example_ParameterType::d:
             set_d(parameter.link_index_, parameter_space_vector(parameter_index));
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::a:
+        case ParameterSpaceEDH::Example_ParameterType::a:
             set_a(parameter.link_index_, parameter_space_vector(parameter_index));
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::alpha:
+        case ParameterSpaceEDH::Example_ParameterType::alpha:
             set_alpha(parameter.link_index_, parameter_space_vector(parameter_index));
             break;
 
         // Base Parameters
-        case M3_ParameterSpaceEDH::Example_ParameterType::base_x:
+        case ParameterSpaceEDH::Example_ParameterType::base_x:
             base_parameters_[0].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::base_y:
+        case ParameterSpaceEDH::Example_ParameterType::base_y:
             base_parameters_[1].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::base_z:
+        case ParameterSpaceEDH::Example_ParameterType::base_z:
             base_parameters_[2].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::base_alpha:
+        case ParameterSpaceEDH::Example_ParameterType::base_alpha:
             base_parameters_[3].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::base_beta:
+        case ParameterSpaceEDH::Example_ParameterType::base_beta:
             base_parameters_[4].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::base_gamma:
+        case ParameterSpaceEDH::Example_ParameterType::base_gamma:
             base_parameters_[5].value_ = parameter_space_vector(parameter_index);
             break;
 
         // End Effector Parameters
-        case M3_ParameterSpaceEDH::Example_ParameterType::eff_x:
+        case ParameterSpaceEDH::Example_ParameterType::eff_x:
             eff_parameters_[0].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::eff_y:
+        case ParameterSpaceEDH::Example_ParameterType::eff_y:
             eff_parameters_[1].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::eff_z:
+        case ParameterSpaceEDH::Example_ParameterType::eff_z:
             eff_parameters_[2].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::eff_alpha:
+        case ParameterSpaceEDH::Example_ParameterType::eff_alpha:
             eff_parameters_[3].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::eff_beta:
+        case ParameterSpaceEDH::Example_ParameterType::eff_beta:
             eff_parameters_[4].value_ = parameter_space_vector(parameter_index);
             break;
-        case M3_ParameterSpaceEDH::Example_ParameterType::eff_gamma:
+        case ParameterSpaceEDH::Example_ParameterType::eff_gamma:
             eff_parameters_[5].value_ = parameter_space_vector(parameter_index);
             break;
         }
     }
 }
 
-void M3_SerialManipulatorEDH::set_parameter_space_boundaries(const std::tuple<VectorXd, VectorXd>& boundaries)
+void SerialManipulatorEDH::set_parameter_space_boundaries(const std::tuple<VectorXd, VectorXd>& boundaries)
 {
     for(int parameter_counter=0;parameter_counter<get_dim_parameter_space();parameter_counter++)
     {
-        M3_ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_counter];
+        ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_counter];
         parameter.min_ = std::get<0>(boundaries)(parameter_counter);
         parameter.max_ = std::get<1>(boundaries)(parameter_counter);
     }
 }
 
-std::tuple<VectorXd,VectorXd> M3_SerialManipulatorEDH::get_parameter_space_boundaries() const
+std::tuple<VectorXd,VectorXd> SerialManipulatorEDH::get_parameter_space_boundaries() const
 {
     VectorXd parameters_min(get_dim_parameter_space());
     VectorXd parameters_max(get_dim_parameter_space());
     for(int parameter_counter=0;parameter_counter<get_dim_parameter_space();parameter_counter++)
     {
-        const M3_ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_counter];
+        const ParameterSpaceEDH::Example_Parameter& parameter = parameter_space_[parameter_counter];
         parameters_min(parameter_counter) = parameter.min_;
         parameters_max(parameter_counter) = parameter.max_;
     }
@@ -465,9 +469,9 @@ std::tuple<VectorXd,VectorXd> M3_SerialManipulatorEDH::get_parameter_space_bound
     return {parameters_min, parameters_max};
 }
 
-std::vector<M3_ParameterSpaceEDH::Example_ParameterType> M3_SerialManipulatorEDH::get_parameter_types() const
+std::vector<ParameterSpaceEDH::Example_ParameterType> SerialManipulatorEDH::get_parameter_types() const
 {
-    std::vector<M3_ParameterSpaceEDH::Example_ParameterType> parameter_types;
+    std::vector<ParameterSpaceEDH::Example_ParameterType> parameter_types;
     for(auto parameter : parameter_space_)
     {
         parameter_types.push_back(parameter.type_);
@@ -476,7 +480,7 @@ std::vector<M3_ParameterSpaceEDH::Example_ParameterType> M3_SerialManipulatorEDH
 }
 
 
-void M3_SerialManipulatorEDH::_check_link_index(const int &link_index) const
+void SerialManipulatorEDH::_check_link_index(const int &link_index) const
 {
     if(link_index >= get_dim_configuration_space() || link_index < 0)
     {
@@ -484,7 +488,7 @@ void M3_SerialManipulatorEDH::_check_link_index(const int &link_index) const
     }
 }
 
-void M3_SerialManipulatorEDH::_check_parameter_index(const int &parameter_index) const
+void SerialManipulatorEDH::_check_parameter_index(const int &parameter_index) const
 {
     if(parameter_index >= get_dim_parameter_space() || parameter_index < 0)
     {
@@ -492,41 +496,41 @@ void M3_SerialManipulatorEDH::_check_parameter_index(const int &parameter_index)
     }
 }
 
-void M3_SerialManipulatorEDH::_check_base_parameters(const std::vector<M3_ParameterSpaceEDH::Example_Parameter> &parameters)
+void SerialManipulatorEDH::_check_base_parameters(const std::vector<ParameterSpaceEDH::Example_Parameter> &parameters)
 {
     if(parameters.size()!=6)
         std::runtime_error("Incorrect number of parameters");
 
-    if(parameters.at(0).type_ != M3_ParameterSpaceEDH::Example_ParameterType::base_x)
+    if(parameters.at(0).type_ != ParameterSpaceEDH::Example_ParameterType::base_x)
         std::runtime_error("First parameter should be of type base_x");
-    if(parameters.at(1).type_ != M3_ParameterSpaceEDH::Example_ParameterType::base_y)
+    if(parameters.at(1).type_ != ParameterSpaceEDH::Example_ParameterType::base_y)
         std::runtime_error("Second parameter should be of type base_y");
-    if(parameters.at(2).type_ != M3_ParameterSpaceEDH::Example_ParameterType::base_z)
+    if(parameters.at(2).type_ != ParameterSpaceEDH::Example_ParameterType::base_z)
         std::runtime_error("Third parameter should be of type base_z");
-    if(parameters.at(3).type_ != M3_ParameterSpaceEDH::Example_ParameterType::base_alpha)
+    if(parameters.at(3).type_ != ParameterSpaceEDH::Example_ParameterType::base_alpha)
         std::runtime_error("Forth parameter should be of type base_alpha");
-    if(parameters.at(4).type_ != M3_ParameterSpaceEDH::Example_ParameterType::base_beta)
+    if(parameters.at(4).type_ != ParameterSpaceEDH::Example_ParameterType::base_beta)
         std::runtime_error("Fifth parameter should be of type base_beta");
-    if(parameters.at(5).type_ != M3_ParameterSpaceEDH::Example_ParameterType::base_gamma)
+    if(parameters.at(5).type_ != ParameterSpaceEDH::Example_ParameterType::base_gamma)
         std::runtime_error("Sixth parameter should be of type base_gamma");
 }
 
-void M3_SerialManipulatorEDH::_check_eff_parameters(const std::vector<M3_ParameterSpaceEDH::Example_Parameter> &parameters)
+void SerialManipulatorEDH::_check_eff_parameters(const std::vector<ParameterSpaceEDH::Example_Parameter> &parameters)
 {
     if(parameters.size()!=6)
         std::runtime_error("Incorrect number of parameters");
 
-    if(parameters.at(0).type_ != M3_ParameterSpaceEDH::Example_ParameterType::eff_x)
+    if(parameters.at(0).type_ != ParameterSpaceEDH::Example_ParameterType::eff_x)
         std::runtime_error("First parameter should be of type eff_x");
-    if(parameters.at(1).type_ != M3_ParameterSpaceEDH::Example_ParameterType::eff_y)
+    if(parameters.at(1).type_ != ParameterSpaceEDH::Example_ParameterType::eff_y)
         std::runtime_error("Second parameter should be of type eff_y");
-    if(parameters.at(2).type_ != M3_ParameterSpaceEDH::Example_ParameterType::eff_z)
+    if(parameters.at(2).type_ != ParameterSpaceEDH::Example_ParameterType::eff_z)
         std::runtime_error("Third parameter should be of type eff_z");
-    if(parameters.at(3).type_ != M3_ParameterSpaceEDH::Example_ParameterType::eff_alpha)
+    if(parameters.at(3).type_ != ParameterSpaceEDH::Example_ParameterType::eff_alpha)
         std::runtime_error("Forth parameter should be of type eff_alpha");
-    if(parameters.at(4).type_ != M3_ParameterSpaceEDH::Example_ParameterType::eff_beta)
+    if(parameters.at(4).type_ != ParameterSpaceEDH::Example_ParameterType::eff_beta)
         std::runtime_error("Fifth parameter should be of type eff_beta");
-    if(parameters.at(5).type_ != M3_ParameterSpaceEDH::Example_ParameterType::eff_gamma)
+    if(parameters.at(5).type_ != ParameterSpaceEDH::Example_ParameterType::eff_gamma)
         std::runtime_error("Sixth parameter should be of type eff_gamma");
 }
 
@@ -543,7 +547,7 @@ void M3_SerialManipulatorEDH::_check_eff_parameters(const std::vector<M3_Paramet
  * @param link_index
  * @return
  */
-DQ M3_SerialManipulatorEDH::_dh2dq(const double &joint_value, const int &link_index) const
+DQ SerialManipulatorEDH::_dh2dq(const double &joint_value, const int &link_index) const
 {
     double half_theta = get_theta(link_index)/2.0;
     double d = get_d(link_index);
@@ -595,7 +599,7 @@ DQ M3_SerialManipulatorEDH::_dh2dq(const double &joint_value, const int &link_in
  * @param link_index
  * @return
  */
-DQ M3_SerialManipulatorEDH::_get_w(const int &link_index) const
+DQ SerialManipulatorEDH::_get_w(const int &link_index) const
 {
     const int link_type = int(get_link_type(link_index));
     switch (link_type)
@@ -615,7 +619,7 @@ DQ M3_SerialManipulatorEDH::_get_w(const int &link_index) const
  * @param parameter a Example_ParameterSpaceEDH::Example_Parameter containing all information of the parameter.
  * @return a DQ representing the parameter's w.
  */
-DQ M3_SerialManipulatorEDH::_get_param_w(const double& joint_value, const M3_ParameterSpaceEDH::Example_Parameter &parameter) const
+DQ SerialManipulatorEDH::_get_param_w(const double& joint_value, const ParameterSpaceEDH::Example_Parameter &parameter) const
 {
     double theta = get_theta(parameter.link_index_);
     double d = get_d(parameter.link_index_);
@@ -637,13 +641,13 @@ DQ M3_SerialManipulatorEDH::_get_param_w(const double& joint_value, const M3_Par
     // Get w depending on the parameters type
     switch(parameter.type_)
     {
-    case M3_ParameterSpaceEDH::Example_ParameterType::theta:
+    case ParameterSpaceEDH::Example_ParameterType::theta:
         return k_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::d:
+    case ParameterSpaceEDH::Example_ParameterType::d:
         return E_*k_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::a:
+    case ParameterSpaceEDH::Example_ParameterType::a:
         return E_*(cos(theta)*i_ + sin(theta)*j_);
-    case M3_ParameterSpaceEDH::Example_ParameterType::alpha:
+    case ParameterSpaceEDH::Example_ParameterType::alpha:
         return (cos(theta)*i_ + sin(theta)*j_) + E_*(-d*sin(theta)*i_ + d*cos(theta)*j_);
     default:
         throw std::runtime_error("Invalid parameter type in _get_param_w");
@@ -655,7 +659,7 @@ DQ M3_SerialManipulatorEDH::_get_param_w(const double& joint_value, const M3_Par
  * @param parameter_type
  * @return
  */
-DQ M3_SerialManipulatorEDH::_get_base_param_w(const M3_ParameterSpaceEDH::Example_ParameterType &parameter_type) const
+DQ SerialManipulatorEDH::_get_base_param_w(const ParameterSpaceEDH::Example_ParameterType &parameter_type) const
 {
     const double& x = base_parameters_.at(0).value_;
     const double& y = base_parameters_.at(1).value_;
@@ -665,21 +669,21 @@ DQ M3_SerialManipulatorEDH::_get_base_param_w(const M3_ParameterSpaceEDH::Exampl
 
     switch(parameter_type)
     {
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_x:
+    case ParameterSpaceEDH::Example_ParameterType::base_x:
         return E_*i_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_y:
+    case ParameterSpaceEDH::Example_ParameterType::base_y:
         return E_*j_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_z:
+    case ParameterSpaceEDH::Example_ParameterType::base_z:
         return E_*k_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_alpha:
+    case ParameterSpaceEDH::Example_ParameterType::base_alpha:
         return i_ + E_*( z*j_ - y*k_ );
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_beta:
+    case ParameterSpaceEDH::Example_ParameterType::base_beta:
         return  j_*cos(alpha) +
                 k_*sin(alpha) +
                 E_*i_*(y*sin(alpha) - z*cos(alpha)) +
                 E_*j_*(-x*sin(alpha)) +
                 E_*k_*(x*cos(alpha));
-    case M3_ParameterSpaceEDH::Example_ParameterType::base_gamma:
+    case ParameterSpaceEDH::Example_ParameterType::base_gamma:
         return  i_*sin(beta) +
                 j_*(-cos(beta)*sin(alpha)) +
                 k_*(cos(alpha)*cos(beta)) +
@@ -700,7 +704,7 @@ DQ M3_SerialManipulatorEDH::_get_base_param_w(const M3_ParameterSpaceEDH::Exampl
  * @param parameter_type
  * @return
  */
-DQ M3_SerialManipulatorEDH::_get_eff_param_w(const M3_ParameterSpaceEDH::Example_ParameterType &parameter_type) const
+DQ SerialManipulatorEDH::_get_eff_param_w(const ParameterSpaceEDH::Example_ParameterType &parameter_type) const
 {
     const double& x = eff_parameters_.at(0).value_;
     const double& y = eff_parameters_.at(1).value_;
@@ -710,17 +714,17 @@ DQ M3_SerialManipulatorEDH::_get_eff_param_w(const M3_ParameterSpaceEDH::Example
 
     switch(parameter_type)
     {
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_x:
+    case ParameterSpaceEDH::Example_ParameterType::eff_x:
         return E_*i_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_y:
+    case ParameterSpaceEDH::Example_ParameterType::eff_y:
         return E_*j_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_z:
+    case ParameterSpaceEDH::Example_ParameterType::eff_z:
         return E_*k_;
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_alpha:
+    case ParameterSpaceEDH::Example_ParameterType::eff_alpha:
         return DQ( 0., 1., 0., 0., 0., 0., z, -y);
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_beta:
+    case ParameterSpaceEDH::Example_ParameterType::eff_beta:
         return DQ( 0., 0., cos(alpha), sin(alpha), 0., y*sin(alpha) - z*cos(alpha), -x*sin(alpha), x*cos(alpha));
-    case M3_ParameterSpaceEDH::Example_ParameterType::eff_gamma:
+    case ParameterSpaceEDH::Example_ParameterType::eff_gamma:
         return DQ( 0.,
                    sin(beta),
                    -cos(beta)*sin(alpha),
@@ -747,7 +751,7 @@ DQ M3_SerialManipulatorEDH::_get_eff_param_w(const M3_ParameterSpaceEDH::Example
  * @param to_ith_link
  * @return
  */
-DQ M3_SerialManipulatorEDH::raw_fkm(const VectorXd &joint_values, const int &to_ith_link) const
+DQ SerialManipulatorEDH::raw_fkm(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_link_index(to_ith_link);
 
@@ -772,7 +776,7 @@ DQ M3_SerialManipulatorEDH::raw_fkm(const VectorXd &joint_values, const int &to_
  * @param to_ith_link
  * @return
  */
-DQ M3_SerialManipulatorEDH::fkm(const VectorXd& joint_values, const int& to_ith_link) const
+DQ SerialManipulatorEDH::fkm(const VectorXd& joint_values, const int& to_ith_link) const
 {
     _check_q_vec(joint_values);
     _check_link_index(to_ith_link);
@@ -797,7 +801,7 @@ DQ M3_SerialManipulatorEDH::fkm(const VectorXd& joint_values, const int& to_ith_
  * @param joint_values
  * @return
  */
-DQ M3_SerialManipulatorEDH::fkm(const VectorXd &joint_values) const
+DQ SerialManipulatorEDH::fkm(const VectorXd &joint_values) const
 {
     return fkm(joint_values, get_dim_configuration_space()-1);
 }
@@ -815,7 +819,7 @@ DQ M3_SerialManipulatorEDH::fkm(const VectorXd &joint_values) const
  * @param to_ith_link
  * @return
  */
-MatrixXd M3_SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
+MatrixXd SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_q_vec(joint_values);
     _check_link_index(to_ith_link);
@@ -846,7 +850,7 @@ MatrixXd M3_SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values, co
  * @param joint_values
  * @return
  */
-MatrixXd M3_SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values) const
+MatrixXd SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values) const
 {
     return pose_jacobian(joint_values, get_dim_configuration_space()-1);
 }
@@ -865,7 +869,7 @@ MatrixXd M3_SerialManipulatorEDH::pose_jacobian(const VectorXd &joint_values) co
  * @param to_ith_link
  * @return
  */
-MatrixXd M3_SerialManipulatorEDH::raw_pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
+MatrixXd SerialManipulatorEDH::raw_pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_q_vec(joint_values);
 
@@ -896,11 +900,11 @@ MatrixXd M3_SerialManipulatorEDH::raw_pose_jacobian(const VectorXd &joint_values
  * @param to_ith_link up to which link of the robot should the parameter Jacobian column be calculated.
  * @return the parameter pose Jacobian column.
  */
-VectorXd M3_SerialManipulatorEDH::_parameter_pose_jacobian_col(const VectorXd& joint_values, const int& parameter_index, const int& to_ith_link) const
+VectorXd SerialManipulatorEDH::_parameter_pose_jacobian_col(const VectorXd& joint_values, const int& parameter_index, const int& to_ith_link) const
 {
     _check_parameter_index(parameter_index);
 
-    const M3_ParameterSpaceEDH::Example_Parameter& parameter = _get_parameter(parameter_index);
+    const ParameterSpaceEDH::Example_Parameter& parameter = _get_parameter(parameter_index);
 
     DQ x_effector = fkm(joint_values, to_ith_link);
     DQ x;
@@ -940,7 +944,7 @@ VectorXd M3_SerialManipulatorEDH::_parameter_pose_jacobian_col(const VectorXd& j
  * @param to_ith_link
  * @return
  */
-MatrixXd M3_SerialManipulatorEDH::parameter_pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
+MatrixXd SerialManipulatorEDH::parameter_pose_jacobian(const VectorXd &joint_values, const int &to_ith_link) const
 {
     _check_q_vec(joint_values);
     _check_link_index(to_ith_link);
@@ -955,101 +959,101 @@ MatrixXd M3_SerialManipulatorEDH::parameter_pose_jacobian(const VectorXd &joint_
     return Jp;
 }
 
-MatrixXd M3_SerialManipulatorEDH::parameter_pose_jacobian(const VectorXd& joint_values) const
+MatrixXd SerialManipulatorEDH::parameter_pose_jacobian(const VectorXd& joint_values) const
 {
     return parameter_pose_jacobian(joint_values, get_dim_configuration_space()-1);
 }
 
-VectorXd M3_SerialManipulatorEDH::get_thetas() const
+VectorXd SerialManipulatorEDH::get_thetas() const
 {
     return dh_matrix_.row(0);
 }
 
-double M3_SerialManipulatorEDH::get_theta(const int &link_index) const
+double SerialManipulatorEDH::get_theta(const int &link_index) const
 {
     _check_link_index(link_index);
     return dh_matrix_(0,link_index);
 }
 
-void M3_SerialManipulatorEDH::set_theta(const int &link_index, const double &value)
+void SerialManipulatorEDH::set_theta(const int &link_index, const double &value)
 {
     _check_link_index(link_index);
     dh_matrix_(0,link_index) = value;
 }
 
-VectorXd M3_SerialManipulatorEDH::get_ds() const
+VectorXd SerialManipulatorEDH::get_ds() const
 {
     return dh_matrix_.row(1);
 }
 
-double M3_SerialManipulatorEDH::get_d(const int &link_index) const
+double SerialManipulatorEDH::get_d(const int &link_index) const
 {
     _check_link_index(link_index);
     return dh_matrix_(1,link_index);
 }
 
-void M3_SerialManipulatorEDH::set_d(const int &link_index, const double &value)
+void SerialManipulatorEDH::set_d(const int &link_index, const double &value)
 {
     _check_link_index(link_index);
     dh_matrix_(1,link_index) = value;
 }
 
-VectorXd M3_SerialManipulatorEDH::get_as() const
+VectorXd SerialManipulatorEDH::get_as() const
 {
     return dh_matrix_.row(2);
 }
 
-double M3_SerialManipulatorEDH::get_a(const int &link_index) const
+double SerialManipulatorEDH::get_a(const int &link_index) const
 {
     _check_link_index(link_index);
     return dh_matrix_(2,link_index);
 }
 
-void M3_SerialManipulatorEDH::set_a(const int &link_index, const double &value)
+void SerialManipulatorEDH::set_a(const int &link_index, const double &value)
 {
     _check_link_index(link_index);
     dh_matrix_(2,link_index) = value;
 }
 
-VectorXd M3_SerialManipulatorEDH::get_alphas() const
+VectorXd SerialManipulatorEDH::get_alphas() const
 {
     return dh_matrix_.row(3);
 }
 
-double M3_SerialManipulatorEDH::get_alpha(const int &link_index) const
+double SerialManipulatorEDH::get_alpha(const int &link_index) const
 {
     _check_link_index(link_index);
     return dh_matrix_(3,link_index);
 }
 
-void M3_SerialManipulatorEDH::set_alpha(const int &link_index, const double &value)
+void SerialManipulatorEDH::set_alpha(const int &link_index, const double &value)
 {
     _check_link_index(link_index);
     dh_matrix_(3,link_index) = value;
 }
 
-VectorXd M3_SerialManipulatorEDH::get_link_types() const
+VectorXd SerialManipulatorEDH::get_link_types() const
 {
     return dh_matrix_.row(4);
 }
 
-double M3_SerialManipulatorEDH::get_link_type(const int &link_index) const
+double SerialManipulatorEDH::get_link_type(const int &link_index) const
 {
     _check_link_index(link_index);
     return dh_matrix_(4,link_index);
 }
 
-int M3_SerialManipulatorEDH::get_dim_configuration_space() const
+int SerialManipulatorEDH::get_dim_configuration_space() const
 {
     return dh_matrix_.cols();
 }
 
-MatrixXd M3_SerialManipulatorEDH::pose_jacobian_derivative(const VectorXd &q, const VectorXd &q_dot, const int &to_ith_link) const
+MatrixXd SerialManipulatorEDH::pose_jacobian_derivative(const VectorXd &q, const VectorXd &q_dot, const int &to_ith_link) const
 {
     throw std::runtime_error("NOT IMPLEMENTED");
 }
 
-MatrixXd M3_SerialManipulatorEDH::raw_pose_jacobian_derivative(const VectorXd &q, const VectorXd &q_dot, const int &to_ith_link) const
+MatrixXd SerialManipulatorEDH::raw_pose_jacobian_derivative(const VectorXd &q, const VectorXd &q_dot, const int &to_ith_link) const
 {
     throw std::runtime_error("NOT IMPLEMENTED");
 }
@@ -1058,9 +1062,8 @@ MatrixXd M3_SerialManipulatorEDH::raw_pose_jacobian_derivative(const VectorXd &q
  * Gets the supported joint types.
  * @return a std::vector<DQ_JointType> of the supported joint types.
  */
-std::vector<DQ_JointType> M3_SerialManipulatorEDH::get_supported_joint_types() const {
+std::vector<DQ_JointType> SerialManipulatorEDH::get_supported_joint_types() const {
     return {DQ_JointType::REVOLUTE, DQ_JointType::PRISMATIC};
 }
 
-
-
+}  // namespace marinholab::papers::tro2022::adaptive_control

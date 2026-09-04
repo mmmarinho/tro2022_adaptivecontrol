@@ -35,14 +35,18 @@
 
 #include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include <dqrobotics/utils/DQ_Geometry.h>
-#include "marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
+#include "marinholab/papers/tro2022/adaptive_control/VFI.h"
 
-M3_VFI::M3_VFI(const std::string &workspace_entity_name,
+
+namespace marinholab::papers::tro2022::adaptive_control
+{
+
+VFI::VFI(const std::string &workspace_entity_name,
                const std::string& robot_entity_name,
-               const M3_Primitive &type,
-               const std::shared_ptr<M3_SimulatorDummy> &vi,
+               const Primitive &type,
+               const std::shared_ptr<SimulatorDummy> &vi,
                const double &safe_distance,
-               const M3_VFI_Direction &vfi_direction,
+               const VFI_Direction &vfi_direction,
                const int &joint_index,
                const DQ &relative_displacement_to_joint,
                const std::string &cs_reference_name):
@@ -59,7 +63,7 @@ M3_VFI::M3_VFI(const std::string &workspace_entity_name,
     // Do nothing
 }
 
-void M3_VFI::initialize()
+void VFI::initialize()
 {
     //Reference pose is desired
     DQ x_ref(1);
@@ -69,11 +73,11 @@ void M3_VFI::initialize()
 
     switch(type_)
     {
-    case M3_Primitive::None:
+    case Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case M3_Primitive::Point:
+    case Primitive::Point:
         throw std::runtime_error("Not implemented yet.");
-    case M3_Primitive::Plane:
+    case Primitive::Plane:
     {
         const DQ x = conj(x_ref) * vi_->get_object_pose(workspace_entity_name_);
         const DQ r = rotation(x);
@@ -82,7 +86,7 @@ void M3_VFI::initialize()
         set_value(n + E_*dot(t,n));
         return;
     }
-    case M3_Primitive::Line:
+    case Primitive::Line:
         const DQ x = conj(x_ref) * vi_->get_object_pose(workspace_entity_name_);
         const DQ r = rotation(x);
         const DQ l = Ad(r, k_);
@@ -92,18 +96,18 @@ void M3_VFI::initialize()
     }
 }
 
-DQ M3_VFI::get_value() const
+DQ VFI::get_value() const
 {
     return value_;
 }
 
-void M3_VFI::set_value(const DQ &value)
+void VFI::set_value(const DQ &value)
 {
     switch(type_)
     {
-    case M3_Primitive::None:
+    case Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case M3_Primitive::Point:
+    case Primitive::Point:
         if(is_pure_quaternion(value))
         {
             value_ = value;
@@ -111,7 +115,7 @@ void M3_VFI::set_value(const DQ &value)
         }
         else
             throw std::runtime_error("Invalid point.");
-    case M3_Primitive::Plane:
+    case Primitive::Plane:
         if(is_plane(value))
         {
             value_ = value;
@@ -119,7 +123,7 @@ void M3_VFI::set_value(const DQ &value)
         }
         else
             throw std::runtime_error("Invalid plane.");
-    case M3_Primitive::Line:
+    case Primitive::Line:
         if(is_line(value))
         {
             value_ = value;
@@ -130,28 +134,28 @@ void M3_VFI::set_value(const DQ &value)
     }
 }
 
-MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
+MatrixXd VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
 {
     //Consider the relative displacement
     const DQ& local_x = x*relative_displacement_to_joint_;
     const MatrixXd& local_Jx = haminus8(relative_displacement_to_joint_)*Jx;
     switch(type_)
     {
-    case M3_Primitive::None:
+    case Primitive::None:
     {
         throw std::runtime_error("Expected valid type.");
     }
-    case M3_Primitive::Point:
+    case Primitive::Point:
     {
         throw std::runtime_error("Not implemented yet.");
     }
-    case M3_Primitive::Plane:
+    case Primitive::Plane:
     {
         const MatrixXd Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ t = translation(local_x);
         return DQ_Kinematics::point_to_plane_distance_jacobian(Jt, t, get_value());
     }
-    case M3_Primitive::Line:
+    case Primitive::Line:
     {
         const MatrixXd& Jt = DQ_Kinematics::translation_jacobian(local_Jx, local_x);
         const DQ& t = translation(local_x);
@@ -161,20 +165,20 @@ MatrixXd M3_VFI::get_distance_jacobian(const DQ &x, const MatrixXd &Jx) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-MatrixXd M3_VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
+MatrixXd VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
 {
     switch(vfi_direction_)
     {
-    case M3_VFI_Direction::None:
+    case VFI_Direction::None:
     {
         throw std::runtime_error("Expected valid type");
     }
-    case M3_VFI_Direction::FORBIDDEN_ZONE:
+    case VFI_Direction::FORBIDDEN_ZONE:
     {
         //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
         return -get_distance_jacobian(x, Jx);
     }
-    case M3_VFI_Direction::SAFE_ZONE:
+    case VFI_Direction::SAFE_ZONE:
     {
         //Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
         return get_distance_jacobian(x, Jx);
@@ -183,26 +187,26 @@ MatrixXd M3_VFI::get_vfi_matrix(const DQ &x, const MatrixXd &Jx) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double M3_VFI::get_distance(const DQ &x) const
+double VFI::get_distance(const DQ &x) const
 {
     //Consider the relative displacement
     const DQ& local_x = x*relative_displacement_to_joint_;
     switch(type_)
     {
-    case M3_Primitive::None:
+    case Primitive::None:
     {
         throw std::runtime_error("Expected valid type.");
     }
-    case M3_Primitive::Point:
+    case Primitive::Point:
     {
         throw std::runtime_error("Not implemented yet.");
     }
-    case M3_Primitive::Plane:
+    case Primitive::Plane:
     {
         const DQ& t = translation(local_x);
         return DQ_Geometry::point_to_plane_distance(t, get_value());
     }
-    case M3_Primitive::Line:
+    case Primitive::Line:
     {
         const DQ& t = translation(local_x);
         return DQ_Geometry::point_to_line_squared_distance(t, get_value());
@@ -211,72 +215,74 @@ double M3_VFI::get_distance(const DQ &x) const
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double M3_VFI::get_distance_error(const DQ &x) const
+double VFI::get_distance_error(const DQ &x) const
 {
     switch(vfi_direction_)
     {
-    case M3_VFI_Direction::None:
+    case VFI_Direction::None:
         throw std::runtime_error("Expected valid type");
-    case M3_VFI_Direction::FORBIDDEN_ZONE:
+    case VFI_Direction::FORBIDDEN_ZONE:
     {
         //-Jd*q \leq \eta\tilde{d}, \tilde{d}=d-d_safe
         return (get_distance(x) - safe_distance_);
     }
-    case M3_VFI_Direction::SAFE_ZONE:
+    case VFI_Direction::SAFE_ZONE:
         //Jd*q \leq \eta\tilde{d}, \tilde{d}=d_safe-d
         return (safe_distance_ - get_distance(x));
     }
     throw std::runtime_error("Unexpected end of method.");
 }
 
-double M3_VFI::get_safe_distance() const
+double VFI::get_safe_distance() const
 {
     return safe_distance_;
 }
 
-M3_VFI_DistanceType M3_VFI::get_distance_type() const
+VFI_DistanceType VFI::get_distance_type() const
 {
     switch(type_)
     {
-    case M3_Primitive::None:
+    case Primitive::None:
         throw std::runtime_error("Expected valid type.");
-    case M3_Primitive::Point:
+    case Primitive::Point:
     {
-        return M3_VFI_DistanceType::EUCLIDEAN_SQUARED;
+        return VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
-    case M3_Primitive::Plane:
+    case Primitive::Plane:
     {
-        return M3_VFI_DistanceType::EUCLIDEAN;
+        return VFI_DistanceType::EUCLIDEAN;
     }
-    case M3_Primitive::Line:
+    case Primitive::Line:
     {
-        return M3_VFI_DistanceType::EUCLIDEAN_SQUARED;
+        return VFI_DistanceType::EUCLIDEAN_SQUARED;
     }
     }
     throw std::runtime_error("Unexpected end of method.");
 }
 
-void M3_VFI::set_last_real_distance(const DQ &y)
+void VFI::set_last_real_distance(const DQ &y)
 {
     last_real_distance_ = get_distance(y);
 }
 
-double M3_VFI::get_last_real_distance() const
+double VFI::get_last_real_distance() const
 {
     return last_real_distance_;
 }
 
-void M3_VFI::set_last_estimated_distance(const DQ &x_hat)
+void VFI::set_last_estimated_distance(const DQ &x_hat)
 {
     last_estimated_distance_ = get_distance(x_hat);
 }
 
-double M3_VFI::get_last_estimated_distance() const
+double VFI::get_last_estimated_distance() const
 {
     return last_estimated_distance_;
 }
 
-std::string M3_VFI::get_vfi_name() const
+std::string VFI::get_vfi_name() const
 {
     return workspace_entity_name_ + std::string("___") + robot_entity_name_;
 }
+
+}  // namespace marinholab::papers::tro2022::adaptive_control

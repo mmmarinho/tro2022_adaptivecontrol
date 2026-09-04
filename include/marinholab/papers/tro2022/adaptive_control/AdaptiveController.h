@@ -36,9 +36,13 @@
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/solvers/DQ_QPOASESSolver.h>
 
-#include"marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
-#include"marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
-#include"marinholab/papers/tro2022/adaptive_control/M3_VFI.h"
+#include"marinholab/papers/tro2022/adaptive_control/SerialManipulatorEDH.h"
+#include"marinholab/papers/tro2022/adaptive_control/MeasurementSpace.h"
+#include"marinholab/papers/tro2022/adaptive_control/VFI.h"
+
+
+namespace marinholab::papers::tro2022::adaptive_control
+{
 
 using namespace Eigen;
 using namespace DQ_robotics;
@@ -53,7 +57,7 @@ enum class Example_AdaptiveControlStrategy
 
 struct Example_SimulationParameters
 {
-    M3_MeasureSpace measure_space;
+    MeasureSpace measure_space;
     double proportional_gain;
     double vfi_gain;
     double vfi_weight;
@@ -65,35 +69,34 @@ struct Example_SimulationParameters
 //To the pure soul that will port this to DQ_robotics.
 //DQ_robotics needs to be altered before inheritance can happen here.
 //For instance
-//- add a class similar to DQ_SerialManipulator that provides parameter-space Jacobians, e.g. M3_SerialManipulatorEDH.
+//- add a class similar to DQ_SerialManipulator that provides parameter-space Jacobians, e.g. SerialManipulatorEDH.
 //- add a class similar to DQ_KinematicController but for the parameter-space.
-//- And many of the support classes in this example, such as Example_AdaptiveControlStrategy and M3_MeasureSpace.
-class M3_AdaptiveController
+//- And many of the support classes in this example, such as Example_AdaptiveControlStrategy and MeasureSpace.
+class AdaptiveController
 {
 private:
     const Example_SimulationParameters& simulation_arguments_;
-    std::shared_ptr<M3_SerialManipulatorEDH> robot_;
+    std::shared_ptr<SerialManipulatorEDH> robot_;
 
     DQ_QPOASESSolver task_space_solver_;
     DQ_QPOASESSolver parameter_space_solver_;
 
-    DQ _convert_pose_to_measure_space(const DQ& x, const M3_MeasureSpace& measure_space);
+    DQ _convert_pose_to_measure_space(const DQ& x, const MeasureSpace& measure_space);
 
-    static VectorXd _smart_vec(const DQ& x, const M3_MeasureSpace& measure_space);
-    static MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const M3_MeasureSpace& measure_space);
-    static MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const M3_MeasureSpace& measure_space);
+    static VectorXd _smart_vec(const DQ& x, const MeasureSpace& measure_space);
+    static MatrixXd _convert_pose_jacobian_to_measure_space(const MatrixXd& Jx, const DQ &x, const DQ &xd, const MeasureSpace& measure_space);
+    static MatrixXd _get_complimentary_measure_space_jacobian(const MatrixXd& Jx, const DQ &x, const MeasureSpace& measure_space);
  public:
-    M3_AdaptiveController()=delete;
-    M3_AdaptiveController(M3_AdaptiveController&)=delete;
-    M3_AdaptiveController(const std::shared_ptr<M3_SerialManipulatorEDH>& robot,
+    AdaptiveController()=delete;
+    AdaptiveController(AdaptiveController&)=delete;
+    AdaptiveController(const std::shared_ptr<SerialManipulatorEDH>& robot,
                                const Example_SimulationParameters &simulation_arguments);
 
     std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy &control_strategy,
                                                                                            const VectorXd& q,
                                                                                            const DQ& xd,
                                                                                            const DQ& y,
-                                                                                           std::vector<M3_VFI> &vfis);
+                                                                                           std::vector<VFI> &vfis);
 };
 
-
-
+}  // namespace marinholab::papers::tro2022::adaptive_control

@@ -11,6 +11,11 @@ Single-tree layout, consolidated from the old `python_wrapper/` design:
 - Python package at repo root: `marinholab/papers/tro2022/adaptive_control/`
   (only that package dir has an `__init__.py`; upper levels are namespace
   packages). Binding source: `src/adaptive_control_example_py.cpp`.
+- All C++ declarations live in the namespace
+  `marinholab::papers::tro2022::adaptive_control` (see below). The C++
+  identifiers dropped the legacy `M3_` prefix; headers/sources are now
+  `AdaptiveController`, `SerialManipulatorEDH`, `SimulatorDummy`, `VFI`,
+  `MeasurementSpace` (in `include/.../adaptive_control/` and `src/example/`).
 - `setup.py` / `pyproject.toml` at the repo root. Wheel is built from the
   repo root: `pip install .` (or `pip wheel . -w dist/`).
   - The `_core` extension must keep its default pybind11 name
@@ -24,13 +29,31 @@ Single-tree layout, consolidated from the old `python_wrapper/` design:
 - `test_python_wrapper.sh` = CI Python flow: install dqrobotics from PyPI,
   `pip install .`, run the import eval.
 
+## C++ namespace & naming
+- Every C++ declaration is in `marinholab::papers::tro2022::adaptive_control`
+  (mirrors the Python package path). The legacy `M3_` prefix is gone from C++.
+- C++ names: `AdaptiveController`, `SerialManipulatorEDH` (nested
+  `ParameterSpaceEDH` with `Example_Parameter`/`Example_ParameterType`),
+  `SimulatorDummy`, `VFI` (`Primitive`, `VFI_Direction`, `VFI_DistanceType`),
+  `MeasureSpace`, plus free helpers `get_measure_space_dimension`,
+  `get_variable_boundary_inequalities`, `closest_invariant_error`.
+- **The pybind11 API intentionally keeps the historical `M3_*` names**
+  (`M3_SerialManipulatorEDH`, `M3_SimulatorDummy`, `M3_AdaptiveController`,
+  `M3_VFI`, `M3_MeasureSpace`, ...). The Python package and the `book/`
+  tutorial consume these, so do not rename the Python-visible strings in
+  `src/adaptive_control_example_py.cpp` (they are the 2nd arg of
+  `py::enum_<T>(m, "M3_...")` / `py::class_<T>(m, "M3_...")` and the
+  `def_submodule("_M3_ParameterSpaceEDH", ...)` name).
+- Global-scope consumers (`src/adaptive_control_example.cpp` and the binding)
+  bring the namespace in with `using namespace marinholab::papers::tro2022::adaptive_control;`.
+
 ## Hard constraints
 - Keep the `sas_core` submodule and use of `sas::Clock` (required for a
   future step). `sas_object.cpp` must also be compiled because `sas::Clock`
   depends on `sas::Object` (link error otherwise).
-- `M3_AdaptiveController` uses `DQ_QPOASESSolver`, so `qpOASES` and
+- `AdaptiveController` (C++) uses `DQ_QPOASESSolver`, so `qpOASES` and
   `cpp-interface-qpoases` are required (cannot be removed).
-- Simulation is headless via `M3_SimulatorDummy` (16-object reference
+- Simulation is headless via `SimulatorDummy` (C++) (16-object reference
   scene built in code; box half-size 0.2 m in x/y; robot base at identity
   `DQ(1,0,0,0,0,0,0,0)`). No CoppeliaSim/V-REP/ZMQ.
 - DQ pose convention is 8-component (quaternion + translation).

@@ -36,13 +36,46 @@ Sample code and minimal example for [our TRO2022 paper](https://doi.org/10.1109/
 }
 ```
 
+## C++ code layout & namespaces
+
+All C++ declarations (headers under `include/marinholab/papers/tro2022/adaptive_control/`
+and sources under `src/example/`) live in the namespace
+
+```cpp
+marinholab::papers::tro2022::adaptive_control
+```
+
+which mirrors the Python package path `marinholab.papers.tro2022.adaptive_control`.
+To match the namespace, the C++ identifiers no longer carry the legacy `M3_`
+prefix; each class is named after the package path instead:
+
+| `marinholab::papers::tro2022::adaptive_control::` | File |
+|---|---|
+| `AdaptiveController` | `AdaptiveController.{h,cpp}` |
+| `SerialManipulatorEDH` (with nested `ParameterSpaceEDH`) | `SerialManipulatorEDH.{h,cpp}` |
+| `SimulatorDummy` (headless, in-memory scene) | `SimulatorDummy.{h,cpp}` |
+| `VFI` (with `Primitive`, `VFI_Direction`, `VFI_DistanceType`) | `VFI.{h,cpp}` |
+| `MeasureSpace` (with `get_measure_space_dimension`) | `MeasurementSpace.{h,cpp}` |
+
+The free helpers the example relies on (`get_variable_boundary_inequalities`,
+`closest_invariant_error`, `get_example_scene_vfis`, `randomize_parameters`,
+`set_parameter_space_boundaries`) are in the same namespace; the standalone
+example (`src/adaptive_control_example.cpp`) pulls it in with
+`using namespace marinholab::papers::tro2022::adaptive_control;`.
+
+**The Python API is unchanged.** The pybind11 module still exposes the
+historical `M3_*` names (`M3_SerialManipulatorEDH`, `M3_SimulatorDummy`,
+`M3_AdaptiveController`, `M3_VFI`, `M3_MeasureSpace`, ...), so the Python
+package and the notebook under `book/` keep working without changes. The `M3_`
+prefix was dropped only from the C++ layer.
+
 ## Standalone Example
 
 - The estimated robot model starts out **on purpose** very wrong, to evaluate the adaptation.
 - The estimation usually converges within a few seconds using measurements from a simulated sensor.
 - Simultaneously, the robot proceeds through the box toward the target poses, without collisions.
-- The example runs **headless** on the in-memory stand-in simulator (`M3_SimulatorDummy`), so no external simulator is required.
-- You can change the pose of the `xd0` and `xd1` target objects (see `M3_SimulatorDummy::load_reference_scene`), as long as you do it **before** the simulation starts.
+- The example runs **headless** on the in-memory stand-in simulator (`SimulatorDummy`), so no external simulator is required.
+- You can change the pose of the `xd0` and `xd1` target objects (see `SimulatorDummy::load_reference_scene`), as long as you do it **before** the simulation starts.
 
 The paper's original demonstration (recorded with the robot model in the GUI):
 
@@ -111,7 +144,7 @@ chmod +x .build.sh
 
 ## Running
 
-The example runs headless on the in-memory stand-in simulator (`M3_SimulatorDummy`):
+The example runs headless on the in-memory stand-in simulator (`SimulatorDummy`):
 
 ```bash
 cd ~/git/tro2022_adaptivecontrol
@@ -153,6 +186,7 @@ Reference timeout for xd1
 
 ## Changelog
 
+- 2026.09. Dropped the legacy `M3_` prefix from the C++ identifiers and moved all C++ code into the `marinholab::papers::tro2022::adaptive_control` namespace (headers/sources renamed to `AdaptiveController`, `SerialManipulatorEDH`, `SimulatorDummy`, `VFI`, `MeasurementSpace`). The Python API is unchanged and still exposes the historical `M3_*` names.
 - 2026.08. Removed the dependency on the external robot simulator and its network interface: the example now runs headless on the in-memory stand-in simulator `M3_SimulatorDummy` (dry testing), so no external simulator is required to build or run it.
 - 2025.05. Updating code to work with an external-simulator-based interface.
 - 2025.06. Removed Python wrapper instructions now that it's available via PyPI.

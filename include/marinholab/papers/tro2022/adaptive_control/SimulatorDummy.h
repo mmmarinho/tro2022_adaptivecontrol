@@ -33,12 +33,16 @@
 #include <dqrobotics/utils/DQ_Geometry.h>
 #include <dqrobotics/utils/DQ_Math.h>
 
-#include "marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
+#include "marinholab/papers/tro2022/adaptive_control/SerialManipulatorEDH.h"
+
+
+namespace marinholab::papers::tro2022::adaptive_control
+{
 
 using namespace DQ_robotics;
 
 /**
- * @brief M3_SimulatorDummy is an in-memory stand-in for a real robot simulator
+ * @brief SimulatorDummy is an in-memory stand-in for a real robot simulator
  * that stores named object poses and robot configurations.
  *
  * It exists so that the adaptive control example can be built and run
@@ -56,9 +60,9 @@ using namespace DQ_robotics;
  * the joint limits may be adjusted per experiment.
  *
  * A future real-simulator backend can implement the same interface;
- * M3_SimulatorDummy itself is that backend for the headless case.
+ * SimulatorDummy itself is that backend for the headless case.
  */
-class M3_SimulatorDummy
+class SimulatorDummy
 {
     //Object poses, keyed by object name (as used in the original scene)
     std::unordered_map<std::string, DQ> object_poses_;
@@ -71,7 +75,7 @@ class M3_SimulatorDummy
 
 public:
     /// Default constructor: empty scene, zero configuration.
-    M3_SimulatorDummy() = default;
+    SimulatorDummy() = default;
 
     //*************** Object poses (the "scene") ***************
 
@@ -141,5 +145,7 @@ public:
      * the TRO2022 example (modified Denavit-Hartmann parameters and joint
      * limits), with identity base and effector frames.
      */
-    static M3_SerialManipulatorEDH vs050_raw_kinematics();
+    static SerialManipulatorEDH vs050_raw_kinematics();
 };
+
+}  // namespace marinholab::papers::tro2022::adaptive_control

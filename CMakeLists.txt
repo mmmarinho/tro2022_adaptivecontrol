@@ -51,11 +51,11 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 find_package(Threads REQUIRED)
 
 add_library(adaptive_control
-        src/example/M3_AdaptiveController.cpp
-        src/example/M3_VFI.cpp
-        src/example/M3_SerialManipulatorEDH.cpp
-        src/example/M3_SimulatorDummy.cpp
-        src/example/M3_MeasurementSpace.cpp
+        src/example/AdaptiveController.cpp
+        src/example/VFI.cpp
+        src/example/SerialManipulatorEDH.cpp
+        src/example/SimulatorDummy.cpp
+        src/example/MeasurementSpace.cpp
 
         # sas::Clock (timing statistics) depends on sas::Object internally,
         # so both translation units are needed.
@@ -104,7 +104,7 @@ add_subdirectory(submodules/qpOASES)
 
 target_link_libraries(adaptive_control PUBLIC dqrobotics qpOASES)
 
-# Stand-alone example. Runs headless on the in-memory M3_SimulatorDummy,
+# Stand-alone example. Runs headless on the in-memory SimulatorDummy,
 # so it no longer requires any external simulator.
 add_executable(${PROJECT_NAME}
     src/adaptive_control_example.cpp
