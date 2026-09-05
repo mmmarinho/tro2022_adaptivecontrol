@@ -337,7 +337,14 @@ The paper's original demonstration (recorded with the robot model in the GUI):
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
-## Usage 
+## Usage
+
+> **Note (stale):** the pre-compiled download below is release
+> `v23.05.1` from **2023-05-26**, which predates the 2025.05 external-simulator
+> removal, the 2026.08 headless `SimulatorDummy` change, and the 2026.09
+> `M3_`/namespace refactor. It is not current with the repository, and
+> **Build from source** is the supported way to run the example as it stands
+> today.
 
 ### Download & extract the standalone version (only do this once)
 ```bash
@@ -410,26 +417,61 @@ chmod +x .run.sh
 
 ## Example console output of the results
 
-Running on an 8 core Ubuntu VM.
-
-*Not considering the setup step prints*
+Running on an 8-core Ubuntu VM. The example runs the scenario **twice** — once
+with full adaptation (`[6]`) and once without it (`[7]`) — so you can compare
+the final task errors. The exact numbers vary from run to run: the initial
+parameter estimate is randomized and there is **no fixed seed** (unlike the
+seeded Python example above). What is stable is the *structure*, shown below
+(the per-attempt `Finding suitable parameters …` and occasional `… estimated
+penetration: …` lines are elided with `...`):
 
 ```console
+[1] Loading the reference scene (in-memory simulator)...
+[2] Initializing robot and models...
+[3] Initializing xd...
+[4] Initializing VFIs...
+[5] Making our initial parameter estimate wrong, but plausible...
+...
+[6] Running with full adaptation.
+...
 Reference timeout for xd0
-  Average computational time = 0.00126314 seconds.
-  Clock overruns =7 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
-  Final task pose error norm 2.37699e-15 (Dual quaternion norm).
-  Final task translation error norm 0 (in meters).
-  Final measurement error norm 9.3756e-16 (Dual quaternion norm).
-  Final measurement translation error norm 0 (in meters).
+  Average computational time = 0.00223711 seconds.
+  Clock overruns = 0 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm = 0.793335 (Dual quaternion norm).
+  Final task translation error norm = 0.563789 (in meters).
+  Final measurement error norm = 0.240959 (Dual quaternion norm).
+  Final measurement translation error norm = 0.159095 (in meters).
 Reference timeout for xd1
-  Average computational time = 0.000902905 seconds.
-  Clock overruns =7 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
-  Final task pose error norm 0.0225817 (Dual quaternion norm).
-  Final task translation error norm 0.044178 (in meters).
-  Final measurement error norm 0.000940036 (Dual quaternion norm).
-  Final measurement translation error norm 0.001836 (in meters).
+  Average computational time = 0.00247141 seconds.
+  Clock overruns = 0 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm = 0.742961 (Dual quaternion norm).
+  Final task translation error norm = 0.130314 (in meters).
+  Final measurement error norm = 0.231114 (Dual quaternion norm).
+  Final measurement translation error norm = 0.061223 (in meters).
+[7] Running WITHOUT adaptation.
+...
+Reference timeout for xd0
+  Average computational time = 0.000304637 seconds.
+  Clock overruns = 0 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm = 0.775077 (Dual quaternion norm).
+  Final task translation error norm = 0.725812 (in meters).
+  Final measurement error norm = 0 (Dual quaternion norm).
+  Final measurement translation error norm = 0.123291 (in meters).
+Reference timeout for xd1
+  Average computational time = 0.000312849 seconds.
+  Clock overruns = 0 (Too many, i.e. hundreds, indicate that the sampling time is too low for this CPU).
+  Final task pose error norm = 0.685748 (Dual quaternion norm).
+  Final task translation error norm = 0.213954 (in meters).
+  Final measurement error norm = 0 (Dual quaternion norm).
+  Final measurement translation error norm = 0.122333 (in meters).
 ```
+
+Notes:
+
+- The final task errors are **not** zero by design: the last target (`xd1`) is
+  intentionally unreachable (see *Known limitations*).
+- `Clock overruns = 0` means the sampling time was adequate on that machine; a
+  large (hundreds+) number means it was not.
 
 ## Tested on
 
@@ -442,7 +484,8 @@ Reference timeout for xd1
 
 ## Changelog
 
+- 2026.09. README: added a self-contained Python + pyplot example (the adaptive control loop run end-to-end, headlessly, with a comparison figure); refreshed the C++ console-output sample to match the current two-run (with/without adaptation) example; and flagged the pre-compiled `v23.05.1` download as a 2023 snapshot that predates the headless and `M3_`-refactor changes.
 - 2026.09. Dropped the legacy `M3_` prefix from the C++ identifiers and moved all C++ code into the `marinholab::papers::tro2022::adaptive_control` namespace (headers/sources renamed to `AdaptiveController`, `SerialManipulatorEDH`, `SimulatorDummy`, `VFI`, `MeasurementSpace`). The Python API was aligned with the C++ classes in the same step: the pybind11 module now exposes `SerialManipulatorEDH`, `SimulatorDummy`, `AdaptiveController`, `VFI`, `MeasureSpace`, `Primitive`, `VFI_Direction`, `VFI_DistanceType` (and the `_ParameterSpaceEDH` submodule) — the historical `M3_*` Python names are gone, and the `book/` tutorial + `adaptive_control_import_eval.py` were updated to the new names.
-- 2026.08. Removed the dependency on the external robot simulator and its network interface: the example now runs headless on the in-memory stand-in simulator `M3_SimulatorDummy` (dry testing), so no external simulator is required to build or run it.
-- 2025.05. Updating code to work with an external-simulator-based interface.
+- 2026.08. Removed the dependency on the external robot simulator and its network interface: the example now runs headless on the in-memory stand-in simulator `SimulatorDummy` (dry testing), so no external simulator is required to build or run it.
 - 2025.06. Removed Python wrapper instructions now that it's available via PyPI.
+- 2025.05. Updating code to work with an external-simulator-based interface.
