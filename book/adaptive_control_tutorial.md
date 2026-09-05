@@ -44,7 +44,7 @@ parameters are deliberately wrong, and a control law that
 3. enforcing **collision avoidance** through vector-field inequalities (VFIs).
 
 Everything is self-contained and runs *headlessly* on an in-memory stand-in
-simulator (`M3_SimulatorDummy`) that reconstructs the nominal reference scene:
+simulator (`SimulatorDummy`) that reconstructs the nominal reference scene:
 a 6-DoF VS050-style robot, a box workspace (4 walls, 2 tubes) and two task
 targets. No external simulator, robot, or ROS is required.
 
@@ -183,7 +183,7 @@ try:
     import marinholab.papers.tro2022.adaptive_control._core as _core
     # The parameter-space submodule is not re-exported by the package `__init__`,
     # so pull it straight from the compiled core.
-    M3_ParameterSpaceEDH = _core._M3_ParameterSpaceEDH
+    ParameterSpaceEDH = _core._ParameterSpaceEDH
     # The C++ helper deg2rad is not re-exported in Python.
     deg2rad = np.radians
 except Exception as _e:  # pragma: no cover - depends on the environment
@@ -208,7 +208,7 @@ control frequency.
 ````{code-cell}
 if example_available:
     simulation_parameters = Example_SimulationParameters(
-        M3_MeasureSpace.Pose,  # measure the full pose
+        MeasureSpace.Pose,  # measure the full pose
         20.0,                  # proportional_gain
         5,                     # vfi_gain
         0.02,                  # vfi_weight
@@ -233,7 +233,7 @@ Both share the same VS050 joint structure; only the parameters differ.
 
 ````{code-cell}
 if example_available:
-    vi = M3_SimulatorDummy()
+    vi = SimulatorDummy()
     vi.load_reference_scene()
     print("scene objects:", ", ".join(sorted(vi.get_object_names())))
 
@@ -247,11 +247,11 @@ if example_available:
     effector_frame = r + 0.5 * E_ * k_ * 0.15688 * r
 
     # Two independent instances of the same kinematic structure.
-    real_robot = M3_SimulatorDummy.vs050_raw_kinematics()
+    real_robot = SimulatorDummy.vs050_raw_kinematics()
     real_robot.set_base_frame(real_base_frame)
     real_robot.set_effector_frame(effector_frame)
 
-    estimated_robot = M3_SimulatorDummy.vs050_raw_kinematics()
+    estimated_robot = SimulatorDummy.vs050_raw_kinematics()
     estimated_robot.set_base_frame(real_base_frame)
     estimated_robot.set_effector_frame(effector_frame)
 
@@ -284,29 +284,29 @@ if example_available:
         opa = other_parameters_angular_confidence_degrees
         bp = robot.get_base_parameters()
         ep = robot.get_effector_parameters()
-        P = M3_ParameterSpaceEDH.Example_ParameterType
+        P = ParameterSpaceEDH.Example_ParameterType
         parameter_space = [
-            M3_ParameterSpaceEDH.Example_Parameter(-1, P.base_x, bp[0].value_, bp[0].value_ - bl, bp[0].value_ + bl),
-            M3_ParameterSpaceEDH.Example_Parameter(-1, P.base_y, bp[1].value_, bp[1].value_ - bl, bp[1].value_ + bl),
-            M3_ParameterSpaceEDH.Example_Parameter(-1, P.base_z, bp[2].value_, bp[2].value_ - bl, bp[2].value_ + bl),
-            M3_ParameterSpaceEDH.Example_Parameter(-1, P.base_alpha, bp[3].value_, bp[3].value_ - deg2rad(ba), bp[3].value_ + deg2rad(ba)),
-            M3_ParameterSpaceEDH.Example_Parameter(-1, P.base_beta, bp[4].value_, bp[4].value_ - deg2rad(ba), bp[4].value_ + deg2rad(ba)),
-            M3_ParameterSpaceEDH.Example_Parameter(-1, P.base_gamma, bp[5].value_, bp[5].value_ - deg2rad(ba), bp[5].value_ + deg2rad(ba)),
+            ParameterSpaceEDH.Example_Parameter(-1, P.base_x, bp[0].value_, bp[0].value_ - bl, bp[0].value_ + bl),
+            ParameterSpaceEDH.Example_Parameter(-1, P.base_y, bp[1].value_, bp[1].value_ - bl, bp[1].value_ + bl),
+            ParameterSpaceEDH.Example_Parameter(-1, P.base_z, bp[2].value_, bp[2].value_ - bl, bp[2].value_ + bl),
+            ParameterSpaceEDH.Example_Parameter(-1, P.base_alpha, bp[3].value_, bp[3].value_ - deg2rad(ba), bp[3].value_ + deg2rad(ba)),
+            ParameterSpaceEDH.Example_Parameter(-1, P.base_beta, bp[4].value_, bp[4].value_ - deg2rad(ba), bp[4].value_ + deg2rad(ba)),
+            ParameterSpaceEDH.Example_Parameter(-1, P.base_gamma, bp[5].value_, bp[5].value_ - deg2rad(ba), bp[5].value_ + deg2rad(ba)),
         ]
         for li in range(6):
             parameter_space += [
-                M3_ParameterSpaceEDH.Example_Parameter(li, P.theta, robot.get_theta(li), robot.get_theta(li) - deg2rad(opa), robot.get_theta(li) + deg2rad(opa)),
-                M3_ParameterSpaceEDH.Example_Parameter(li, P.d, robot.get_d(li), robot.get_d(li) - opl, robot.get_d(li) + opl),
-                M3_ParameterSpaceEDH.Example_Parameter(li, P.a, robot.get_a(li), robot.get_a(li) - opl, robot.get_a(li) + opl),
-                M3_ParameterSpaceEDH.Example_Parameter(li, P.alpha, robot.get_alpha(li), robot.get_alpha(li) - deg2rad(opa), robot.get_alpha(li) + deg2rad(opa)),
+                ParameterSpaceEDH.Example_Parameter(li, P.theta, robot.get_theta(li), robot.get_theta(li) - deg2rad(opa), robot.get_theta(li) + deg2rad(opa)),
+                ParameterSpaceEDH.Example_Parameter(li, P.d, robot.get_d(li), robot.get_d(li) - opl, robot.get_d(li) + opl),
+                ParameterSpaceEDH.Example_Parameter(li, P.a, robot.get_a(li), robot.get_a(li) - opl, robot.get_a(li) + opl),
+                ParameterSpaceEDH.Example_Parameter(li, P.alpha, robot.get_alpha(li), robot.get_alpha(li) - deg2rad(opa), robot.get_alpha(li) + deg2rad(opa)),
             ]
         parameter_space += [
-            M3_ParameterSpaceEDH.Example_Parameter(6, P.eff_x, ep[0].value_, ep[0].value_ - el, ep[0].value_ + el),
-            M3_ParameterSpaceEDH.Example_Parameter(6, P.eff_y, ep[1].value_, ep[1].value_ - el, ep[1].value_ + el),
-            M3_ParameterSpaceEDH.Example_Parameter(6, P.eff_z, ep[2].value_, ep[2].value_ - el, ep[2].value_ + el),
-            M3_ParameterSpaceEDH.Example_Parameter(6, P.eff_alpha, ep[3].value_, ep[3].value_ - deg2rad(ea), ep[3].value_ + deg2rad(ea)),
-            M3_ParameterSpaceEDH.Example_Parameter(6, P.eff_beta, ep[4].value_, ep[4].value_ - deg2rad(ea), ep[4].value_ + deg2rad(ea)),
-            M3_ParameterSpaceEDH.Example_Parameter(6, P.eff_gamma, ep[5].value_, ep[5].value_ - deg2rad(ea), ep[5].value_ + deg2rad(ea)),
+            ParameterSpaceEDH.Example_Parameter(6, P.eff_x, ep[0].value_, ep[0].value_ - el, ep[0].value_ + el),
+            ParameterSpaceEDH.Example_Parameter(6, P.eff_y, ep[1].value_, ep[1].value_ - el, ep[1].value_ + el),
+            ParameterSpaceEDH.Example_Parameter(6, P.eff_z, ep[2].value_, ep[2].value_ - el, ep[2].value_ + el),
+            ParameterSpaceEDH.Example_Parameter(6, P.eff_alpha, ep[3].value_, ep[3].value_ - deg2rad(ea), ep[3].value_ + deg2rad(ea)),
+            ParameterSpaceEDH.Example_Parameter(6, P.eff_beta, ep[4].value_, ep[4].value_ - deg2rad(ea), ep[4].value_ + deg2rad(ea)),
+            ParameterSpaceEDH.Example_Parameter(6, P.eff_gamma, ep[5].value_, ep[5].value_ - deg2rad(ea), ep[5].value_ + deg2rad(ea)),
         ]
         robot.set_parameter_space(parameter_space)
 
@@ -359,13 +359,13 @@ if example_available:
     for (ref_dq, radius, sphere_name) in vfi_reference_dqs:
         for wall in ("cube_40x40_wall_1", "cube_40x40_wall_2",
                      "cube_40x40_wall_3", "cube_40x40_wall_4"):
-            vfis.append(M3_VFI(wall, sphere_name, M3_Primitive.Plane, vi,
+            vfis.append(VFI(wall, sphere_name, Primitive.Plane, vi,
                                radius + wall_distance,
-                               M3_VFI_Direction.FORBIDDEN_ZONE, 7, ref_dq, ""))
+                               VFI_Direction.FORBIDDEN_ZONE, 7, ref_dq, ""))
         for tube in ("cube_40x40_tube_1", "cube_40x40_tube_2"):
-            vfis.append(M3_VFI(tube, sphere_name, M3_Primitive.Line, vi,
+            vfis.append(VFI(tube, sphere_name, Primitive.Line, vi,
                                (radius + tube_distance) ** 2,
-                               M3_VFI_Direction.FORBIDDEN_ZONE, 7, ref_dq, ""))
+                               VFI_Direction.FORBIDDEN_ZONE, 7, ref_dq, ""))
     for vfi in vfis:
         vfi.initialize()
 
@@ -401,10 +401,10 @@ if example_available:
             for vfi in vfis:
                 de = vfi.get_distance_error(x_hat)
                 dt_ = vfi.get_distance_type()
-                if dt_ == M3_VFI_DistanceType.EUCLIDEAN and de < -0.001:
+                if dt_ == VFI_DistanceType.EUCLIDEAN and de < -0.001:
                     found = False
                     break
-                if dt_ == M3_VFI_DistanceType.EUCLIDEAN_SQUARED and de < -0.00001:
+                if dt_ == VFI_DistanceType.EUCLIDEAN_SQUARED and de < -0.00001:
                     found = False
                     break
             print(f"  Finding suitable parameters {{t={time.perf_counter() - t0:.3f}s}}, tries={counter}.")
@@ -430,7 +430,7 @@ faithful, step-bounded version of the same loop.
 
 ````{code-cell}
 if example_available:
-    adaptive_controller = M3_AdaptiveController(estimated_robot, simulation_parameters)
+    adaptive_controller = AdaptiveController(estimated_robot, simulation_parameters)
     vi.start_simulation()
 
     xds = [vi.get_object_pose("xd0"),  # safe approach reference (going)
@@ -542,5 +542,5 @@ control example of Marinho & Adorno (TRO 2022):
   moves the estimated model towards the true model and reduces the
   estimate-vs-reality error, while the robot avoids the obstacles.
 
-Everything ran headlessly on the in-memory `M3_SimulatorDummy`; no simulator,
+Everything ran headlessly on the in-memory `SimulatorDummy`; no simulator,
 robot, or ROS was required.
