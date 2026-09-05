@@ -49,7 +49,7 @@ PYBIND11_MODULE(_core, m) {
     /// "example/MeasurementSpace.h"
 
     //enum class MeasureSpace
-    py::enum_<MeasureSpace>(m, "M3_MeasureSpace")
+    py::enum_<MeasureSpace>(m, "MeasureSpace")
             .value("None", MeasureSpace::None)
             .value("Pose", MeasureSpace::Pose)
             .value("Rotation", MeasureSpace::Rotation)
@@ -100,7 +100,7 @@ PYBIND11_MODULE(_core, m) {
             <
             AdaptiveController,
             std::shared_ptr<AdaptiveController>
-            >(m, "M3_AdaptiveController")
+            >(m, "AdaptiveController")
             .def(py::init
                  <const std::shared_ptr<SerialManipulatorEDH>&,
                  const Example_SimulationParameters &
@@ -110,7 +110,7 @@ PYBIND11_MODULE(_core, m) {
     /// "example/AdaptiveController.h"
 
     //enum class Primitive
-    py::enum_<Primitive>(m, "M3_Primitive")
+    py::enum_<Primitive>(m, "Primitive")
             .value("None", Primitive::None)
             .value("Point", Primitive::Point)
             .value("Plane", Primitive::Plane)
@@ -118,21 +118,21 @@ PYBIND11_MODULE(_core, m) {
             .export_values();
 
     //enum class VFI_Direction
-    py::enum_<VFI_Direction>(m, "M3_VFI_Direction")
+    py::enum_<VFI_Direction>(m, "VFI_Direction")
             .value("None", VFI_Direction::None)
             .value("FORBIDDEN_ZONE", VFI_Direction::FORBIDDEN_ZONE)
             .value("SAFE_ZONE", VFI_Direction::SAFE_ZONE)
             .export_values();
 
     //enum class VFI_DistanceType
-    py::enum_<VFI_DistanceType>(m, "M3_VFI_DistanceType")
+    py::enum_<VFI_DistanceType>(m, "VFI_DistanceType")
             .value("None", VFI_DistanceType::None)
             .value("EUCLIDEAN", VFI_DistanceType::EUCLIDEAN)
             .value("EUCLIDEAN_SQUARED", VFI_DistanceType::EUCLIDEAN_SQUARED)
             .export_values();
 
     //class VFI
-    py::class_<VFI,std::shared_ptr<VFI>>(m, "M3_VFI")
+    py::class_<VFI,std::shared_ptr<VFI>>(m, "VFI")
             .def(py::init
                  <
                  const std::string&,
@@ -163,7 +163,7 @@ PYBIND11_MODULE(_core, m) {
     /// "example/SerialManipulatorEDH.h"
 
     //namespace ParameterSpaceEDH
-    py::module ParameterSpaceEDH = m.def_submodule("_M3_ParameterSpaceEDH", "");
+    py::module ParameterSpaceEDH = m.def_submodule("_ParameterSpaceEDH", "");
 
     //enum class Example_ParameterType
     py::enum_<ParameterSpaceEDH::Example_ParameterType>(ParameterSpaceEDH, "Example_ParameterType")
@@ -205,7 +205,7 @@ PYBIND11_MODULE(_core, m) {
 
     // This is originally wrapped in dqrobotics. Better to know what to expect in this case. Nonetheless, this was needed
     // in 2025.05 and otherwise had the error
-    // ImportError: generic_type: type "M3_SerialManipulatorEDH" referenced unknown base type "DQ_robotics::DQ_SerialManipulator"
+    // ImportError: generic_type: type "SerialManipulatorEDH" referenced unknown base type "DQ_robotics::DQ_SerialManipulator"
     // This was solved by me a long time ago, the DQ_SerialManipulator imported be installed beforehand in Python.
     // see test_python_wrapper.sh or look up the history if the file no longer exists.
     // However, this does not seem to always work. It might fail for the slightest of differences in versions.
@@ -222,7 +222,7 @@ PYBIND11_MODULE(_core, m) {
             > SerialManipulatorEDH
             (
                 m,
-                "M3_SerialManipulatorEDH"
+                "SerialManipulatorEDH"
                 );
 
     py::enum_<SerialManipulatorEDH::JOINT_TYPES>(SerialManipulatorEDH, "JOINT_TYPES")
@@ -349,7 +349,7 @@ PYBIND11_MODULE(_core, m) {
     /// "SimulatorDummy.h"
 
     //class SimulatorDummy
-    py::class_<SimulatorDummy, std::shared_ptr<SimulatorDummy>>(m, "M3_SimulatorDummy")
+    py::class_<SimulatorDummy, std::shared_ptr<SimulatorDummy>>(m, "SimulatorDummy")
             .def(py::init<>())
             .def("get_object_pose", &SimulatorDummy::get_object_pose, "", py::arg("object_name"))
             .def("set_object_pose", &SimulatorDummy::set_object_pose, "", py::arg("object_name"), py::arg("pose"))

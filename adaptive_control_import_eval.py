@@ -85,7 +85,7 @@ def setup_plot():
     ax.set_zlim((-plot_size, plot_size))
     return fig, ax
 
-def vs050_raw_kinematics() -> M3_SerialManipulatorEDH:
+def vs050_raw_kinematics() -> SerialManipulatorEDH:
     """
     Gets the ideal kinematics of the VS050 robot.
     :return:
@@ -101,7 +101,7 @@ def vs050_raw_kinematics() -> M3_SerialManipulatorEDH:
     lower_joint_limits = np.array([-170, -100, -60, -265, -119, -355]) * pi / 180
     upper_joint_limits = np.array([170, 100, 124, 265, 89.9, 355]) * pi / 180
 
-    robot = M3_SerialManipulatorEDH(VS050_dh_matrix)
+    robot = SerialManipulatorEDH(VS050_dh_matrix)
     robot.set_lower_q_limit(lower_joint_limits)
     robot.set_upper_q_limit(upper_joint_limits)
 
