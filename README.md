@@ -46,8 +46,8 @@ marinholab::papers::tro2022::adaptive_control
 ```
 
 which mirrors the Python package path `marinholab.papers.tro2022.adaptive_control`.
-To match the namespace, the C++ identifiers no longer carry the legacy `M3_`
-prefix; each class is named after the package path instead:
+The identifiers no longer carry the legacy `M3_` prefix; each class is named
+after the package path instead:
 
 | `marinholab::papers::tro2022::adaptive_control::` | File |
 |---|---|
@@ -63,11 +63,14 @@ The free helpers the example relies on (`get_variable_boundary_inequalities`,
 example (`src/adaptive_control_example.cpp`) pulls it in with
 `using namespace marinholab::papers::tro2022::adaptive_control;`.
 
-**The Python API is unchanged.** The pybind11 module still exposes the
-historical `M3_*` names (`M3_SerialManipulatorEDH`, `M3_SimulatorDummy`,
-`M3_AdaptiveController`, `M3_VFI`, `M3_MeasureSpace`, ...), so the Python
-package and the notebook under `book/` keep working without changes. The `M3_`
-prefix was dropped only from the C++ layer.
+**The Python API uses the same names as the C++ classes.** The pybind11
+module exposes `SerialManipulatorEDH`, `SimulatorDummy`, `AdaptiveController`,
+`VFI`, `MeasureSpace`, `Primitive`, `VFI_Direction`, `VFI_DistanceType`
+(and the `_ParameterSpaceEDH` submodule with `Example_Parameter` /
+`Example_ParameterType`), so there is a 1:1 match between the C++ and Python
+layers. Note: this dropped the historical `M3_*` Python names — consumers
+that used them need a mechanical `M3_` removal (the `book/` tutorial and
+`adaptive_control_import_eval.py` have been updated accordingly).
 
 ## Standalone Example
 
@@ -186,7 +189,7 @@ Reference timeout for xd1
 
 ## Changelog
 
-- 2026.09. Dropped the legacy `M3_` prefix from the C++ identifiers and moved all C++ code into the `marinholab::papers::tro2022::adaptive_control` namespace (headers/sources renamed to `AdaptiveController`, `SerialManipulatorEDH`, `SimulatorDummy`, `VFI`, `MeasurementSpace`). The Python API is unchanged and still exposes the historical `M3_*` names.
+- 2026.09. Dropped the legacy `M3_` prefix from the C++ identifiers and moved all C++ code into the `marinholab::papers::tro2022::adaptive_control` namespace (headers/sources renamed to `AdaptiveController`, `SerialManipulatorEDH`, `SimulatorDummy`, `VFI`, `MeasurementSpace`). The Python API was aligned with the C++ classes in the same step: the pybind11 module now exposes `SerialManipulatorEDH`, `SimulatorDummy`, `AdaptiveController`, `VFI`, `MeasureSpace`, `Primitive`, `VFI_Direction`, `VFI_DistanceType` (and the `_ParameterSpaceEDH` submodule) — the historical `M3_*` Python names are gone, and the `book/` tutorial + `adaptive_control_import_eval.py` were updated to the new names.
 - 2026.08. Removed the dependency on the external robot simulator and its network interface: the example now runs headless on the in-memory stand-in simulator `M3_SimulatorDummy` (dry testing), so no external simulator is required to build or run it.
 - 2025.05. Updating code to work with an external-simulator-based interface.
 - 2025.06. Removed Python wrapper instructions now that it's available via PyPI.

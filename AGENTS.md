@@ -37,13 +37,17 @@ Single-tree layout, consolidated from the old `python_wrapper/` design:
   `SimulatorDummy`, `VFI` (`Primitive`, `VFI_Direction`, `VFI_DistanceType`),
   `MeasureSpace`, plus free helpers `get_measure_space_dimension`,
   `get_variable_boundary_inequalities`, `closest_invariant_error`.
-- **The pybind11 API intentionally keeps the historical `M3_*` names**
-  (`M3_SerialManipulatorEDH`, `M3_SimulatorDummy`, `M3_AdaptiveController`,
-  `M3_VFI`, `M3_MeasureSpace`, ...). The Python package and the `book/`
-  tutorial consume these, so do not rename the Python-visible strings in
-  `src/adaptive_control_example_py.cpp` (they are the 2nd arg of
-  `py::enum_<T>(m, "M3_...")` / `py::class_<T>(m, "M3_...")` and the
-  `def_submodule("_M3_ParameterSpaceEDH", ...)` name).
+- **The pybind11 API uses the same names as the C++ classes** — a 1:1
+  match: `SerialManipulatorEDH`, `SimulatorDummy`, `AdaptiveController`,
+  `VFI`, `MeasureSpace`, `Primitive`, `VFI_Direction`, `VFI_DistanceType`
+  (and the `_ParameterSpaceEDH` submodule with `Example_Parameter` /
+  `Example_ParameterType`). The historical `M3_*` Python names are gone;
+  keep the Python-visible strings in `src/adaptive_control_example_py.cpp`
+  (2nd arg of `py::enum_<T>(m, "...")` / `py::class_<T>(m, "...")` and the
+  `def_submodule("_ParameterSpaceEDH", ...)` name) in sync with the C++
+  class/enum names. If you rename a C++ class, rename the binding string and
+  every Python consumer (`adaptive_control_import_eval.py`, `book/`
+  tutorial) in the same change.
 - Global-scope consumers (`src/adaptive_control_example.cpp` and the binding)
   bring the namespace in with `using namespace marinholab::papers::tro2022::adaptive_control;`.
 

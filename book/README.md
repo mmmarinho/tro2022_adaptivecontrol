@@ -13,7 +13,7 @@ repository.
 
 | Title | Content |
 |-------|---------|
-| [Adaptive Constrained Kinematic Control (Python example)](./adaptive_control_tutorial.ipynb) | Runs the example headlessly on the in-memory `M3_SimulatorDummy`, with a *deliberately wrong* initial model that is **adapted** online from task-space measurements, and compares a run **with** adaptation (`FULL`) against one **without** (`TASK_ONLY`). |
+| [Adaptive Constrained Kinematic Control (Python example)](./adaptive_control_tutorial.ipynb) | Runs the example headlessly on the in-memory `SimulatorDummy`, with a *deliberately wrong* initial model that is **adapted** online from task-space measurements, and compares a run **with** adaptation (`FULL`) against one **without** (`TASK_ONLY`). |
 
 ## Running the notebook
 
