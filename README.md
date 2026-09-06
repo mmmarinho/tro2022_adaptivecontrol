@@ -337,31 +337,7 @@ The paper's original demonstration (recorded with the robot model in the GUI):
 
 https://github.com/mmmarinho/tro2022_adaptivecontrol/assets/46012516/2abe0b0b-6e48-46e9-9a86-061ba013b355
 
-## Usage
-
-> **Note (stale):** the pre-compiled download below is release
-> `v23.05.1` from **2023-05-26**, which predates the 2025.05 external-simulator
-> removal, the 2026.08 headless `SimulatorDummy` change, and the 2026.09
-> `M3_`/namespace refactor. It is not current with the repository, and
-> **Build from source** is the supported way to run the example as it stands
-> today.
-
-### Download & extract the standalone version (only do this once)
-```bash
-cd ~
-sudo apt install curl jq -y
-wget $(curl -sL https://api.github.com/repos/mmmarinho/tro2022_adaptivecontrol/releases/latest | jq -r '.assets[].browser_download_url')
-tar -xvf tro2022_adaptivecontrol_example.tar.xz
-```
-### Running
-
-```bash
-cd ~/tro2022_adaptivecontrol_example
-./run_example.sh
-```
-### Troubleshooting
-
-If the pre-compiled example fails with a `GLIBC`/`GLIBCXX` version error, please use `Ubuntu 22.04` or later, or build from source (below).
+To run the example, use the **Python example** (above) or **Build from source** (below). A pre-compiled standalone download is no longer provided: the `v23.05.1` release from 2023-05-26 predates the 2025.05 external-simulator removal, the 2026.08 headless `SimulatorDummy` change, and the 2026.09 `M3_`/namespace refactor, so it no longer matches the code in this repository.
 
 ## Known limitations *of this example*/*TODO* list/*Extra info*
 
@@ -484,6 +460,7 @@ Notes:
 
 ## Changelog
 
+- 2026.09. README: removed the stale pre-compiled standalone download (`Usage` section) — the `v23.05.1` 2023 release predates the 2025.05 external-simulator removal, the 2026.08 headless `SimulatorDummy` change, and the 2026.09 `M3_`/namespace refactor. The Python example and **Build from source** are now the supported ways to run the example.
 - 2026.09. README: added a self-contained Python + pyplot example (the adaptive control loop run end-to-end, headlessly, with a comparison figure); refreshed the C++ console-output sample to match the current two-run (with/without adaptation) example; and flagged the pre-compiled `v23.05.1` download as a 2023 snapshot that predates the headless and `M3_`-refactor changes.
 - 2026.09. Dropped the legacy `M3_` prefix from the C++ identifiers and moved all C++ code into the `marinholab::papers::tro2022::adaptive_control` namespace (headers/sources renamed to `AdaptiveController`, `SerialManipulatorEDH`, `SimulatorDummy`, `VFI`, `MeasurementSpace`). The Python API was aligned with the C++ classes in the same step: the pybind11 module now exposes `SerialManipulatorEDH`, `SimulatorDummy`, `AdaptiveController`, `VFI`, `MeasureSpace`, `Primitive`, `VFI_Direction`, `VFI_DistanceType` (and the `_ParameterSpaceEDH` submodule) — the historical `M3_*` Python names are gone, and the `book/` tutorial + `adaptive_control_import_eval.py` were updated to the new names.
 - 2026.08. Removed the dependency on the external robot simulator and its network interface: the example now runs headless on the in-memory stand-in simulator `SimulatorDummy` (dry testing), so no external simulator is required to build or run it.
