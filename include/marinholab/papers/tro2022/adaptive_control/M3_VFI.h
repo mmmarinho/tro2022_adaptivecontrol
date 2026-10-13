@@ -29,8 +29,8 @@ Contributors (aside from author):
 #include<string>
 
 #include<dqrobotics/DQ.h>
+#include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include<dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterface.h>
-#include <dqrobotics/robot_modeling/DQ_SerialManipulator.h>
 
 using namespace DQ_robotics;
 
@@ -120,10 +120,10 @@ public:
            const std::string& cs_reference_name="");
 
     void initialize();
-    void initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+    void initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
                                                  const VectorXd& q);
 
-    void update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+    void update_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
                                              const VectorXd& q);
     void update_cylinder_vfi(const DQ& line, const DQ& start_point, const DQ& end_point);
 
