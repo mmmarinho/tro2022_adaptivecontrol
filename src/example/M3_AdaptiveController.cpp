@@ -20,7 +20,8 @@ Author:
     Murilo M. Marinho (murilomarinho@ieee.org)
 
 Contributors (aside from author):
-    None
+    Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
+        - Add line control objective and associated methods
 */
 /**
  * Example code for:
@@ -372,7 +373,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     {
         M3_VFI& vfi = vfis[i];
         w_vfi(i) = vfi.get_distance_error(x_hat);
-        switch(vfi.get_distance_type(x_hat))
+        switch(vfi.get_distance_type())
         {
         case M3_VFI_DistanceType::None:
             throw std::runtime_error("Expected valid value");

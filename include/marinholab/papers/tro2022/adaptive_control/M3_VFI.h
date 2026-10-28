@@ -29,8 +29,8 @@ Contributors (aside from author):
 #include<string>
 
 #include<dqrobotics/DQ.h>
+#include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include<dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterface.h>
-#include <dqrobotics/robot_modeling/DQ_SerialManipulator.h>
 
 using namespace DQ_robotics;
 
@@ -98,11 +98,6 @@ class M3_VFI
     //New in this paper
     double last_estimated_distance_;
     double last_real_distance_;
-
-    std::tuple<bool, bool> check_if_point_is_inside_line_segment(
-        const DQ& point_in_line,
-        const DQ& line_segment_start_point,
-        const DQ& line_segment_end_point) const;
 public:
     M3_VFI(const std::string& workspace_entity_name,
                     const std::string& robot_entity_name,
@@ -125,10 +120,10 @@ public:
            const std::string& cs_reference_name="");
 
     void initialize();
-    void initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+    void initialize_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
                                                  const VectorXd& q);
 
-    void update_dynamic_geometric_primitives(std::shared_ptr<DQ_SerialManipulator> robot_ptr,
+    void update_dynamic_geometric_primitives(std::shared_ptr<DQ_Kinematics> robot_ptr,
                                              const VectorXd& q);
     void update_cylinder_vfi(const DQ& line, const DQ& start_point, const DQ& end_point);
 
@@ -146,7 +141,7 @@ public:
 
     double get_safe_distance() const;
 
-    M3_VFI_DistanceType get_distance_type(const DQ &x) const;
+    M3_VFI_DistanceType get_distance_type() const;
 
     M3_Primitive get_type() const;
 
