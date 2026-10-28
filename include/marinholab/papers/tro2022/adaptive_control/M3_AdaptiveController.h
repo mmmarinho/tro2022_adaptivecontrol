@@ -21,7 +21,8 @@ Author:
     Murilo M. Marinho (murilomarinho@ieee.org)
 
 Contributors (aside from author):
-    None
+    Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
+        - Add line control objective and associated methods
 */
 /**
  * Example code for:
@@ -34,6 +35,7 @@ Contributors (aside from author):
 
 #include<dqrobotics/DQ.h>
 #include<dqrobotics/solvers/DQ_QPOASESSolver.h>
+#include<dqrobotics/robot_control/DQ_KinematicController.h>
 
 #include"marinholab/papers/tro2022/adaptive_control/M3_SerialManipulatorEDH.h"
 #include"marinholab/papers/tro2022/adaptive_control/M3_MeasurementSpace.h"
@@ -73,8 +75,16 @@ private:
     const Example_SimulationParameters& simulation_arguments_;
     std::shared_ptr<M3_SerialManipulatorEDH> robot_;
 
+    ControlObjective control_objective_ = ControlObjective::Pose;
+    DQ attached_primitive_;
+    DQ target_primitive_;
+
     DQ_QPOASESSolver task_space_solver_;
     DQ_QPOASESSolver parameter_space_solver_;
+
+    std::tuple<VectorXd,double> _closest_invariant_task_error(const DQ& x, const DQ& xd, const M3_MeasureSpace& measure_space);
+    MatrixXd _get_task_jacobian(const VectorXd& q, const DQ& xd) const;
+    MatrixXd _get_parameter_jacobian(const VectorXd& q, const VectorXd& x_tilde, const DQ& xd) const;
 
     DQ _convert_pose_to_measure_space(const DQ& x, const M3_MeasureSpace& measure_space);
 
@@ -86,6 +96,14 @@ private:
     M3_AdaptiveController(M3_AdaptiveController&)=delete;
     M3_AdaptiveController(const std::shared_ptr<M3_SerialManipulatorEDH>& robot,
                                const Example_SimulationParameters &simulation_arguments);
+
+    ControlObjective get_control_objective() const;
+
+    void set_control_objective(const ControlObjective& control_objective);
+
+    void set_primitive_to_effector(const DQ& primitive);
+
+    void set_target_primitive(const DQ& primitive);
 
     std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> compute_setpoint_control_signal(const Example_AdaptiveControlStrategy &control_strategy,
                                                                                            const VectorXd& q,

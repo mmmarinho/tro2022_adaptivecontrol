@@ -20,7 +20,8 @@ Author:
     Murilo M. Marinho (murilomarinho@ieee.org)
 
 Contributors (aside from author):
-    None
+    Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
+        - Add line control objective and associated methods
 */
 /**
  * Example code for:
@@ -132,6 +133,197 @@ std::tuple<VectorXd,double> closest_invariant_error(const DQ& x, const DQ& xd, c
 }
 
 /**
+ * @brief A generalization of closest_invariant_error() to different task control objectives.
+ *
+ * @param x the current task variable.
+ * @param xd the desired taks variable.
+ * @param measure_space see Example_MeasureSpace for possible values.
+ * @return the closest invariant error, and the closest invariant itself as 1 or -1.
+ */
+std::tuple<VectorXd,double> M3_AdaptiveController::_closest_invariant_task_error(const DQ& x,
+                                                                                 const DQ& xd,
+                                                                                 const M3_MeasureSpace& measure_space)
+{
+    switch(measure_space)
+    {
+    case M3_MeasureSpace::Pose:
+    {
+        switch (control_objective_)
+        {
+        case ControlObjective::Pose:
+        {
+            //Address double cover in pose space
+            const double ex_1_norm       = vec8(conj(x)*xd - 1).norm();
+            const double ex_1minus_norm  = vec8(conj(x)*xd + 1).norm();
+            DQ ex;
+            double invariant;
+            if(ex_1_norm<ex_1minus_norm)
+            {
+                ex = conj(x)*xd - 1;
+                invariant = -1;
+            }
+            else
+            {
+                ex = conj(x)*xd + 1;
+                invariant = +1;
+            }
+            return {vec8(ex),invariant};
+        }
+        case ControlObjective::Line:
+        {
+            //There is no double cover in line
+            return {vec8(Ad(x, attached_primitive_) - xd), 1}; //x_tild w.r.t. the inertial frame
+        }
+        default:
+            throw std::runtime_error("Invalid control_objective. Currently, M3_MeasureSpace::Pose only supports"
+                                     " ControlObjective::Pose and ControlObjective::Line.");
+        }
+    }
+    default:
+        throw std::runtime_error("Invalid measure_space. Currently, only supports"
+                                 " M3_MeasureSpace::Pose.");
+    }
+    throw std::runtime_error("Not supposed to be reachable");
+}
+
+MatrixXd M3_AdaptiveController::_get_task_jacobian(const VectorXd &q, const DQ &xd) const
+{
+    const MatrixXd J_x_q = robot_->pose_jacobian(q);
+
+    switch (control_objective_)
+    {
+    case ControlObjective::Pose:
+    {
+        return haminus8(xd)*C8()*J_x_q;
+    }
+    case ControlObjective::Line:
+    {
+        const DQ x_hat = robot_->fkm(q);
+        return DQ_Kinematics::line_jacobian(J_x_q, x_hat, attached_primitive_);
+    }
+    default:
+        throw std::runtime_error("Invalid control_objective. Currently, only supports"
+                                 " ControlObjective::Pose and ControlObjective::Line.");
+    }
+    throw std::runtime_error("Not supposed to be reachable");
+}
+
+MatrixXd M3_AdaptiveController::_get_parameter_jacobian(const VectorXd& q, const VectorXd& x_tilde, const DQ& xd) const
+{
+    const MatrixXd J_y_a = robot_->parameter_pose_jacobian(q);
+
+    switch (control_objective_)
+    {
+    case ControlObjective::Pose:
+    {
+        return x_tilde.transpose()*haminus8(xd)*C8()*J_y_a;
+    }
+    case ControlObjective::Line:
+    {
+        const DQ y_hat = robot_->fkm(q);
+        const MatrixXd J_x_a = DQ_Kinematics::line_jacobian(J_y_a, y_hat, attached_primitive_);
+        return x_tilde.transpose()*J_x_a;
+    }
+    default:
+        throw std::runtime_error("Invalid control_objective. Currently, only supports"
+                                 " ControlObjective::Pose and ControlObjective::Line.");
+    }
+    throw std::runtime_error("Not supposed to be reachable");
+}
+
+/**
+ * @brief Get the control objective.
+ * @return A ControlObjective enumeration represeting the control objective.
+ */
+ControlObjective M3_AdaptiveController::get_control_objective() const
+{
+    return control_objective_;
+}
+
+/**
+ * @brief Set the control objective. Currently, only supports ControlObjective::Pose and ControlObjective::Line. The control
+ *        objective is set to pose by default for legacy support.
+ * @param control_objective A ControlObjective enumeration represeting the control objective.
+ */
+void M3_AdaptiveController::set_control_objective(const ControlObjective &control_objective)
+{
+    switch(control_objective)
+    {
+    case ControlObjective::Pose:
+    {
+        control_objective_ = control_objective;
+        break;
+    }
+    case ControlObjective::Line:
+    {
+        control_objective_ = control_objective;
+        break;
+    }
+    default:
+    {
+        throw std::runtime_error("Invalid control_objective. Currently, only supports"
+                                 " ControlObjective::Pose and ControlObjective::Line.");
+    }
+    }
+}
+
+/**
+ * @brief Set the geometric primitive attached to the end-effector. Currently, only supports lines if ControlObjective::Line.
+ *        If ControlObjective::Pose, this method has no effect.
+ * @param primitive A dual quaternion represeting a geometric primitive.
+ */
+void M3_AdaptiveController::set_primitive_to_effector(const DQ &primitive)
+{
+    switch(control_objective_)
+    {
+    case ControlObjective::Pose: // there's nothing to set
+    {
+        break;
+    }
+    case ControlObjective::Line:
+    {
+        if (!is_unit(primitive))
+            throw std::runtime_error("Expected a line direction.");
+
+        attached_primitive_ = primitive;
+        break;
+    }
+    default:
+    {
+        throw std::runtime_error("Unexpected fallthrough.");
+    }
+    }
+}
+
+/**
+ * @brief Set the target geometric primitive. Currently, only supports lines if ControlObjective::Line.
+ *        If ControlObjective::Pose, this method has no effect.
+ * @param primitive A dual quaternion represeting a geometric primitive.
+ */
+void M3_AdaptiveController::set_target_primitive(const DQ &primitive)
+{
+    switch(control_objective_)
+    {
+    case ControlObjective::Pose: // there's nothing to set
+    {
+        break;
+    }
+    case ControlObjective::Line: // only supports line-to-line
+    {
+        if (!is_line(primitive))
+            throw std::runtime_error("Expected a line.");
+
+        target_primitive_ = primitive;
+        break;
+    }
+    default:
+    {
+        throw std::runtime_error("Unexpected fallthrough.");
+    }
+    }
+}
+
+/**
  * @brief compute_setpoint_control_signal One possible implementation of Algorithm 1 of
  * M. M. Marinho and B. V. Adorno,
  * "Adaptive Constrained Kinematic Control Using Partial or Complete Task-Space Measurements,"
@@ -173,7 +365,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     const DQ x_hat = robot_->fkm(q);
     double x_invariant;
     VectorXd x_tilde;
-    std::tie(x_tilde, x_invariant) = closest_invariant_error(x_hat, xd, M3_MeasureSpace::Pose);
+    std::tie(x_tilde, x_invariant) = this->_closest_invariant_task_error(x_hat, xd, M3_MeasureSpace::Pose);
     ///VFI state that is independent of control strategy
     const int& vfis_size = static_cast<int>(vfis.size());
     VectorXd w_vfi(vfis_size);
@@ -213,7 +405,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
     {
         ///Task
         const MatrixXd J_x_q = robot_->pose_jacobian(q);
-        const MatrixXd N_x_q = haminus8(xd)*C8()*robot_->pose_jacobian(q);
+        const MatrixXd N_x_q = this->_get_task_jacobian(q, xd);
 
         const MatrixXd Hx = (N_x_q.transpose()*N_x_q + lambda*MatrixXd::Identity(n,n));
         const VectorXd fx = 2.*N_x_q.transpose()*eta_task*x_tilde;
@@ -272,7 +464,7 @@ std::tuple<VectorXd, VectorXd, VectorXd, VectorXd, DQ> M3_AdaptiveController::co
         const VectorXd b_N_a = VectorXd::Zero(N_a.rows());
 
         ///Inequality constraint for Lyapunov stability
-        const MatrixXd A_y = x_tilde.transpose()*haminus8(xd)*C8()*J_y_a;
+        const MatrixXd A_y = this->_get_parameter_jacobian(q, x_tilde, xd);
         const VectorXd b_y = VectorXd::Zero(1);
 
         MatrixXd W_vfi_a(vfis_size, p);
