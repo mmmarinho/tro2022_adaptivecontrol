@@ -99,6 +99,7 @@ int main(int, char**)
         Example_SimulationParameters simulation_parameters;
         simulation_parameters.measure_space = Example_MeasureSpace::Pose;
         simulation_parameters.proportional_gain = 20.0;
+        simulation_parameters.proportional_adaptation_gain = 20.0;
         simulation_parameters.vfi_gain = 5;
         simulation_parameters.vfi_weight = 0.02;
         simulation_parameters.damping = 0.01;
