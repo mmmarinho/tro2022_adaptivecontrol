@@ -23,6 +23,7 @@ Author:
 Contributors (aside from author):
     Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
         - Add line control objective and associated methods
+        - Add independent proportional adaptaion gain
 */
 /**
  * Example code for:
@@ -56,6 +57,7 @@ struct Example_SimulationParameters
 {
     M3_MeasureSpace measure_space;
     double proportional_gain;
+    double proportional_adaptation_gain;
     double vfi_gain;
     double vfi_weight;
     double damping;
