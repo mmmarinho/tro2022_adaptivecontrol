@@ -20,7 +20,8 @@ Author:
     Murilo M. Marinho (murilomarinho@ieee.org)
 
 Contributors (aside from author):
-    None
+    Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
+        - Add line control objective and associated methods
 */
 /**
  * Example code for:
