@@ -22,6 +22,7 @@ Author:
 Contributors (aside from author):
     Frederico Fernandes Afonso Silva (frederico.silva@manchester.ac.uk)
         - Add line control objective and associated methods
+        - Add independent proportional adaptaion gain
 */
 /**
  * Example code for:
